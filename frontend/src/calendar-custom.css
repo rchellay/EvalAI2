@@ -224,7 +224,7 @@
   }
   
   .rbc-month-row {
-    min-height: 80px !important;
+    min-height: 50px !important; /* Aún más compacto en móvil */
     flex: 1 !important;
   }
   
@@ -237,4 +237,82 @@
     font-size: 11px !important;
     padding: 2px 6px !important;
   }
+}
+
+/* ============================================
+   CALENDARIO MÁS COMPACTO - REDUCCIÓN PROFESIONAL
+   Reduce tipografía y márgenes sin escalar
+   ============================================ */
+
+.rbc-calendar {
+  font-size: 0.75rem; /* Reduce tamaño de texto base */
+}
+
+.rbc-header {
+  padding: 2px 4px !important; /* Reduce padding de encabezados */
+  font-size: 11px !important; /* Tamaño de fuente más pequeño */
+}
+
+.rbc-event {
+  font-size: 0.7rem !important; /* Fuente más pequeña para eventos */
+  padding: 1px 2px !important; /* Padding mínimo */
+  margin: 0.5px 0 !important; /* Margen reducido para más eventos */
+  line-height: 1 !important; /* Línea más compacta */
+}
+
+.rbc-date-cell {
+  padding: 4px !important; /* Reduce padding de celdas de fecha */
+}
+
+.rbc-date-cell > a,
+.rbc-date-cell button {
+  font-size: 12px !important; /* Fuente más pequeña para números de fecha */
+}
+
+.rbc-month-row {
+  min-height: 60px !important; /* Altura de fila aún más compacta para más eventos */
+}
+
+.rbc-toolbar {
+  padding: 8px 12px !important; /* Toolbar más compacto */
+}
+
+.rbc-toolbar button {
+  padding: 6px 12px !important; /* Botones más pequeños */
+  font-size: 12px !important; /* Fuente más pequeña */
+}
+
+.rbc-toolbar-label {
+  font-size: 16px !important; /* Título más pequeño */
+}
+
+/* ============================================
+   SIDEBAR IZQUIERDO - ESTILOS COMPACTOS
+   Reduce elementos del sidebar para consistencia
+   ============================================ */
+
+.calendar-sidebar h2 {
+  font-size: 1rem !important; /* Título del día más pequeño */
+  margin-bottom: 0.25rem !important;
+}
+
+.calendar-sidebar p {
+  font-size: 0.75rem !important; /* Descripción más pequeña */
+  margin-bottom: 0.5rem !important;
+}
+
+.calendar-sidebar .space-y-2 > div {
+  padding: 0.5rem !important; /* Eventos más compactos */
+}
+
+.calendar-sidebar h3 {
+  font-size: 0.875rem !important; /* Título de evento más pequeño */
+}
+
+.calendar-sidebar .text-xs {
+  font-size: 0.75rem !important; /* Horarios más pequeños */
+}
+
+.calendar-sidebar .material-symbols-outlined {
+  font-size: 1rem !important; /* Iconos más pequeños */
 }

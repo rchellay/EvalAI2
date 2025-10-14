@@ -193,14 +193,14 @@ export default function CalendarView() {
     weekdayFormat: (date, culture, localizer) => localizer.format(date, 'dddd', culture).toUpperCase().substring(0, 3),
   };  return (
     <div className="h-full flex bg-gray-50">
-      <div className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">
+      <div className="w-64 bg-white border-r border-gray-200 p-2 overflow-y-auto calendar-sidebar">
+        <h2 className="text-lg font-bold text-gray-800 mb-2">
           {moment(selectedDate).format("dddd, D [de] MMMM")}
         </h2>
-        <p className="text-sm text-gray-600 mb-4">Clases del día seleccionado</p>
+        <p className="text-xs text-gray-600 mb-3">Clases del día seleccionado</p>
         
         {selectedDayEvents.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {selectedDayEvents.map((event, idx) => (
               <div
                 key={idx}
@@ -209,17 +209,17 @@ export default function CalendarView() {
                     navigate(`/asignaturas/${event.resource.subjectId}`);
                   }
                 }}
-                className="p-3 bg-gray-50 rounded-lg border-l-4 hover:shadow-md hover:bg-gray-100 transition-all cursor-pointer"
+                className="p-2 bg-gray-50 rounded-lg border-l-4 hover:shadow-md hover:bg-gray-100 transition-all cursor-pointer"
                 style={{ borderLeftColor: event.resource?.color || "#3B82F6" }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800">{event.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h3 className="font-semibold text-gray-800 text-sm">{event.title}</h3>
+                    <p className="text-xs text-gray-600 mt-1">
                       {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
                     </p>
                   </div>
-                  <span className="material-symbols-outlined text-gray-400 text-xl">
+                  <span className="material-symbols-outlined text-gray-400 text-lg">
                     chevron_right
                   </span>
                 </div>
@@ -227,16 +227,16 @@ export default function CalendarView() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-4 text-gray-500">
+            <svg className="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p>No hay clases programadas para este día</p>
+            <p className="text-sm">No hay clases programadas para este día</p>
           </div>
         )}
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-4 overflow-y-auto">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-800">Calendario</h1>
           <p className="text-gray-600">Gestiona tus clases y eventos</p>
@@ -246,7 +246,7 @@ export default function CalendarView() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         )}
-        <div className="bg-white rounded-lg shadow p-4" style={{ minHeight: "800px", maxHeight: "calc(100vh - 200px)", height: "calc(100vh - 200px)", display: "flex", flexDirection: "column" }}>
+        <div className="bg-white rounded-lg shadow p-2" style={{ minHeight: "800px", maxHeight: "calc(100vh - 200px)", height: "calc(100vh - 200px)", display: "flex", flexDirection: "column" }}>
           <Calendar
             localizer={localizer}
             events={events}
@@ -263,7 +263,8 @@ export default function CalendarView() {
             messages={messages}
             views={["month"]}
             defaultView="month"
-            popup
+            popup={false}
+            eventLimit={false}
           />
         </div>
       </div>
