@@ -1,0 +1,32 @@
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { isValid } from '../auth/token';
+
+// Updated to point to Django REST Framework backend with /api prefix
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
+console.log('[AXIOS] Base URL configured:', baseURL);
+
+const api = axios.create({
+  baseURL
+});
+
+api.interceptors.request.use((config) => {
+  console.log('[AXIOS] Request:', config.method?.toUpperCase(), config.url, 'Full URL:', config.baseURL + config.url);
+  const token = localStorage.getItem('token');
+  if (token && isValid(token)) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(r => r, err => {
+  if (err.response?.status === 401) {
+    localStorage.removeItem('token');
+    toast.error('Sesión expirada');
+    setTimeout(() => window.location.assign('/'), 800);
+  }
+  return Promise.reject(err);
+});
+
+export default api;

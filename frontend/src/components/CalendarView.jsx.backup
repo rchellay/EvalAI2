@@ -1,0 +1,326 @@
+﻿import React, { useState, useEffect } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import api from "../lib/axios";
+import { toast } from "react-hot-toast";
+import { RRule } from "rrule";
+
+// Configurar moment para español
+import "moment/locale/es";
+moment.locale("es");
+
+const localizer = momentLocalizer(moment);
+
+function toLocalISOString(date) {
+  // Returns ISO string in local timezone (for FullCalendar)
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date - tzOffset).toISOString().slice(0, -1);
+}
+
+export default function CalendarView() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [seriesModalOpen, setSeriesModalOpen] = useState(false);
+  const [seriesModalAction, setSeriesModalAction] = useState('edit');
+  const calendarRef = useRef();
+
+  // Fetch events for visible range
+  const fetchEvents = async (fetchInfo, successCallback, failureCallback) => {
+    setLoading(true);
+    try {
+      const start = fetchInfo.startStr.split('T')[0]; // YYYY-MM-DD
+      const end = fetchInfo.endStr.split('T')[0];
+      
+      // Fetch regular events
+      const eventsRes = await api.get("/calendar/events", {
+        params: { start: fetchInfo.startStr, end: fetchInfo.endStr },
+      });
+      
+      const regularEvents = eventsRes.data.map(mapEventToFullCalendar);
+      
+      // Fetch subject schedule events (recurring classes)
+      const subjectsRes = await api.get("/subjects");
+      const allSubjects = Array.isArray(subjectsRes.data) ? subjectsRes.data : [];
+      
+      // Generate recurring events for each subject
+      const subjectEvents = [];
+      for (const subject of allSubjects) {
+        if (subject.id) {
+          try {
+            const scheduleRes = await api.get(`/subjects/${subject.id}/calendar-events`, {
+              params: { start_date: start, end_date: end }
+            });
+            
+            // Add these events with special marking
+            const schedEvents = scheduleRes.data.map(ev => ({
+              id: `subject-${subject.id}-${ev.start}`,
+              title: ev.title,
+              start: ev.start,
+              end: ev.end,
+              backgroundColor: ev.color,
+              borderColor: ev.color,
+              extendedProps: {
+                subjectId: ev.subject_id,
+                eventType: 'class',
+                isRecurring: true,
+                course: ev.extendedProps?.course,
+                groups: ev.extendedProps?.groups
+              }
+            }));
+            
+            subjectEvents.push(...schedEvents);
+          } catch (err) {
+            // Skip if subject doesn't have calendar events
+            console.warn(`No calendar events for subject ${subject.id}`);
+          }
+        }
+      }
+      
+      // Combine all events
+      const allEvents = [...regularEvents, ...subjectEvents];
+      successCallback(allEvents);
+    } catch (e) {
+      console.error('❌ Error loading events:', e.response?.data || e.message);
+      toast.error("Error cargando eventos");
+      successCallback([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Map backend event to FullCalendar event shape
+  function mapEventToFullCalendar(ev) {
+    return {
+      id: ev.id,
+      title: ev.title,
+      start: ev.start_at,
+      end: ev.end_at,
+      allDay: ev.all_day,
+      backgroundColor: ev.color || undefined,
+      borderColor: ev.color || undefined,
+      extendedProps: {
+        subjectId: ev.subject_id,
+        eventType: ev.event_type,
+        isRecurring: !!ev.recurrence_rule,
+        parentId: ev.parent_id,
+        isException: ev.is_exception,
+        timezone: ev.timezone,
+      },
+    };
+  }
+
+  // Drag & drop handler
+  const handleEventDrop = async (info) => {
+    try {
+      await api.put(`/calendar/events/${info.event.id}`, {
+        start_at: info.event.start.toISOString(),
+        end_at: info.event.end ? info.event.end.toISOString() : null,
+      });
+      toast.success("Evento actualizado");
+    } catch (e) {
+      toast.error("No se pudo mover el evento");
+      info.revert();
+    }
+  };
+
+  // Resize handler
+  const handleEventResize = async (info) => {
+    try {
+      await api.put(`/calendar/events/${info.event.id}`, {
+        start_at: info.event.start.toISOString(),
+        end_at: info.event.end ? info.event.end.toISOString() : null,
+      });
+      toast.success("Evento actualizado");
+    } catch (e) {
+      toast.error("No se pudo redimensionar el evento");
+      info.revert();
+    }
+  };
+
+  // Fetch subjects on mount
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const res = await api.get('/subjects');
+        setSubjects(Array.isArray(res.data) ? res.data : []);
+      } catch (e) {
+        console.error('Error fetching subjects:', e);
+        setSubjects([]);
+      }
+    };
+    fetchSubjects();
+  }, []);
+
+  // Event click handler (abrir modal de edición o navegar a asignatura)
+  const handleEventClick = (info) => {
+    const event = {
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.startStr,
+      end: info.event.endStr,
+      allDay: info.event.allDay,
+      backgroundColor: info.event.backgroundColor,
+      extendedProps: info.event.extendedProps
+    };
+
+    // If it's a class from subject schedule, show info and navigate
+    if (info.event.extendedProps?.eventType === 'class') {
+      const subjectId = info.event.extendedProps.subjectId;
+      const groups = info.event.extendedProps.groups || [];
+      
+      // Show toast with groups info
+      const groupNames = groups.map(g => g.name).join(', ');
+      const message = groupNames 
+        ? `${event.title} - Grupos: ${groupNames}`
+        : event.title;
+      
+      toast(message, {
+        duration: 4000,
+        icon: '📚',
+      });
+      
+      // Navigate to subject detail page
+      navigate(`/asignaturas/${subjectId}`);
+      return;
+    }
+
+    // Check if recurring event (from calendar API)
+    if (info.event.extendedProps?.isRecurring) {
+      setSelectedEvent(event);
+      setSeriesModalAction('edit');
+      setSeriesModalOpen(true);
+    } else {
+      setSelectedEvent(event);
+      setEventModalOpen(true);
+    }
+  };
+
+  // Quick create handler (abrir modal de creación)
+  const handleDateSelect = (selectInfo) => {
+    setSelectedEvent({
+      start: selectInfo.startStr,
+      end: selectInfo.endStr,
+      allDay: selectInfo.allDay
+    });
+    setEventModalOpen(true);
+  };
+
+  // Handle save from modal
+  const handleEventSave = () => {
+    // Refetch events
+    if (calendarRef.current) {
+      calendarRef.current.getApi().refetchEvents();
+    }
+  };
+
+  // Handle edit this occurrence
+  const handleEditThis = () => {
+    setSeriesModalOpen(false);
+    setEventModalOpen(true);
+    // Will use POST /calendar/events/{id}/occurrences
+  };
+
+  // Handle edit series
+  const handleEditSeries = () => {
+    setSeriesModalOpen(false);
+    setEventModalOpen(true);
+    // Will use PUT /calendar/events/{id}?update_series=true
+  };
+
+  // Handle delete
+  const handleEventDelete = async (eventId, isRecurring) => {
+    if (isRecurring) {
+      setSeriesModalAction('delete');
+      setSeriesModalOpen(true);
+    } else {
+      if (window.confirm('¿Eliminar este evento?')) {
+        try {
+          await api.delete(`/calendar/events/${eventId}`);
+          toast.success('Evento eliminado');
+          if (calendarRef.current) {
+            calendarRef.current.getApi().refetchEvents();
+          }
+        } catch (e) {
+          toast.error('Error al eliminar evento');
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Daily Agenda Sidebar */}
+      <DailyAgenda />
+
+      {/* Main Calendar Area */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Calendar Container */}
+        <div className="flex-1 p-6 overflow-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+            {loading && (
+              <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                Cargando eventos...
+              </div>
+            )}
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek",
+              }}
+              locale="es"
+              height="auto"
+              events={fetchEvents}
+              editable={true}
+              selectable={true}
+              eventDrop={handleEventDrop}
+              eventResize={handleEventResize}
+              eventClick={handleEventClick}
+              select={handleDateSelect}
+              nowIndicator={true}
+              dayMaxEvents={3}
+              slotMinTime="07:00:00"
+              slotMaxTime="22:00:00"
+              eventTimeFormat={{ hour: '2-digit', minute: '2-digit', hour12: false }}
+              eventClassNames="cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </div>
+
+          {/* Statistics Cards */}
+          <CalendarStats />
+        </div>
+      </main>
+
+      {/* Event Modal */}
+      <EventModal
+        isOpen={eventModalOpen}
+        onClose={() => {
+          setEventModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        onSave={handleEventSave}
+        subjects={subjects}
+      />
+
+      {/* Edit Series Modal */}
+      <EditSeriesModal
+        isOpen={seriesModalOpen}
+        onClose={() => {
+          setSeriesModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onEditThis={handleEditThis}
+        onEditSeries={handleEditSeries}
+        action={seriesModalAction}
+      />
+    </div>
+  );
+}

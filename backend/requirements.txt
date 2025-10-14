@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+pydantic
+python-dotenv
+pytest
+httpx
+passlib[bcrypt]
+python-jose[cryptography]
+bcrypt==4.0.1
+requests
+google-auth
