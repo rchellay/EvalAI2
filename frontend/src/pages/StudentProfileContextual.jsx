@@ -29,27 +29,102 @@ const StudentProfileContextual = () => {
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Estado para evaluación
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [evaluationData, setEvaluationData] = useState({ score: '', comment: '' });
+  const [currentEvaluation, setCurrentEvaluation] = useState(null);
+
+  // Estado para información de asignatura
+  const [subjectInfo, setSubjectInfo] = useState(null);
+
   useEffect(() => {
     loadStudentData();
   }, [id, asignaturaId]);
+
+  useEffect(() => {
+    if (asignaturaId) {
+      api.get(`/subjects/${asignaturaId}/`).then(res => setSubjectInfo(res.data));
+    }
+  }, [asignaturaId]);
 
   const loadStudentData = async () => {
     try {
       setLoading(true);
       
-      // Construir params con o sin filtro de asignatura
-      const params = asignaturaId ? { asignatura: asignaturaId } : {};
+      // Cargar información básica del estudiante
+      const studentResponse = await api.get(`/students/${id}/`);
+      setResumen({
+        estudiante: studentResponse.data,
+        grupos: [], // TODO: cargar grupos del estudiante
+        asignaturas: [], // TODO: cargar asignaturas del estudiante
+        estadisticas: { filtrado_por_asignatura: !!asignaturaId },
+        ultimos_comentarios: []
+      });
       
-      // Cargar datos en paralelo
-      const [resumenRes, evaluacionesRes, comentariosRes] = await Promise.all([
-        api.get(`/estudiantes/${id}/resumen/`, { params }),
-        api.get(`/estudiantes/${id}/evaluaciones/`, { params }),
-        api.get(`/estudiantes/${id}/comentarios/`, { params })
-      ]);
+      // Cargar evaluaciones usando la nueva API
+      const evaluationsParams = asignaturaId ? { subject_id: asignaturaId } : {};
+      const evaluationsResponse = await api.get(`/alumnos/${id}/evaluaciones/`, { 
+        params: evaluationsParams 
+      });
       
-      setResumen(resumenRes.data);
-      setEvaluaciones(evaluacionesRes.data.evaluaciones);
-      setComentarios(comentariosRes.data.comentarios);
+      // Transformar las evaluaciones al formato esperado por el componente
+      let transformedEvaluations = [];
+      if (Array.isArray(evaluationsResponse.data)) {
+        transformedEvaluations = evaluationsResponse.data.map(evaluation => ({
+          id: evaluation.id,
+          rubric: evaluation.subject_name || 'Evaluación general',
+          subject: evaluation.subject_name || 'General',
+          evaluator: evaluation.evaluator_name || 'Profesor',
+          evaluated_at: evaluation.date,
+          porcentaje: evaluation.score ? Math.round((evaluation.score / 10) * 100) : 0,
+          total_score: evaluation.score || 0,
+          max_possible: 10,
+          criterios: [] // Las evaluaciones simples no tienen criterios detallados
+        }));
+      } else {
+        console.warn('Evaluations API returned non-array data:', evaluationsResponse.data);
+      }
+      
+      setEvaluaciones(transformedEvaluations);
+      
+      // Cargar comentarios usando la nueva API
+      let apiComments = [];
+      try {
+        const commentsParams = asignaturaId ? { asignatura: asignaturaId } : {};
+        const commentsResponse = await api.get(`/estudiantes/${id}/comentarios/`, { 
+          params: commentsParams 
+        });
+        
+        if (commentsResponse.data && Array.isArray(commentsResponse.data.comentarios)) {
+          apiComments = commentsResponse.data.comentarios;
+        } else {
+          console.warn('Comments API returned unexpected format:', commentsResponse.data);
+        }
+      } catch (commentsError) {
+        console.warn('Error loading comments:', commentsError);
+        // Continue without comments if API fails
+      }
+      
+      // Agregar comentarios de evaluaciones como comentarios adicionales
+      let evaluationComments = [];
+      if (Array.isArray(evaluationsResponse.data)) {
+        evaluationComments = evaluationsResponse.data
+          .filter(evaluation => evaluation.comment && evaluation.comment.trim())
+          .map(evaluation => ({
+            id: `eval_${evaluation.id}`,
+            text: evaluation.comment,
+            author: evaluation.evaluator_name || 'Profesor',
+            subject: evaluation.subject_name || 'Evaluación',
+            subject_id: evaluation.subject_id,
+            created_at: evaluation.date
+          }));
+      }
+      
+      // Combinar comentarios de la API con comentarios de evaluaciones
+      const allComments = [...apiComments, ...evaluationComments];
+      
+      setComentarios(allComments);
+      
     } catch (error) {
       console.error('Error loading student data:', error);
       toast.error('Error al cargar los datos del estudiante');
@@ -69,27 +144,109 @@ const StudentProfileContextual = () => {
     try {
       setSubmitting(true);
       
-      // Si estamos en contexto de asignatura, asociar el comentario
+      // Usar la nueva API para crear evaluaciones con comentarios
       const payload = {
-        text: nuevoComentario.trim(),
-        subject_id: asignaturaId || null
+        student: id,
+        subject: asignaturaId || null,
+        date: new Date().toISOString().split('T')[0],
+        score: null, // Solo comentario, sin calificación
+        comment: nuevoComentario.trim()
       };
       
-      await api.post(`/estudiantes/${id}/comentarios/crear/`, payload);
+      await api.post(`/alumnos/${id}/evaluaciones/`, payload);
       
       toast.success('Comentario creado exitosamente');
       setNuevoComentario('');
       
-      // Recargar comentarios
-      const params = asignaturaId ? { asignatura: asignaturaId } : {};
-      const res = await api.get(`/estudiantes/${id}/comentarios/`, { params });
-      setComentarios(res.data.comentarios);
+      // Recargar evaluaciones
+      const evaluationsParams = asignaturaId ? { subject_id: asignaturaId } : {};
+      const evaluationsResponse = await api.get(`/alumnos/${id}/evaluaciones/`, { 
+        params: evaluationsParams 
+      });
+      
+      const transformedEvaluations = evaluationsResponse.data.map(evaluation => ({
+        id: evaluation.id,
+        rubric: evaluation.subject_name || 'Comentario',
+        subject: evaluation.subject_name || 'General',
+        evaluator: evaluation.evaluator_name || 'Profesor',
+        evaluated_at: evaluation.date,
+        porcentaje: evaluation.score ? Math.round((evaluation.score / 10) * 100) : 0,
+        total_score: evaluation.score || 0,
+        max_possible: 10,
+        criterios: []
+      }));
+      
+      setEvaluaciones(transformedEvaluations);
       
     } catch (error) {
       console.error('Error creating comment:', error);
       toast.error('Error al crear el comentario');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleOpenEvaluationForm = (evaluation = null) => {
+    if (evaluation) {
+      setCurrentEvaluation(evaluation);
+      setEvaluationData({
+        score: evaluation.total_score || '',
+        comment: evaluation.comment || ''
+      });
+    } else {
+      setCurrentEvaluation(null);
+      setEvaluationData({ score: '', comment: '' });
+    }
+    setShowEvaluationForm(true);
+  };
+
+  const handleSaveEvaluation = async () => {
+    try {
+      const payload = {
+        student: id,
+        subject: asignaturaId || null,
+        date: new Date().toISOString().split('T')[0],
+        score: evaluationData.score ? parseFloat(evaluationData.score) : null,
+        comment: evaluationData.comment
+      };
+
+      if (currentEvaluation) {
+        // Actualizar evaluación existente
+        await api.put(`/alumnos/${id}/evaluaciones/${currentEvaluation.id}/`, payload);
+        toast.success('Evaluación actualizada correctamente');
+      } else {
+        // Crear nueva evaluación
+        await api.post(`/alumnos/${id}/evaluaciones/`, payload);
+        toast.success('Evaluación guardada correctamente');
+      }
+
+      setShowEvaluationForm(false);
+      setCurrentEvaluation(null);
+      setEvaluationData({ score: '', comment: '' });
+
+      // Recargar evaluaciones
+      const evaluationsParams = asignaturaId ? { subject_id: asignaturaId } : {};
+      const evaluationsResponse = await api.get(`/alumnos/${id}/evaluaciones/`, { 
+        params: evaluationsParams 
+      });
+      
+      const transformedEvaluations = evaluationsResponse.data.map(evaluation => ({
+        id: evaluation.id,
+        rubric: evaluation.subject_name || 'Evaluación general',
+        subject: evaluation.subject_name || 'General',
+        evaluator: evaluation.evaluator_name || 'Profesor',
+        evaluated_at: evaluation.date,
+        porcentaje: evaluation.score ? Math.round((evaluation.score / 10) * 100) : 0,
+        total_score: evaluation.score || 0,
+        max_possible: 10,
+        criterios: []
+      }));
+      
+      setEvaluaciones(transformedEvaluations);
+
+    } catch (error) {
+      console.error('Error saving evaluation:', error);
+      toast.error('Error al guardar la evaluación');
     }
   };
 
@@ -117,17 +274,17 @@ const StudentProfileContextual = () => {
           {estaFiltrado ? (
             <>
               <button
-                onClick={() => navigate('/calendario')}
+                onClick={() => navigate('/asignaturas')}
                 className="text-primary hover:underline"
               >
-                Calendario
+                Asignaturas
               </button>
               <span className="text-gray-500">/</span>
               <button
                 onClick={() => navigate(`/asignaturas/${asignaturaId}`)}
                 className="text-primary hover:underline"
               >
-                {asignaturas.find(a => a.id === parseInt(asignaturaId))?.name || 'Asignatura'}
+                {subjectInfo?.name || 'Asignatura'}
               </button>
               <span className="text-gray-500">/</span>
               <span className="text-gray-900 dark:text-white font-medium">
@@ -137,10 +294,10 @@ const StudentProfileContextual = () => {
           ) : (
             <>
               <button
-                onClick={() => navigate('/grupos')}
+                onClick={() => navigate('/estudiantes')}
                 className="text-primary hover:underline"
               >
-                Grupos
+                Estudiantes
               </button>
               <span className="text-gray-500">/</span>
               <span className="text-gray-900 dark:text-white font-medium">
@@ -172,7 +329,7 @@ const StudentProfileContextual = () => {
                 📚 Vista filtrada por asignatura
               </p>
               <p className="text-xs text-purple-600 dark:text-purple-400">
-                {asignaturas.find(a => a.id === parseInt(asignaturaId))?.name}
+                {subjectInfo?.name}
               </p>
             </div>
           )}
@@ -197,13 +354,16 @@ const StudentProfileContextual = () => {
               {estaFiltrado ? 'Evaluaciones (filtradas)' : 'Total Evaluaciones'}
             </p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {estadisticas.total_evaluaciones}
+              {evaluaciones.length}
             </p>
           </div>
           <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Promedio</p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {estadisticas.promedio_general}%
+              {evaluaciones.length > 0 
+                ? Math.round(evaluaciones.reduce((sum, evaluation) => sum + evaluation.porcentaje, 0) / evaluaciones.length)
+                : 0
+              }%
             </p>
           </div>
         </div>
@@ -301,48 +461,79 @@ const StudentProfileContextual = () => {
                     }
                   </p>
                 ) : (
-                  evaluaciones.map((evaluacion) => (
-                    <div
-                      key={evaluacion.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white">
-                            {evaluacion.rubric}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {evaluacion.subject} • {evaluacion.evaluator}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(evaluacion.evaluated_at).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-primary">
-                            {evaluacion.porcentaje}%
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {evaluacion.total_score}/{evaluacion.max_possible}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        {evaluacion.criterios.map((criterio, idx) => (
-                          <div key={idx} className="flex justify-between text-sm">
-                            <span className="text-gray-700 dark:text-gray-300">
-                              {criterio.criterio}: {criterio.nivel}
-                            </span>
-                            <span className="text-gray-500">
-                              {criterio.puntos} pts ({criterio.peso}%)
-                            </span>
+                  <div className="space-y-4">
+                    {evaluaciones.map((evaluacion) => (
+                      <div
+                        key={evaluacion.id}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                              {evaluacion.rubric}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              {evaluacion.subject} • {evaluacion.evaluator}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {new Date(evaluacion.evaluated_at).toLocaleString()}
+                            </p>
                           </div>
-                        ))}
+                          <div className="flex items-center gap-2">
+                            {evaluacion.porcentaje > 0 && (
+                              <div className="text-right mr-4">
+                                <p className="text-2xl font-bold text-primary">
+                                  {evaluacion.porcentaje}%
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {evaluacion.total_score}/{evaluacion.max_possible}
+                                </p>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleOpenEvaluationForm(evaluacion)}
+                              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        </div>
+
+                        {evaluacion.comment && (
+                          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                              <strong>Comentario:</strong> {evaluacion.comment}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {evaluacion.criterios.map((criterio, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {criterio.criterio}: {criterio.nivel}
+                              </span>
+                              <span className="text-gray-500">
+                                {criterio.puntos} pts ({criterio.peso}%)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
+
+                {/* Botón para nueva evaluación */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => handleOpenEvaluationForm()}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    Nueva Evaluación
+                  </button>
+                </div>
               </div>
             )}
 
@@ -418,6 +609,67 @@ const StudentProfileContextual = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de evaluación */}
+      {showEvaluationForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              {currentEvaluation ? 'Editar Evaluación' : 'Nueva Evaluación'}
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Calificación (0-10)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value={evaluationData.score}
+                  onChange={(e) => setEvaluationData(prev => ({ ...prev, score: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Ej: 8.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Comentarios
+                </label>
+                <textarea
+                  value={evaluationData.comment}
+                  onChange={(e) => setEvaluationData(prev => ({ ...prev, comment: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  rows="3"
+                  placeholder="Comentarios sobre el desempeño..."
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEvaluationForm(false);
+                  setCurrentEvaluation(null);
+                  setEvaluationData({ score: '', comment: '' });
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEvaluation}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                {currentEvaluation ? 'Actualizar' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

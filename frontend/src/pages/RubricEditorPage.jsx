@@ -186,7 +186,7 @@ const RubricEditorPage = () => {
       id: `temp-ai-${Date.now()}-${idx}`,
       name: criterion.name,
       description: criterion.description || '',
-      weight: (criterion.weight * 100).toFixed(1), // Convertir decimal a porcentaje
+      weight: criterion.weight.toFixed(1), // El peso ya viene como porcentaje
       levels: criterion.levels?.map((level, levelIdx) => ({
         id: `temp-ai-level-${Date.now()}-${idx}-${levelIdx}`,
         name: level.level_name,

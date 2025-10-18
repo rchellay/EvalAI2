@@ -1,124 +1,177 @@
-import { useState, useEffect } from "react";
-import api from "../lib/axios";
-import { Users, FileText, TrendingUp } from 'lucide-react';
-import StatsCard from '../components/StatsCard';
-import ActivityChart from '../components/ActivityChart';
-import RubricsDistribution from '../components/RubricsDistribution';
-import ScheduleWidget from '../components/ScheduleWidget';
-import EventsWidget from '../components/EventsWidget';
-import CommentsWidget from '../components/CommentsWidget';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import api from '../lib/axios';
 
-export default function Dashboard() {
-  const [stats, setStats] = useState({
-    studentsCount: 0,
-    transcriptsCount: 0,
-    attendance: 0,
-    activity: [],
-    rubrics: { applied: 0, pending: 0, percent_applied: 0 },
-    schedule: [],
-    events: [],
-    comments: []
-  });
+// Importar todos los widgets
+import WidgetResumen from '../components/widgets/WidgetResumen';
+import WidgetClases from '../components/widgets/WidgetClases';
+import WidgetRendimiento from '../components/widgets/WidgetRendimiento';
+import WidgetComentarios from '../components/widgets/WidgetComentarios';
+import WidgetIA from '../components/widgets/WidgetIA';
+import WidgetRubricas from '../components/widgets/WidgetRubricas';
+import WidgetPendientes from '../components/widgets/WidgetPendientes';
+import WidgetAccesos from '../components/widgets/WidgetAccesos';
+import WidgetNoticias from '../components/widgets/WidgetNoticias';
+
+const Dashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    // Verificar autenticación
+    const checkAuth = async () => {
       try {
-        const [
-          studentsRes,
-          transcriptsRes,
-          attendanceRes,
-          activityRes,
-          rubricsRes,
-          scheduleRes,
-          eventsRes,
-          commentsRes
-        ] = await Promise.all([
-          api.get("/dashboard/stats/students-count"),
-          api.get("/dashboard/stats/transcripts-count"),
-          api.get("/dashboard/stats/attendance"),
-          api.get("/dashboard/stats/activity-last-7-days"),
-          api.get("/dashboard/stats/rubrics-distribution"),
-          api.get("/dashboard/schedule/today"),
-          api.get("/dashboard/events/upcoming"),
-          api.get("/dashboard/comments/latest")
-        ]);
-
-        setStats({
-          studentsCount: studentsRes.data.count,
-          transcriptsCount: transcriptsRes.data.count,
-          attendance: attendanceRes.data.percent,
-          activity: activityRes.data.activity || [],
-          rubrics: rubricsRes.data,
-          schedule: scheduleRes.data.schedule || [],
-          events: eventsRes.data.events || [],
-          comments: commentsRes.data.comments || []
-        });
+        await api.get('/auth/me');
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+      } catch (err) {
+        setError('No autorizado');
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    checkAuth();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Cargando dashboard...</p>
+          <p className="text-slate-600">Cargando Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Acceso Denegado</h2>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <Link 
+            to="/login" 
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Iniciar Sesión
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatsCard 
-          title="Estudiantes" 
-          value={stats.studentsCount}
-          icon={Users}
-          color="blue"
-        />
-        <StatsCard 
-          title="Transcripciones" 
-          value={stats.transcriptsCount}
-          icon={FileText}
-          color="green"
-        />
-        <StatsCard 
-          title="Asistencia" 
-          value={`${stats.attendance}%`}
-          icon={TrendingUp}
-          color="orange"
-        />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white/70 backdrop-blur-sm shadow-md border-b border-white/20"
+      >
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <h1 className="text-4xl font-bold text-slate-800 flex items-center">
+            <span className="mr-3">🎓</span>
+            Panel del Profesor
+          </h1>
+          <p className="text-slate-600 mt-2">
+            Bienvenido a tu centro de control educativo
+          </p>
+        </div>
+      </motion.div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ActivityChart data={stats.activity} />
-        </div>
-        <div>
-          <RubricsDistribution data={stats.rubrics} />
-        </div>
-      </div>
+      {/* Grid de Widgets */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Widget Resumen de Clase */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <WidgetResumen />
+          </motion.div>
 
-      {/* Schedule and Events Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ScheduleWidget schedule={stats.schedule} />
-        </div>
-        <div className="space-y-6">
-          <EventsWidget events={stats.events} />
-          <CommentsWidget comments={stats.comments} />
+          {/* Widget Próximas Clases */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <WidgetClases />
+          </motion.div>
+
+          {/* Widget Evolución del Rendimiento */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <WidgetRendimiento />
+          </motion.div>
+
+          {/* Widget Comentarios Recientes */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <WidgetComentarios />
+          </motion.div>
+
+          {/* Widget Insights IA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <WidgetIA />
+          </motion.div>
+
+          {/* Widget Rúbricas más usadas */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <WidgetRubricas />
+          </motion.div>
+
+          {/* Widget Evaluaciones Pendientes */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
+            <WidgetPendientes />
+          </motion.div>
+
+          {/* Widget Accesos Rápidos */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <WidgetAccesos />
+          </motion.div>
+
+          {/* Widget Noticias Educativas */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.9 }}
+            className="md:col-span-2"
+          >
+            <WidgetNoticias />
+          </motion.div>
+
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-sr+j3au1z1t+%602^k9ym*6&5r2jbogrn5ha$pz!f(bhcazgs0'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-sr+j3au1z1t+%602^k9ym*6&5r2jbogrn5ha$pz!f(bhcazgs0')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
 
 
 # Application definition
@@ -153,21 +154,31 @@ SIMPLE_JWT = {
 # CORS
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
-    'http://localhost:5174',  # Puerto alternativo cuando 5173 está ocupado
-    'http://localhost:3000',
     'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
 ]
-CORS_ALLOW_CREDENTIALS = True
 
-# Google Gemini AI Configuration
-GEMINI_API_KEY = 'AIzaSyDCwn_CO127mh1fPg1jrlHnfqMNCor_azg'
-GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
-GEMINI_DEFAULT_MODEL = 'gemini-pro'
-GEMINI_TIMEOUT = 30
-GEMINI_MAX_TOKENS = 2048
-GEMINI_MAX_PROMPT_LENGTH = 2000
-GEMINI_CACHE_TTL = 86400  # 24 horas
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+CORS_ALLOW_HEADERS = [
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
+]
+
+# OpenRouter AI Configuration (Multi-model AI service)
+OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='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')
+OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
+OPENROUTER_TIMEOUT = config('OPENROUTER_TIMEOUT', default=60, cast=int)
+OPENROUTER_CACHE_TTL = config('OPENROUTER_CACHE_TTL', default=86400, cast=int)
+
+# Modelos específicos para diferentes tareas
+QWEN_MODEL = config('QWEN_MODEL', default='qwen/qwen3-235b-a22b:free')  # Principal para rúbricas
+DEEPSEEK_MODEL = config('DEEPSEEK_MODEL', default='tngtech/deepseek-r1t2-chimera:free')  # Análisis y feedback
+GLM_MODEL = config('GLM_MODEL', default='z-ai/glm-4.5-air:free')  # Tareas rápidas
+
+# Google Cloud Vision OCR Configuration
+GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-education')
+GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
+GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
 # Cache Configuration
 CACHES = {

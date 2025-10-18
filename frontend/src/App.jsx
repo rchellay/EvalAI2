@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import StudentProfilePage from "./pages/StudentProfilePage";
+import StudentEvaluationPanel from "./pages/StudentEvaluationPanel";
 import StudentFormPage from "./pages/StudentFormPage";
 import SubjectsPage from "./pages/SubjectsPage";
 import GroupsPage from "./pages/GroupsPage";
@@ -15,6 +16,9 @@ import RubricApplyPage from "./pages/RubricApplyPage";
 import RubricResultsPage from "./pages/RubricResultsPage";
 import AttendancePage from "./pages/AttendancePage";
 import ProtectedRoute from './auth/ProtectedRoute';
+import InformesPage from './pages/InformesPage';
+import CorreccionPage from './pages/CorreccionPage';
+import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -107,7 +111,7 @@ function App() {
             <Route path="/estudiantes" element={<ProtectedRoute><Students /></ProtectedRoute>} />
             <Route path="/estudiantes/nuevo" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
             <Route path="/estudiantes/:id/editar" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
-            <Route path="/estudiantes/:id" element={<ProtectedRoute><StudentProfilePage /></ProtectedRoute>} />
+            <Route path="/estudiantes/:id" element={<ProtectedRoute><StudentEvaluationPanel /></ProtectedRoute>} />
             <Route path="/asignaturas" element={<ProtectedRoute><SubjectsPage /></ProtectedRoute>} />
             <Route path="/asignaturas/:id" element={<ProtectedRoute><SubjectDetailPage /></ProtectedRoute>} />
             <Route path="/grupos" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
@@ -121,9 +125,10 @@ function App() {
             <Route path="/rubricas/:id/resultados" element={<ProtectedRoute><RubricResultsPage /></ProtectedRoute>} />
             <Route path="/rubricas/resultados" element={<ProtectedRoute><RubricResultsPage /></ProtectedRoute>} />
             <Route path="/asistencia" element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
-            <Route path="/comentarios" element={<ProtectedRoute><PlaceholderPage title="Comentarios" /></ProtectedRoute>} />
+            <Route path="/correccion" element={<ProtectedRoute><CorreccionPage /></ProtectedRoute>} />
+            <Route path="/evidencias-correccion/:studentId" element={<ProtectedRoute><EvidenciasCorreccionPage /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
-            <Route path="/informes" element={<ProtectedRoute><PlaceholderPage title="Informes" /></ProtectedRoute>} />
+            <Route path="/informes" element={<ProtectedRoute><InformesPage /></ProtectedRoute>} />
             <Route path="/ajustes" element={<ProtectedRoute><PlaceholderPage title="Ajustes" /></ProtectedRoute>} />
           </Route>
         </Routes>

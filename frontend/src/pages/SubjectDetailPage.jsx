@@ -1,6 +1,6 @@
-// frontend/src/pages/SubjectDetailPage.jsx
+﻿// frontend/src/pages/SubjectDetailPage.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
 
@@ -18,18 +18,35 @@ const SubjectDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    loadSubjectDetails();
+    loadSubjectData();
   }, [id]);
 
-  const loadSubjectDetails = async () => {
+  const loadSubjectData = async () => {
     try {
-      const response = await api.get(`/subjects/${id}/`);
-      setSubject(response.data);
+      setLoading(true);
+      
+      // Cargar información básica de la asignatura
+      const subjectResponse = await api.get(`/subjects/${id}/`);
+      setSubject(subjectResponse.data);
+      
+      // Cargar grupos de la asignatura usando la nueva API
+      const groupsResponse = await api.get(`/asignaturas/${id}/grupos/`);
+      // Los grupos ya incluyen estudiantes a través del serializer
+      const groupsWithStudents = Array.isArray(groupsResponse.data) 
+        ? groupsResponse.data.map(group => ({
+            ...group,
+            students: Array.isArray(group.students) ? group.students : []
+          }))
+        : [];
+      
+      setGroups(groupsWithStudents);
     } catch (error) {
-      console.error('Error loading subject:', error);
+      console.error('Error loading subject data:', error);
       toast.error('Error al cargar la asignatura');
       navigate('/asignaturas');
     } finally {
@@ -37,182 +54,157 @@ const SubjectDetailPage = () => {
     }
   };
 
+  const handleEvaluateStudent = async (student) => {
+    // Navegar directamente al perfil contextual del estudiante
+    navigate(`/estudiantes/${student.id}?asignatura=${id}&fecha=${selectedDate}`);
+  };
+
+  const getAllStudents = () => {
+    if (!groups) return [];
+    const allStudents = [];
+    groups.forEach(group => {
+      if (group.students && Array.isArray(group.students)) {
+        group.students.forEach(student => {
+          if (!allStudents.find(s => s.id === student.id)) {
+            allStudents.push({ ...student, groupName: group.name });
+          }
+        });
+      }
+    });
+    return allStudents;
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center h-screen'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500'></div>
       </div>
     );
   }
 
   if (!subject) {
     return (
-      <div className="p-8">
-        <p className="text-red-600">Asignatura no encontrada</p>
+      <div className='p-8'>
+        <p className='text-red-600'>Asignatura no encontrada</p>
       </div>
     );
   }
 
-  return (
-    <div className="flex-1 p-8 overflow-y-auto bg-background-light dark:bg-background-dark">
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-6 text-sm">
-          <Link to="/asignaturas" className="text-primary hover:underline">
-            Asignaturas
-          </Link>
-          <span className="mx-2 text-gray-500">/</span>
-          <span className="text-gray-900 dark:text-white font-medium">{subject.name}</span>
-        </nav>
+  const allStudents = getAllStudents();
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+  return (
+    <div className='flex-1 p-6 overflow-y-auto bg-gray-50'>
+      <div className='max-w-7xl mx-auto'>
+        <div className='flex items-center justify-between mb-6'>
+          <div className='flex items-center gap-4'>
+            <button
+              onClick={() => navigate('/')}
+              className='p-2 bg-gray-200 rounded-lg transition text-gray-700'
+            >
+              <span className='material-symbols-outlined'>arrow_back</span>
+            </button>
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+              className='w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold text-white'
               style={{ backgroundColor: subject.color }}
             >
               {subject.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{subject.name}</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">{subject.course}</p>
-              {subject.description && (
-                <p className="text-gray-600 dark:text-gray-400 mt-2">{subject.description}</p>
-              )}
+              <h1 className='text-2xl font-bold text-gray-900'>{subject.name}</h1>
+              <p className='text-gray-600'>
+                {subject.days?.map(day => DAYS_OF_WEEK_ES[day]).join(', ')} •
+                {subject.start_time?.substring(0, 5)} - {subject.end_time?.substring(0, 5)}
+              </p>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/asignaturas')}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-          >
-            Volver
-          </button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Grupos</p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {subject.group_count || 0}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Estudiantes</p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {subject.student_count || 0}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Horarios</p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {subject.schedules?.length || 0}
-            </p>
+          <div className='flex items-center gap-4'>
+            <div className='text-sm'>
+              <label className='block text-gray-600 mb-1'>Fecha de evaluación</label>
+              <input
+                type='date'
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              />
+            </div>
           </div>
         </div>
 
-        {/* Schedules Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Horarios de clase
-          </h2>
-          <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-            {!subject.schedules || subject.schedules.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                No hay horarios definidos para esta asignatura.
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
+          <div className='bg-white p-6 rounded-lg shadow border'>
+            <p className='text-gray-600 text-sm'>Grupos</p>
+            <p className='text-3xl font-bold text-gray-900 mt-2'>
+              {groups?.length || 0}
+            </p>
+          </div>
+          <div className='bg-white p-6 rounded-lg shadow border'>
+            <p className='text-gray-600 text-sm'>Estudiantes</p>
+            <p className='text-3xl font-bold text-gray-900 mt-2'>
+              {allStudents.length}
+            </p>
+          </div>
+          <div className='bg-white p-6 rounded-lg shadow border'>
+            <p className='text-gray-600 text-sm'>Evaluaciones hoy</p>
+            <p className='text-3xl font-bold text-gray-900 mt-2'>
+              {allStudents.filter(student =>
+                student.recent_evaluations &&
+                student.recent_evaluations.some(evaluation => evaluation.date === selectedDate)
+              ).length}
+            </p>
+          </div>
+        </div>
+
+        <div className='space-y-6'>
+          {groups?.map(group => (
+            <div key={group.id} className='bg-white rounded-lg shadow border'>
+              <div className='p-6 border-b border-gray-200'>
+                <h2 className='text-xl font-bold text-gray-900'>{group.name}</h2>
+                <p className='text-gray-600'>{group.students?.length || 0} estudiantes</p>
               </div>
-            ) : (
-              <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                {subject.schedules.map((schedule, index) => (
-                  <div key={index} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-blue-600 dark:text-blue-300">
-                          schedule
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {DAYS_OF_WEEK_ES[schedule.day_of_week]}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)}
-                        </p>
-                      </div>
-                    </div>
+
+              <div className='p-6'>
+                {group.students && Array.isArray(group.students) && group.students.length > 0 ? (
+                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                    {group.students.map(student => {
+                      const todayEvaluation = student.recent_evaluations?.find(
+                        evaluation => evaluation.date === selectedDate && evaluation.subject === parseInt(id)
+                      );
+
+                      return (
+                        <div key={student.id} className='border border-gray-200 rounded-lg p-4'>
+                          <div className='flex items-center justify-between mb-3'>
+                            <div>
+                              <h3 className='font-semibold text-gray-900'>{student.name}</h3>
+                              <p className='text-sm text-gray-600'>{student.email}</p>
+                            </div>
+                            {todayEvaluation && (
+                              <div className='text-right'>
+                                <div className='text-lg font-bold text-blue-600'>
+                                  {todayEvaluation.score}/10
+                                </div>
+                                <div className='text-xs text-gray-500'>Evaluado</div>
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => handleEvaluateStudent(student)}
+                            className='w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2'
+                          >
+                            <span className='material-symbols-outlined text-sm'>person</span>
+                            {todayEvaluation ? 'Ver Evaluación' : 'Evaluar Estudiante'}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                ) : (
+                  <p className='text-gray-500 text-center py-8'>No hay estudiantes en este grupo</p>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* Groups Section */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Grupos ({subject.groups?.length || 0})
-          </h2>
-          <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-            {!subject.groups || subject.groups.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                Esta asignatura no está asignada a ningún grupo.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                {subject.groups.map((group) => (
-                  <Link
-                    key={group.id}
-                    to={`/grupos/${group.id}`}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: group.color }}
-                        ></div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{group.name}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {group.course} • {group.student_count} estudiantes
-                          </p>
-                        </div>
-                      </div>
-                      <span className="material-symbols-outlined text-gray-400">
-                        chevron_right
-                      </span>
-                    </div>
-
-                    {/* Students preview */}
-                    {group.students && group.students.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                          Estudiantes:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {group.students.slice(0, 5).map((student) => (
-                            <div
-                              key={student.id}
-                              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-700 dark:text-gray-300"
-                            >
-                              {student.name || student.username || 'Sin nombre'}
-                            </div>
-                          ))}
-                          {group.students.length > 5 && (
-                            <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-500">
-                              +{group.students.length - 5} más
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

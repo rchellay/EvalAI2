@@ -109,6 +109,9 @@ class GeminiClient:
             logger.warning("No hay API key configurada, usando fallback")
             return self._get_fallback_rubric(prompt, num_criteria, num_levels, max_score)
         
+        # FORZAR uso de IA - no usar fallback si hay API key
+        logger.info(f"Generando rúbrica con IA Gemini para: {prompt[:50]}...")
+        
         # Construir el prompt estructurado
         structured_prompt = self._build_prompt(prompt, language, num_criteria, num_levels, max_score)
         
@@ -133,9 +136,12 @@ class GeminiClient:
                 if attempt < max_retries - 1:
                     time.sleep(2 ** attempt)  # Backoff exponencial
         
-        # Si todos los intentos fallan, usar fallback
-        logger.warning("Todos los intentos fallaron, usando fallback")
-        return self._get_fallback_rubric(prompt, num_criteria, num_levels, max_score)
+        # Si todos los intentos fallan, usar fallback mejorado pero indicar que es fallback
+        logger.warning("Todos los intentos fallaron con la API de Gemini, usando fallback mejorado")
+        fallback_result = self._get_fallback_rubric(prompt, num_criteria, num_levels, max_score)
+        fallback_result['_is_fallback'] = True
+        fallback_result['_fallback_reason'] = "API de Gemini no disponible"
+        return fallback_result
     
     def _build_prompt(
         self,
@@ -276,26 +282,10 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional."""
         
         weight_per_criterion = round(100 / num_criteria, 1)
         colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
-        level_names = ['Excelente', 'Bueno', 'Satisfactorio', 'Mejorable', 'Insuficiente']
+        level_names = ['Excelente', 'Bueno', 'Satisfactorio', 'Necesita mejorar', 'Insuficiente']
         
-        criteria = []
-        for i in range(num_criteria):
-            levels = []
-            for j in range(num_levels):
-                score = max_score * (1 - (j / num_levels))
-                levels.append({
-                    'name': level_names[j] if j < len(level_names) else f'Nivel {j+1}',
-                    'description': f'Descripción del nivel {j+1}',
-                    'score': round(score, 1),
-                    'color': colors[j] if j < len(colors) else '#6b7280'
-                })
-            
-            criteria.append({
-                'name': f'Criterio {i+1}',
-                'description': f'Descripción del criterio {i+1}',
-                'weight': weight_per_criterion,
-                'levels': levels
-            })
+        # Generar criterios específicos basados en el prompt
+        criteria = self._generate_specific_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
         
         return {
             'title': f'Rúbrica: {prompt[:50]}',
@@ -304,3 +294,473 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional."""
             '_is_fallback': True,
             '_from_cache': False
         }
+    
+    def _generate_specific_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                  num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos basados en el prompt"""
+        
+        # Analizar el prompt para generar criterios específicos
+        prompt_lower = prompt.lower()
+        
+        # Detectar tipo de contenido
+        if any(word in prompt_lower for word in ['presentación', 'oral', 'exposición', 'hablar']):
+            return self._generate_presentation_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['escrito', 'redacción', 'composición', 'texto']):
+            return self._generate_writing_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['proyecto', 'investigación', 'trabajo']):
+            return self._generate_project_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['geografía', 'comarques', 'catalunya', 'región', 'territorio']):
+            return self._generate_geography_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['historia', 'histórico', 'época', 'siglo']):
+            return self._generate_history_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['ciencia', 'científico', 'experimento', 'laboratorio']):
+            return self._generate_science_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        elif any(word in prompt_lower for word in ['matemática', 'matemáticas', 'cálculo', 'problema']):
+            return self._generate_math_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+        else:
+            return self._generate_general_criteria(prompt, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_geography_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                   num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para geografía"""
+        criteria_templates = [
+            {
+                'name': 'Conocimiento geográfico',
+                'description': 'Demuestra conocimiento preciso de la ubicación, características físicas y datos geográficos',
+                'levels': [
+                    'Conocimiento exhaustivo y preciso de todos los elementos geográficos',
+                    'Conocimiento sólido con algunos detalles menores',
+                    'Conocimiento básico con algunas imprecisiones',
+                    'Conocimiento limitado con errores significativos',
+                    'Conocimiento insuficiente o incorrecto'
+                ]
+            },
+            {
+                'name': 'Análisis territorial',
+                'description': 'Analiza correctamente las características socioeconómicas y culturales del territorio',
+                'levels': [
+                    'Análisis profundo y bien fundamentado con múltiples perspectivas',
+                    'Análisis sólido con buena fundamentación',
+                    'Análisis básico con fundamentación limitada',
+                    'Análisis superficial con poca fundamentación',
+                    'Análisis insuficiente o sin fundamentación'
+                ]
+            },
+            {
+                'name': 'Organización espacial',
+                'description': 'Presenta la información de manera clara y organizada espacialmente',
+                'levels': [
+                    'Organización excelente con estructura lógica y clara',
+                    'Organización buena con estructura coherente',
+                    'Organización aceptable con algunas inconsistencias',
+                    'Organización básica con estructura confusa',
+                    'Organización deficiente sin estructura clara'
+                ]
+            },
+            {
+                'name': 'Uso de recursos cartográficos',
+                'description': 'Utiliza mapas, gráficos y recursos visuales de manera efectiva',
+                'levels': [
+                    'Uso excelente de recursos visuales con interpretación precisa',
+                    'Uso bueno de recursos con interpretación adecuada',
+                    'Uso básico de recursos con interpretación limitada',
+                    'Uso mínimo de recursos con interpretación deficiente',
+                    'Uso insuficiente o incorrecto de recursos'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_presentation_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                      num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para presentaciones orales"""
+        criteria_templates = [
+            {
+                'name': 'Contenido y conocimiento',
+                'description': 'Demuestra dominio del tema y presenta información relevante y precisa',
+                'levels': [
+                    'Dominio excepcional con información completa y precisa',
+                    'Buen dominio con información relevante',
+                    'Dominio básico con información adecuada',
+                    'Dominio limitado con información insuficiente',
+                    'Dominio insuficiente con información incorrecta'
+                ]
+            },
+            {
+                'name': 'Comunicación oral',
+                'description': 'Se expresa con claridad, fluidez y uso apropiado del lenguaje',
+                'levels': [
+                    'Comunicación excelente con fluidez y claridad excepcional',
+                    'Comunicación buena con fluidez y claridad adecuada',
+                    'Comunicación aceptable con algunas dificultades',
+                    'Comunicación básica con dificultades evidentes',
+                    'Comunicación deficiente con problemas graves'
+                ]
+            },
+            {
+                'name': 'Estructura y organización',
+                'description': 'Organiza la presentación de manera lógica y coherente',
+                'levels': [
+                    'Estructura excelente con organización lógica perfecta',
+                    'Estructura buena con organización coherente',
+                    'Estructura aceptable con organización básica',
+                    'Estructura limitada con organización confusa',
+                    'Estructura deficiente sin organización clara'
+                ]
+            },
+            {
+                'name': 'Recursos y apoyo visual',
+                'description': 'Utiliza recursos visuales y de apoyo de manera efectiva',
+                'levels': [
+                    'Uso excelente de recursos con gran impacto visual',
+                    'Uso bueno de recursos con impacto adecuado',
+                    'Uso básico de recursos con impacto limitado',
+                    'Uso mínimo de recursos con poco impacto',
+                    'Uso insuficiente o inadecuado de recursos'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_writing_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                 num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para escritura"""
+        criteria_templates = [
+            {
+                'name': 'Contenido y desarrollo',
+                'description': 'Desarrolla ideas de manera coherente y con profundidad',
+                'levels': [
+                    'Desarrollo excepcional con ideas profundas y bien desarrolladas',
+                    'Desarrollo sólido con ideas bien estructuradas',
+                    'Desarrollo básico con ideas adecuadas',
+                    'Desarrollo limitado con ideas superficiales',
+                    'Desarrollo insuficiente con ideas confusas'
+                ]
+            },
+            {
+                'name': 'Estructura y organización',
+                'description': 'Organiza el texto de manera lógica y coherente',
+                'levels': [
+                    'Estructura excelente con organización perfecta',
+                    'Estructura buena con organización coherente',
+                    'Estructura aceptable con organización básica',
+                    'Estructura limitada con organización confusa',
+                    'Estructura deficiente sin organización clara'
+                ]
+            },
+            {
+                'name': 'Expresión y estilo',
+                'description': 'Utiliza un lenguaje apropiado y variado',
+                'levels': [
+                    'Expresión excelente con lenguaje rico y variado',
+                    'Expresión buena con lenguaje apropiado',
+                    'Expresión aceptable con lenguaje básico',
+                    'Expresión limitada con lenguaje pobre',
+                    'Expresión deficiente con lenguaje inadecuado'
+                ]
+            },
+            {
+                'name': 'Ortografía y gramática',
+                'description': 'Maneja correctamente la ortografía y gramática',
+                'levels': [
+                    'Ortografía y gramática perfectas',
+                    'Ortografía y gramática correctas con errores menores',
+                    'Ortografía y gramática aceptables con algunos errores',
+                    'Ortografía y gramática limitadas con errores frecuentes',
+                    'Ortografía y gramática deficientes con muchos errores'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_project_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                  num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para proyectos"""
+        criteria_templates = [
+            {
+                'name': 'Planificación y metodología',
+                'description': 'Demuestra una planificación adecuada y metodología clara',
+                'levels': [
+                    'Planificación excelente con metodología perfecta',
+                    'Planificación buena con metodología adecuada',
+                    'Planificación básica con metodología simple',
+                    'Planificación limitada con metodología confusa',
+                    'Planificación deficiente sin metodología clara'
+                ]
+            },
+            {
+                'name': 'Investigación y fuentes',
+                'description': 'Utiliza fuentes apropiadas y realiza investigación adecuada',
+                'levels': [
+                    'Investigación exhaustiva con fuentes excelentes',
+                    'Investigación sólida con fuentes apropiadas',
+                    'Investigación básica con fuentes limitadas',
+                    'Investigación superficial con fuentes inadecuadas',
+                    'Investigación insuficiente sin fuentes apropiadas'
+                ]
+            },
+            {
+                'name': 'Creatividad e innovación',
+                'description': 'Muestra originalidad y enfoque innovador',
+                'levels': [
+                    'Creatividad excepcional con enfoque muy innovador',
+                    'Creatividad buena con enfoque original',
+                    'Creatividad básica con algunos elementos nuevos',
+                    'Creatividad limitada con enfoque convencional',
+                    'Creatividad insuficiente sin elementos innovadores'
+                ]
+            },
+            {
+                'name': 'Presentación y comunicación',
+                'description': 'Presenta el proyecto de manera clara y efectiva',
+                'levels': [
+                    'Presentación excelente con comunicación perfecta',
+                    'Presentación buena con comunicación clara',
+                    'Presentación aceptable con comunicación básica',
+                    'Presentación limitada con comunicación confusa',
+                    'Presentación deficiente sin comunicación clara'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_history_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                 num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para historia"""
+        criteria_templates = [
+            {
+                'name': 'Conocimiento histórico',
+                'description': 'Demuestra conocimiento preciso de hechos, fechas y contextos históricos',
+                'levels': [
+                    'Conocimiento exhaustivo y preciso de todos los elementos históricos',
+                    'Conocimiento sólido con algunos detalles menores',
+                    'Conocimiento básico con algunas imprecisiones',
+                    'Conocimiento limitado con errores significativos',
+                    'Conocimiento insuficiente o incorrecto'
+                ]
+            },
+            {
+                'name': 'Análisis histórico',
+                'description': 'Analiza causas, consecuencias y relaciones históricas',
+                'levels': [
+                    'Análisis profundo con comprensión de múltiples causas y efectos',
+                    'Análisis sólido con buena comprensión de relaciones',
+                    'Análisis básico con comprensión limitada',
+                    'Análisis superficial con poca comprensión',
+                    'Análisis insuficiente sin comprensión clara'
+                ]
+            },
+            {
+                'name': 'Interpretación de fuentes',
+                'description': 'Utiliza y analiza fuentes históricas de manera crítica',
+                'levels': [
+                    'Interpretación excelente con análisis crítico profundo',
+                    'Interpretación buena con análisis crítico adecuado',
+                    'Interpretación básica con análisis limitado',
+                    'Interpretación superficial con análisis deficiente',
+                    'Interpretación insuficiente sin análisis crítico'
+                ]
+            },
+            {
+                'name': 'Contextualización temporal',
+                'description': 'Ubica los hechos en su contexto temporal y espacial',
+                'levels': [
+                    'Contextualización excelente con ubicación perfecta',
+                    'Contextualización buena con ubicación adecuada',
+                    'Contextualización básica con ubicación limitada',
+                    'Contextualización superficial con ubicación confusa',
+                    'Contextualización insuficiente sin ubicación clara'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_science_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                  num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para ciencias"""
+        criteria_templates = [
+            {
+                'name': 'Conocimiento científico',
+                'description': 'Demuestra comprensión de conceptos, principios y teorías científicas',
+                'levels': [
+                    'Conocimiento exhaustivo con comprensión profunda de conceptos',
+                    'Conocimiento sólido con buena comprensión',
+                    'Conocimiento básico con comprensión limitada',
+                    'Conocimiento superficial con comprensión deficiente',
+                    'Conocimiento insuficiente sin comprensión clara'
+                ]
+            },
+            {
+                'name': 'Metodología científica',
+                'description': 'Aplica correctamente el método científico y procedimientos',
+                'levels': [
+                    'Metodología excelente con aplicación perfecta del método científico',
+                    'Metodología buena con aplicación adecuada',
+                    'Metodología básica con aplicación limitada',
+                    'Metodología superficial con aplicación deficiente',
+                    'Metodología insuficiente sin aplicación clara'
+                ]
+            },
+            {
+                'name': 'Análisis de datos',
+                'description': 'Analiza datos, resultados y evidencia de manera crítica',
+                'levels': [
+                    'Análisis excelente con interpretación precisa de datos',
+                    'Análisis bueno con interpretación adecuada',
+                    'Análisis básico con interpretación limitada',
+                    'Análisis superficial con interpretación deficiente',
+                    'Análisis insuficiente sin interpretación clara'
+                ]
+            },
+            {
+                'name': 'Comunicación científica',
+                'description': 'Comunica hallazgos científicos de manera clara y precisa',
+                'levels': [
+                    'Comunicación excelente con precisión científica perfecta',
+                    'Comunicación buena con precisión adecuada',
+                    'Comunicación básica con precisión limitada',
+                    'Comunicación superficial con precisión deficiente',
+                    'Comunicación insuficiente sin precisión científica'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_math_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                               num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios específicos para matemáticas"""
+        criteria_templates = [
+            {
+                'name': 'Comprensión conceptual',
+                'description': 'Demuestra comprensión de conceptos y principios matemáticos',
+                'levels': [
+                    'Comprensión excepcional con dominio completo de conceptos',
+                    'Comprensión sólida con buen dominio',
+                    'Comprensión básica con dominio limitado',
+                    'Comprensión superficial con dominio mínimo',
+                    'Comprensión insuficiente sin dominio de conceptos'
+                ]
+            },
+            {
+                'name': 'Resolución de problemas',
+                'description': 'Aplica estrategias apropiadas para resolver problemas',
+                'levels': [
+                    'Resolución excelente con estrategias múltiples y efectivas',
+                    'Resolución buena con estrategias apropiadas',
+                    'Resolución básica con estrategias limitadas',
+                    'Resolución superficial con estrategias inadecuadas',
+                    'Resolución insuficiente sin estrategias claras'
+                ]
+            },
+            {
+                'name': 'Precisión y exactitud',
+                'description': 'Realiza cálculos y operaciones con precisión',
+                'levels': [
+                    'Precisión perfecta en todos los cálculos',
+                    'Precisión buena con errores menores',
+                    'Precisión básica con algunos errores',
+                    'Precisión limitada con errores frecuentes',
+                    'Precisión deficiente con muchos errores'
+                ]
+            },
+            {
+                'name': 'Comunicación matemática',
+                'description': 'Explica procesos y resultados de manera clara',
+                'levels': [
+                    'Comunicación excelente con explicaciones perfectas',
+                    'Comunicación buena con explicaciones claras',
+                    'Comunicación básica con explicaciones limitadas',
+                    'Comunicación superficial con explicaciones confusas',
+                    'Comunicación insuficiente sin explicaciones claras'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _generate_general_criteria(self, prompt: str, num_criteria: int, weight_per_criterion: float, 
+                                 num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Genera criterios generales cuando no se puede determinar el tipo específico"""
+        criteria_templates = [
+            {
+                'name': 'Comprensión del contenido',
+                'description': f'Demuestra comprensión profunda del tema: {prompt[:30]}...',
+                'levels': [
+                    'Comprensión excepcional con dominio completo del tema',
+                    'Comprensión sólida con buen dominio del tema',
+                    'Comprensión básica con dominio limitado',
+                    'Comprensión superficial con dominio mínimo',
+                    'Comprensión insuficiente sin dominio del tema'
+                ]
+            },
+            {
+                'name': 'Organización y estructura',
+                'description': 'Presenta la información de manera clara y organizada',
+                'levels': [
+                    'Organización excelente con estructura perfecta',
+                    'Organización buena con estructura coherente',
+                    'Organización aceptable con estructura básica',
+                    'Organización limitada con estructura confusa',
+                    'Organización deficiente sin estructura clara'
+                ]
+            },
+            {
+                'name': 'Creatividad e innovación',
+                'description': 'Muestra originalidad y pensamiento creativo en el enfoque',
+                'levels': [
+                    'Creatividad excepcional con enfoque innovador',
+                    'Creatividad buena con enfoque original',
+                    'Creatividad básica con algunos elementos nuevos',
+                    'Creatividad limitada con enfoque convencional',
+                    'Creatividad insuficiente sin elementos innovadores'
+                ]
+            },
+            {
+                'name': 'Comunicación efectiva',
+                'description': 'Comunica ideas de forma clara y persuasiva',
+                'levels': [
+                    'Comunicación excelente con gran claridad y persuasión',
+                    'Comunicación buena con claridad y persuasión adecuada',
+                    'Comunicación aceptable con claridad básica',
+                    'Comunicación limitada con claridad deficiente',
+                    'Comunicación insuficiente sin claridad'
+                ]
+            }
+        ]
+        
+        return self._build_criteria_from_templates(criteria_templates, num_criteria, weight_per_criterion, num_levels, max_score, colors, level_names)
+    
+    def _build_criteria_from_templates(self, templates: list, num_criteria: int, weight_per_criterion: float, 
+                                     num_levels: int, max_score: int, colors: list, level_names: list) -> list:
+        """Construye criterios a partir de plantillas"""
+        criteria = []
+        
+        for i in range(num_criteria):
+            template = templates[i] if i < len(templates) else templates[0]
+            
+            levels = []
+            for j in range(num_levels):
+                score = max_score * (1 - (j / num_levels))
+                level_description = template['levels'][j] if j < len(template['levels']) else template['levels'][-1]
+                
+                levels.append({
+                    'name': level_names[j] if j < len(level_names) else f'Nivel {j+1}',
+                    'description': level_description,
+                    'score': round(score, 1),
+                    'color': colors[j] if j < len(colors) else '#6b7280'
+                })
+            
+            criteria.append({
+                'name': template['name'],
+                'description': template['description'],
+                'weight': weight_per_criterion,
+                'levels': levels
+            })
+        
+        return criteria

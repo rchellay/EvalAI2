@@ -93,7 +93,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
               <span className="material-symbols-outlined text-4xl">auto_awesome</span>
               <div>
                 <h2 className="text-2xl font-bold">Generar con IA</h2>
-                <p className="text-purple-100 text-sm mt-1">Powered by Google Gemini</p>
+                <p className="text-purple-100 text-sm mt-1">Powered by OpenRouter AI (Qwen3-235B)</p>
               </div>
             </div>
             <button
@@ -269,7 +269,7 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
                         {idx + 1}. {criterion.name}
                       </h4>
                       <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
-                        {(criterion.weight * 100).toFixed(0)}%
+                        {criterion.weight}%
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-3">{criterion.description}</p>

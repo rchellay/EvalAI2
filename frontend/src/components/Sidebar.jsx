@@ -6,14 +6,14 @@ import {
   Users, 
   UsersRound,
   ClipboardList, 
-  MessageSquare, 
   Calendar, 
   BarChart3, 
   Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  ClipboardCheck
+  ClipboardCheck,
+  BookOpen
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,7 +22,7 @@ const menuItems = [
   { path: '/grupos', icon: UsersRound, label: 'Grupos' },
   { path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia' },
   { path: '/rubricas', icon: ClipboardList, label: 'Rúbricas' },
-  { path: '/comentarios', icon: MessageSquare, label: 'Comentarios' },
+  { path: '/correccion', icon: BookOpen, label: 'Corrección' },
   { path: '/calendario', icon: Calendar, label: 'Calendario' },
   { path: '/informes', icon: BarChart3, label: 'Informes' },
   { path: '/ajustes', icon: Settings, label: 'Ajustes' },

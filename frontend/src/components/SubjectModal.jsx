@@ -109,13 +109,14 @@ const SubjectModal = ({ subject, onClose }) => {
       const startTime = firstSchedule.start_time ? firstSchedule.start_time + ':00' : '09:00:00';
       const endTime = firstSchedule.end_time ? firstSchedule.end_time + ':00' : '10:00:00';
 
-      // Backend expects: name, days, start_time, end_time, color
+      // Backend expects: name, days, start_time, end_time, color, group_ids
       const payload = {
         name: formData.name,
         days: days,
         start_time: startTime,
         end_time: endTime,
-        color: formData.color
+        color: formData.color,
+        group_ids: formData.group_ids
       };
 
       if (subject) {

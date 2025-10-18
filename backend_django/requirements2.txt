@@ -1,9 +1,0 @@
-Django==5.0.1
-djangorestframework==3.14.0
-djangorestframework-simplejwt==5.3.1
-django-cors-headers==4.3.1
-psycopg==3.1.18
-python-decouple==3.8
-Pillow
-python-dateutil==2.8.2
-pytz==2024.1
