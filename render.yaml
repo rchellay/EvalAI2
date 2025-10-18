@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: evalai-backend
+    env: python
+    plan: free
+    rootDir: backend_django
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: evalai-backend.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: evalai-db
+          property: connectionString
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: GOOGLE_CLOUD_PROJECT_ID
+        sync: false
+      - key: GOOGLE_CLOUD_API_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://evalai-frontend.vercel.app
+      - key: LANGUAGE_TOOL_API_URL
+        value: https://api.languagetool.org/v2/check
+
+  - type: pserv
+    name: evalai-db
+    env: postgresql
+    plan: free

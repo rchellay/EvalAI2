@@ -1,0 +1,60 @@
+# EvalAI - Variables de Entorno para Producción
+# Copia este archivo como .env y configura tus claves reales
+
+# ===========================================
+# CONFIGURACIÓN DE DJANGO
+# ===========================================
+SECRET_KEY=tu-clave-secreta-django-muy-segura-aqui
+DEBUG=False
+ALLOWED_HOSTS=evalai-backend.onrender.com,localhost,127.0.0.1
+
+# ===========================================
+# CONFIGURACIÓN DE BASE DE DATOS
+# ===========================================
+# Render proporcionará automáticamente DATABASE_URL
+DATABASE_URL=postgresql://usuario:password@host:puerto/database
+
+# ===========================================
+# CONFIGURACIÓN DE CORS
+# ===========================================
+CORS_ALLOWED_ORIGINS=https://evalai-frontend.vercel.app,http://localhost:5173
+
+# ===========================================
+# CONFIGURACIÓN DE IA (OpenRouter)
+# ===========================================
+OPENROUTER_API_KEY=tu-clave-openrouter-aqui
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_TIMEOUT=60
+OPENROUTER_CACHE_TTL=86400
+
+# Modelos específicos
+QWEN_MODEL=qwen/qwen3-235b-a22b:free
+DEEPSEEK_MODEL=tngtech/deepseek-r1t2-chimera:free
+GLM_MODEL=z-ai/glm-4.5-air:free
+
+# ===========================================
+# CONFIGURACIÓN DE TRANSCRIPCIÓN (Hugging Face)
+# ===========================================
+HUGGINGFACE_API_KEY=tu-clave-huggingface-aqui
+HUGGINGFACE_TIMEOUT=60
+HUGGINGFACE_MAX_FILE_SIZE=26214400
+
+# ===========================================
+# CONFIGURACIÓN DE OCR (Google Cloud Vision)
+# ===========================================
+GOOGLE_CLOUD_PROJECT_ID=tu-proyecto-google-aqui
+GOOGLE_CLOUD_API_KEY=tu-clave-google-cloud-aqui
+GOOGLE_VISION_MAX_FILE_SIZE=20971520
+
+# ===========================================
+# CONFIGURACIÓN DE CORRECCIÓN DE TEXTO
+# ===========================================
+LANGUAGETOOL_API_URL=https://api.languagetool.org/v2/check
+
+# ===========================================
+# CONFIGURACIÓN DE ARCHIVOS MEDIA
+# ===========================================
+MEDIA_ROOT=media/
+MEDIA_URL=/media/
+STATIC_ROOT=staticfiles/
+STATIC_URL=/static/
