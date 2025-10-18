@@ -3,12 +3,12 @@ services:
     name: evalai-backend
     env: python
     plan: free
-    rootDir: backend_django
     buildCommand: |
+      cd backend_django
       pip install -r requirements.txt
       python manage.py migrate
       python manage.py collectstatic --noinput
-    startCommand: gunicorn config.wsgi:application
+    startCommand: cd backend_django && gunicorn config.wsgi:application
     envVars:
       - key: DEBUG
         value: False
