@@ -165,7 +165,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # OpenRouter AI Configuration (Multi-model AI service)
-OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='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')
+OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
 OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
 OPENROUTER_TIMEOUT = config('OPENROUTER_TIMEOUT', default=60, cast=int)
 OPENROUTER_CACHE_TTL = config('OPENROUTER_CACHE_TTL', default=86400, cast=int)

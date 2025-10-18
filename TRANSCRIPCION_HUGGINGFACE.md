@@ -37,7 +37,7 @@ EvalAI ahora utiliza **Hugging Face Whisper** para transcripción de audio, reem
 
 ```python
 # Hugging Face Whisper Configuration
-HUGGINGFACE_API_KEY = "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"
+HUGGINGFACE_API_KEY = "tu-clave-huggingface-aqui"
 HUGGINGFACE_TIMEOUT = 60  # segundos
 HUGGINGFACE_MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
 ```

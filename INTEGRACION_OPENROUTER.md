@@ -53,7 +53,7 @@ EvalAI ahora utiliza **OpenRouter** como plataforma unificada para acceder a mú
 
 ```python
 # OpenRouter AI Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "tu-clave-openrouter-aqui"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_TIMEOUT = 60
 OPENROUTER_CACHE_TTL = 86400  # 24 horas

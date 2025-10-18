@@ -119,12 +119,41 @@ npm install
 npm run dev
 ```
 
-### **4. Acceder al Sistema**
+### **4. Configurar Variables de Entorno**
+```bash
+# Copiar archivo de ejemplo
+cp .env.example .env
+
+# Editar con tus claves reales
+# NUNCA subas el archivo .env a Git
+```
+
+### **5. Acceder al Sistema**
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:8000
 - **Admin**: http://localhost:8000/admin
 
 ## 🔧 Configuración de Servicios Externos
+
+> ⚠️ **IMPORTANTE**: Nunca subas claves API reales a Git. Usa variables de entorno.
+
+## 🔒 Seguridad y Variables de Entorno
+
+### **Configuración Segura**
+1. **Copia el archivo de ejemplo**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edita `.env` con tus claves reales**:
+   ```bash
+   # Nunca subas este archivo a Git
+   OPENROUTER_API_KEY=tu-clave-real-aqui
+   HUGGINGFACE_API_KEY=tu-clave-real-aqui
+   GOOGLE_CLOUD_PROJECT_ID=tu-proyecto-real
+   ```
+
+3. **El archivo `.env` está excluido de Git** por seguridad
 
 ### **LanguageTool (Gratuito)**
 ```python
