@@ -169,11 +169,8 @@ class SubjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusuarios ven todas las asignaturas, profesores solo las suyas
         if self.request.user.is_superuser:
-            return Subject.objects.all().prefetch_related('groups__students', 'groups__subjects')
-        return Subject.objects.filter(teacher=self.request.user).prefetch_related(
-            'groups__students',
-            'groups__subjects'
-        )
+            return Subject.objects.all()
+        return Subject.objects.filter(teacher=self.request.user)
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -248,9 +245,9 @@ class GroupViewSet(viewsets.ModelViewSet):
         # Mostrar grupos del profesor autenticado
         if self.request.user.is_superuser:
             # Los superusuarios ven todos los grupos
-            return Group.objects.all().prefetch_related('students', 'subjects')
+            return Group.objects.all()
         # Los profesores ven solo sus grupos
-        return Group.objects.filter(teacher=self.request.user).prefetch_related('students', 'subjects')
+        return Group.objects.filter(teacher=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -275,9 +272,9 @@ class RubricViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusuarios ven todas las rúbricas, profesores solo las suyas
         if self.request.user.is_superuser:
-            queryset = Rubric.objects.all().prefetch_related('criteria__levels')
+            queryset = Rubric.objects.all()
         else:
-            queryset = Rubric.objects.filter(teacher=self.request.user).prefetch_related('criteria__levels')
+            queryset = Rubric.objects.filter(teacher=self.request.user)
         
         status_filter = self.request.query_params.get('status', None)
         subject_id = self.request.query_params.get('subject_id', None)
@@ -1135,8 +1132,8 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusuarios ven todos los objetivos, profesores solo los suyos
         if self.request.user.is_superuser:
-            return Objective.objects.all().select_related('student', 'subject')
-        return Objective.objects.filter(created_by=self.request.user).select_related('student', 'subject')
+            return Objective.objects.all()
+        return Objective.objects.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -1150,8 +1147,8 @@ class EvidenceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusuarios ven todas las evidencias, profesores solo las suyas
         if self.request.user.is_superuser:
-            return Evidence.objects.all().select_related('student', 'subject')
-        return Evidence.objects.filter(uploaded_by=self.request.user).select_related('student', 'subject')
+            return Evidence.objects.all()
+        return Evidence.objects.filter(uploaded_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
@@ -1174,10 +1171,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusuarios ven todas las notificaciones, usuarios normales solo las suyas
         if self.request.user.is_superuser:
-            return Notification.objects.all().select_related('recipient', 'related_student', 'related_objective')
-        return Notification.objects.filter(recipient=self.request.user).select_related(
-            'recipient', 'related_student', 'related_objective'
-        )
+            return Notification.objects.all()
+        return Notification.objects.filter(recipient=self.request.user)
 
     def perform_create(self, serializer):
         # Asignar el usuario actual como recipient por defecto
