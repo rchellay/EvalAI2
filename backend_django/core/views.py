@@ -238,11 +238,16 @@ class SubjectViewSet(viewsets.ModelViewSet):
 
 
 class GroupViewSet(viewsets.ModelViewSet):
-    def get_queryset(self):
-        # Solo mostrar grupos que contengan asignaturas del profesor autenticado
-        return Group.objects.filter(subjects__teacher=self.request.user).distinct()
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Mostrar grupos del profesor autenticado
+        if self.request.user.is_superuser:
+            # Los superusuarios ven todos los grupos
+            return Group.objects.all().prefetch_related('students', 'subjects')
+        # Los profesores ven solo sus grupos
+        return Group.objects.filter(teacher=self.request.user).prefetch_related('students', 'subjects')
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -1647,11 +1652,13 @@ def student_analytics_data(request, student_id):
         # Datos de evaluaciones por mes (últimos 6 meses)
         six_months_ago = timezone.now().date() - timedelta(days=180)
 
+        from django.db.models.functions import TruncMonth
+        
         evaluations_by_month = Evaluation.objects.filter(
             student=student,
             date__gte=six_months_ago
-        ).extra(
-            select={'month': "strftime('%%Y-%%m', date)"}
+        ).annotate(
+            month=TruncMonth('date')
         ).values('month').annotate(
             count=Count('id'),
             avg_score=Avg('score')
@@ -1661,7 +1668,7 @@ def student_analytics_data(request, student_id):
         evaluation_trend = []
         for item in evaluations_by_month:
             evaluation_trend.append({
-                'month': item['month'],
+                'month': item['month'].strftime('%Y-%m') if item['month'] else None,
                 'count': item['count'],
                 'avg_score': round(float(item['avg_score']), 1) if item['avg_score'] else None
             })
@@ -1713,11 +1720,13 @@ def student_analytics_data(request, student_id):
             })
 
         # Autoevaluaciones por mes
+        from django.db.models.functions import TruncMonth
+        
         self_evaluations_by_month = SelfEvaluation.objects.filter(
             student=student,
             created_at__gte=six_months_ago
-        ).extra(
-            select={'month': "strftime('%%Y-%%m', created_at)"}
+        ).annotate(
+            month=TruncMonth('created_at')
         ).values('month').annotate(
             count=Count('id'),
             avg_score=Avg('score')
@@ -1726,7 +1735,7 @@ def student_analytics_data(request, student_id):
         self_evaluation_trend = []
         for item in self_evaluations_by_month:
             self_evaluation_trend.append({
-                'month': item['month'],
+                'month': item['month'].strftime('%Y-%m') if item['month'] else None,
                 'count': item['count'],
                 'avg_score': round(float(item['avg_score']), 1) if item['avg_score'] else None
             })
@@ -1845,6 +1854,8 @@ def proximas_clases(request):
 def evolucion_rendimiento(request):
     """Evolución del rendimiento de los últimos 30 días"""
     try:
+        from django.db.models.functions import TruncDate
+        
         thirty_days_ago = timezone.now().date() - timedelta(days=30)
         subject_id = request.GET.get('subject_id')
         
@@ -1857,9 +1868,9 @@ def evolucion_rendimiento(request):
         if subject_id:
             evaluations_filter = evaluations_filter.filter(subject_id=subject_id)
         
-        # Agrupar por día y calcular promedio
-        evolucion_data = evaluations_filter.extra(
-            select={'day': "strftime('%%Y-%%m-%%d', created_at)"}
+        # Agrupar por día y calcular promedio (compatible con PostgreSQL)
+        evolucion_data = evaluations_filter.annotate(
+            day=TruncDate('created_at')
         ).values('day').annotate(
             avg_score=Avg('score'),
             total_evaluations=Count('id')
@@ -1869,7 +1880,7 @@ def evolucion_rendimiento(request):
         chart_data = []
         for item in evolucion_data:
             chart_data.append({
-                'date': item['day'],
+                'date': item['day'].strftime('%Y-%m-%d') if item['day'] else None,
                 'avg_score': round(float(item['avg_score']), 1),
                 'total_evaluations': item['total_evaluations']
             })
