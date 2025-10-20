@@ -181,11 +181,8 @@ class SubjectViewSet(viewsets.ModelViewSet):
         return SubjectDetailSerializer
 
     def perform_create(self, serializer):
-        # Si el superusuario no especifica teacher, usar el usuario actual
-        if not serializer.validated_data.get('teacher'):
-            serializer.save(teacher=self.request.user)
-        else:
-            serializer.save()
+        # Siempre asignar el usuario actual como teacher
+        serializer.save(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='calendar-events')
     def calendar_events(self, request, pk=None):
@@ -1183,11 +1180,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        # Si no se especifica recipient, usar el usuario actual
-        if not serializer.validated_data.get('recipient'):
-            serializer.save(recipient=self.request.user)
-        else:
-            serializer.save()
+        # Asignar el usuario actual como recipient por defecto
+        serializer.save(recipient=self.request.user)
 
     @action(detail=True, methods=['post'])
     def mark_as_read(self, request, pk=None):
