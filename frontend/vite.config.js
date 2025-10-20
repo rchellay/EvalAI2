@@ -22,6 +22,6 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://evalai-backend.onrender.com'),
+    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://evalai2.onrender.com/api'),
   },
 });
