@@ -24,11 +24,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-sr+j3au1z1t+%602^k9ym*6&5r2jbogrn5ha$pz!f(bhcazgs0')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,evalai2.onrender.com').split(',')
+# Hosts permitidos - Configuración para producción y desarrollo
+if DEBUG:
+    # Desarrollo local
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+else:
+    # Producción en Render
+    ALLOWED_HOSTS = [
+        'evalai2.onrender.com',
+        'www.evalai2.onrender.com',
+    ]
 
-# Configuración para HTTPS en Render
+# Detectar solicitudes HTTPS detrás de proxy (necesario para Render)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -140,9 +149,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
+if DEBUG:
+    # Desarrollo: permitir todas las solicitudes locales
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # Producción: solo dominios específicos
+    CORS_ALLOWED_ORIGINS = [
+        'https://evalai2.onrender.com',
+        'https://www.evalai2.onrender.com',
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Solo en desarrollo
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -165,13 +183,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-# CORS
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
-
-CORS_ALLOW_CREDENTIALS = True
+# Configuración adicional de CORS
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
 CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization', 'content-type',
