@@ -167,7 +167,9 @@ class SubjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Solo mostrar asignaturas del profesor autenticado
+        # Superusuarios ven todas las asignaturas, profesores solo las suyas
+        if self.request.user.is_superuser:
+            return Subject.objects.all().prefetch_related('groups__students', 'groups__subjects')
         return Subject.objects.filter(teacher=self.request.user).prefetch_related(
             'groups__students',
             'groups__subjects'
@@ -179,7 +181,11 @@ class SubjectViewSet(viewsets.ModelViewSet):
         return SubjectDetailSerializer
 
     def perform_create(self, serializer):
-        serializer.save(teacher=self.request.user)
+        # Si el superusuario no especifica teacher, usar el usuario actual
+        if not serializer.validated_data.get('teacher'):
+            serializer.save(teacher=self.request.user)
+        else:
+            serializer.save()
     
     @action(detail=True, methods=['get'], url_path='calendar-events')
     def calendar_events(self, request, pk=None):
@@ -267,9 +273,15 @@ class GeminiGenerateThrottle(UserRateThrottle):
 
 
 class RubricViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    
     def get_queryset(self):
-        # Solo mostrar rúbricas del profesor autenticado
-        queryset = Rubric.objects.filter(teacher=self.request.user).prefetch_related('criteria__levels')
+        # Superusuarios ven todas las rúbricas, profesores solo las suyas
+        if self.request.user.is_superuser:
+            queryset = Rubric.objects.all().prefetch_related('criteria__levels')
+        else:
+            queryset = Rubric.objects.filter(teacher=self.request.user).prefetch_related('criteria__levels')
+        
         status_filter = self.request.query_params.get('status', None)
         subject_id = self.request.query_params.get('subject_id', None)
         
@@ -279,12 +291,15 @@ class RubricViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(subject_id=subject_id)
         
         return queryset
-    permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
         if self.action == 'create':
             return RubricCreateSerializer
         return RubricSerializer
+    
+    def perform_create(self, serializer):
+        # Asignar el teacher automáticamente
+        serializer.save(teacher=self.request.user)
     
     @action(detail=False, methods=['post'], throttle_classes=[GeminiGenerateThrottle])
     def generate(self, request):
@@ -1121,6 +1136,9 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusuarios ven todos los objetivos, profesores solo los suyos
+        if self.request.user.is_superuser:
+            return Objective.objects.all().select_related('student', 'subject')
         return Objective.objects.filter(created_by=self.request.user).select_related('student', 'subject')
     
     def perform_create(self, serializer):
@@ -1133,6 +1151,9 @@ class EvidenceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusuarios ven todas las evidencias, profesores solo las suyas
+        if self.request.user.is_superuser:
+            return Evidence.objects.all().select_related('student', 'subject')
         return Evidence.objects.filter(uploaded_by=self.request.user).select_related('student', 'subject')
     
     def perform_create(self, serializer):
@@ -1154,12 +1175,19 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Superusuarios ven todas las notificaciones, usuarios normales solo las suyas
+        if self.request.user.is_superuser:
+            return Notification.objects.all().select_related('recipient', 'related_student', 'related_objective')
         return Notification.objects.filter(recipient=self.request.user).select_related(
             'recipient', 'related_student', 'related_objective'
         )
 
     def perform_create(self, serializer):
-        serializer.save(recipient=self.request.user)
+        # Si no se especifica recipient, usar el usuario actual
+        if not serializer.validated_data.get('recipient'):
+            serializer.save(recipient=self.request.user)
+        else:
+            serializer.save()
 
     @action(detail=True, methods=['post'])
     def mark_as_read(self, request, pk=None):
