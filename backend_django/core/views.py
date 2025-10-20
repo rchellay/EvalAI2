@@ -555,6 +555,108 @@ def ping(request):
     return Response({'message': 'pong', 'timestamp': datetime.now().isoformat()})
 
 
+@api_view(['GET'])
+def health_check(request):
+    """Health check endpoint para Render y monitoreo"""
+    return Response({
+        'status': 'ok',
+        'service': 'EvalAI Backend',
+        'timestamp': datetime.now().isoformat(),
+        'version': '1.0.0'
+    })
+
+
+@api_view(['GET'])
+def home(request):
+    """Página de inicio del API"""
+    from django.http import HttpResponse
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>EvalAI API</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .container {
+                text-align: center;
+                padding: 2rem;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            h1 { font-size: 3rem; margin: 0 0 1rem 0; }
+            .status { 
+                font-size: 1.5rem; 
+                margin: 1rem 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            .dot {
+                width: 12px;
+                height: 12px;
+                background: #4ade80;
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            .links {
+                margin-top: 2rem;
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            a {
+                color: white;
+                text-decoration: none;
+                padding: 0.75rem 1.5rem;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 10px;
+                transition: all 0.3s;
+            }
+            a:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 EvalAI</h1>
+            <div class="status">
+                <span class="dot"></span>
+                <span>API funcionando correctamente</span>
+            </div>
+            <p>Sistema de Evaluación con Inteligencia Artificial</p>
+            <div class="links">
+                <a href="/api/">🔗 Endpoints API</a>
+                <a href="/admin/">⚙️ Panel Admin</a>
+                <a href="/health/">💚 Health Check</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content)
+
+
 # Custom authentication endpoints for frontend compatibility
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
