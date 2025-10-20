@@ -153,10 +153,12 @@ if DEBUG:
     # Desarrollo: permitir todas las solicitudes locales
     CORS_ALLOW_ALL_ORIGINS = True
 else:
-    # Producción: solo dominios específicos
+    # Producción: dominios específicos + desarrollo local
     CORS_ALLOWED_ORIGINS = [
         'https://evalai2.onrender.com',
         'https://www.evalai2.onrender.com',
+        'http://localhost:5173',  # Permitir desarrollo local
+        'http://127.0.0.1:5173',  # Permitir desarrollo local
     ]
     CORS_ALLOW_ALL_ORIGINS = False
 
