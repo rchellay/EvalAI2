@@ -18,8 +18,14 @@ class SubjectAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_at']
+    list_display = ['name', 'teacher', 'created_at', 'student_count']
+    list_filter = ['teacher', 'created_at']
+    search_fields = ['name', 'teacher__username']
     filter_horizontal = ['students', 'subjects']
+    
+    def student_count(self, obj):
+        return obj.students.count()
+    student_count.short_description = 'Estudiantes'
 
 
 @admin.register(CalendarEvent)
@@ -37,10 +43,14 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
-    list_display = ['student', 'subject', 'date', 'status', 'recorded_by']
-    list_filter = ['status', 'date', 'subject', 'recorded_by']
+    list_display = ['student', 'subject', 'date', 'status', 'recorded_by_user']
+    list_filter = ['status', 'date', 'subject']
     search_fields = ['student__name', 'subject__name', 'comment']
     date_hierarchy = 'date'
+    
+    def recorded_by_user(self, obj):
+        return obj.recorded_by.username if obj.recorded_by else 'Sistema'
+    recorded_by_user.short_description = 'Registrado por'
     
     def get_readonly_fields(self, request, obj=None):
         if obj:  # Editing
