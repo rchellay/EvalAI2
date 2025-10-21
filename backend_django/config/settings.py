@@ -160,6 +160,10 @@ else:
         'http://localhost:5173',  # Permitir desarrollo local
         'http://127.0.0.1:5173',  # Permitir desarrollo local
     ]
+    # Permitir también dominios de Vercel dinámicamente
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://.*\.vercel\.app$",  # Cualquier subdominio de vercel.app
+    ]
     CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
