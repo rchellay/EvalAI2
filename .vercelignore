@@ -1,0 +1,9 @@
+# Archivos a ignorar en Vercel
+backend_django/
+venv/
+*.sqlite3
+*.pyc
+__pycache__/
+.env.local
+.DS_Store
+
