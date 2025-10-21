@@ -31,9 +31,12 @@ from .serializers import (
 
 
 class StudentViewSet(viewsets.ModelViewSet):
-    queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Filtrar estudiantes que pertenecen a grupos del profesor actual
+        return Student.objects.filter(groups__teacher=self.request.user).distinct()
     
     @action(detail=True, methods=['post'], url_path='attendance')
     def add_attendance(self, request, pk=None):
@@ -166,9 +169,11 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
-    queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Subject.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -964,12 +969,12 @@ def groups_stats(request):
 # ===================== EVALUATION ENDPOINTS =====================
 
 class EvaluationViewSet(viewsets.ModelViewSet):
-    queryset = Evaluation.objects.all()
     serializer_class = EvaluationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Evaluation.objects.select_related('student', 'subject', 'evaluator')
+        # Filtrar evaluaciones del profesor actual
+        queryset = Evaluation.objects.filter(evaluator=self.request.user).select_related('student', 'subject', 'evaluator')
 
         # Filtros opcionales
         student_id = self.request.query_params.get('student_id')

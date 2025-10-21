@@ -20,9 +20,11 @@ class SubjectNestedViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet para navegación desde asignaturas.
     Proporciona endpoints anidados para ver grupos y estudiantes de una asignatura.
     """
-    queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Subject.objects.filter(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='grupos')
     def grupos(self, request, pk=None):
@@ -87,9 +89,12 @@ class StudentContextualViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet para perfil de estudiantes con filtrado contextual.
     Permite ver evaluaciones y comentarios filtrados por asignatura.
     """
-    queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Filtrar estudiantes que pertenecen a grupos del profesor actual
+        return Student.objects.filter(groups__teacher=self.request.user).distinct()
     
     @action(detail=True, methods=['get'], url_path='evaluaciones')
     def evaluaciones(self, request, pk=None):
