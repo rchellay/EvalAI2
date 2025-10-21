@@ -1,4 +1,5 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+// TEMPORALMENTE COMENTADO PARA VERCEL BUILD
+// import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 const COLORS = ['#3b86e3', '#e2e8f0'];
 

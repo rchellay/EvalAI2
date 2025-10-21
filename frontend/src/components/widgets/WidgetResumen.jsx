@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+// TEMPORALMENTE COMENTADO PARA VERCEL BUILD
+// import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import api from '../../lib/axios';
 
 const WidgetResumen = () => {

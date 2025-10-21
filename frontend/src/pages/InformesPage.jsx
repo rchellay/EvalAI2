@@ -3,7 +3,8 @@ import api from '../lib/axios';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+// TEMPORALMENTE COMENTADO PARA VERCEL BUILD
+// import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Dummy widgets for structure
 const AlumnoHeader = ({ alumno }) => (
