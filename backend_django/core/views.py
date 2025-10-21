@@ -164,21 +164,11 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        # Superusuarios ven todas las asignaturas, profesores solo las suyas
-        if self.request.user.is_superuser:
-            return Subject.objects.all()
-        return Subject.objects.filter(teacher=self.request.user)
-
-    def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return SubjectCreateSerializer
-        return SubjectDetailSerializer
-
     def perform_create(self, serializer):
-        # Siempre asignar el usuario actual como teacher
         serializer.save(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='calendar-events')
@@ -238,16 +228,9 @@ class SubjectViewSet(viewsets.ModelViewSet):
 
 
 class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        # Mostrar grupos del profesor autenticado
-        if self.request.user.is_superuser:
-            # Los superusuarios ven todos los grupos
-            return Group.objects.all()
-        # Los profesores ven solo sus grupos
-        return Group.objects.filter(teacher=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -267,32 +250,11 @@ class GeminiGenerateThrottle(UserRateThrottle):
 
 
 class RubricViewSet(viewsets.ModelViewSet):
+    queryset = Rubric.objects.all()
+    serializer_class = RubricSerializer
     permission_classes = [IsAuthenticated]
     
-    def get_queryset(self):
-        # Superusuarios ven todas las rúbricas, profesores solo las suyas
-        if self.request.user.is_superuser:
-            queryset = Rubric.objects.all()
-        else:
-            queryset = Rubric.objects.filter(teacher=self.request.user)
-        
-        status_filter = self.request.query_params.get('status', None)
-        subject_id = self.request.query_params.get('subject_id', None)
-        
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
-        if subject_id:
-            queryset = queryset.filter(subject_id=subject_id)
-        
-        return queryset
-    
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return RubricCreateSerializer
-        return RubricSerializer
-    
     def perform_create(self, serializer):
-        # Asignar el teacher automáticamente
         serializer.save(teacher=self.request.user)
     
     @action(detail=False, methods=['post'], throttle_classes=[GeminiGenerateThrottle])
@@ -1126,14 +1088,9 @@ class StudentDetailViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ObjectiveViewSet(viewsets.ModelViewSet):
     """ViewSet para objetivos/metas de estudiantes"""
+    queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        # Superusuarios ven todos los objetivos, profesores solo los suyos
-        if self.request.user.is_superuser:
-            return Objective.objects.all()
-        return Objective.objects.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -1141,14 +1098,9 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
 
 class EvidenceViewSet(viewsets.ModelViewSet):
     """ViewSet para evidencias/archivos adjuntos"""
+    queryset = Evidence.objects.all()
     serializer_class = EvidenceSerializer
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        # Superusuarios ven todas las evidencias, profesores solo las suyas
-        if self.request.user.is_superuser:
-            return Evidence.objects.all()
-        return Evidence.objects.filter(uploaded_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
@@ -1165,17 +1117,11 @@ class SelfEvaluationViewSet(viewsets.ModelViewSet):
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """ViewSet para notificaciones push"""
+    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        # Superusuarios ven todas las notificaciones, usuarios normales solo las suyas
-        if self.request.user.is_superuser:
-            return Notification.objects.all()
-        return Notification.objects.filter(recipient=self.request.user)
-
     def perform_create(self, serializer):
-        # Asignar el usuario actual como recipient por defecto
         serializer.save(recipient=self.request.user)
 
     @action(detail=True, methods=['post'])
