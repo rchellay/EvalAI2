@@ -10,8 +10,8 @@ const GroupsPage = () => {
   const [groups, setGroups] = useState([]);
   const [stats, setStats] = useState({
     total_groups: 0,
-    active_groups: 0,
-    inactive_groups: 0
+    total_students: 0,
+    total_subgrupos: 0
   });
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,7 +19,7 @@ const GroupsPage = () => {
   const [filters, setFilters] = useState({
     search: '',
     course: '',
-    filter: 'all' // 'all', 'active', 'inactive'
+    filter: 'all' // 'all', 'with_students', 'empty'
   });
 
   useEffect(() => {
@@ -36,13 +36,23 @@ const GroupsPage = () => {
       if (filters.filter === 'active') params.is_active = true;
       if (filters.filter === 'inactive') params.is_active = false;
 
-      console.log('[GroupsPage] Petición a /groups con params:', params);
-      const response = await api.get('/groups', { params });
+      console.log('[GroupsPage] Petición a /grupos con params:', params);
+      const response = await api.get('/grupos', { params });
       console.log('[GroupsPage] Respuesta recibida:', response.data);
       // Django REST Framework returns paginated data with "results" array
       const groupsData = response.data.results || response.data;
       console.log('[GroupsPage] Total grupos:', Array.isArray(groupsData) ? groupsData.length : 0);
-      setGroups(Array.isArray(groupsData) ? groupsData : []);
+      
+      let filteredGroups = Array.isArray(groupsData) ? groupsData : [];
+      
+      // Aplicar filtros adicionales
+      if (filters.filter === 'with_students') {
+        filteredGroups = filteredGroups.filter(group => group.total_students > 0);
+      } else if (filters.filter === 'empty') {
+        filteredGroups = filteredGroups.filter(group => group.total_students === 0);
+      }
+      
+      setGroups(filteredGroups);
     } catch (error) {
       console.error('[GroupsPage] ❌ Error loading groups:', error);
       console.error('[GroupsPage] Error response:', error.response?.data);
@@ -54,14 +64,24 @@ const GroupsPage = () => {
     }
   };
 
-  const loadStats = () => {
-    const totalGroups = groups.length;
-    const activeGroups = groups.filter(g => g.students && g.students.length > 0).length;
-    setStats({ 
-      total: totalGroups, 
-      active: activeGroups, 
-      inactive: totalGroups - activeGroups 
-    });
+  const loadStats = async () => {
+    try {
+      const response = await api.get('/grupos');
+      const groupsData = response.data.results || response.data;
+      const allGroups = Array.isArray(groupsData) ? groupsData : [];
+      
+      const totalGroups = allGroups.length;
+      const totalStudents = allGroups.reduce((sum, group) => sum + (group.total_students || 0), 0);
+      const totalSubgrupos = allGroups.reduce((sum, group) => sum + (group.total_subgrupos || 0), 0);
+      
+      setStats({
+        total_groups: totalGroups,
+        total_students: totalStudents,
+        total_subgrupos: totalSubgrupos
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
   };
 
   const handleCreate = () => {
@@ -78,7 +98,7 @@ const GroupsPage = () => {
     if (!window.confirm('¿Estás seguro de eliminar este grupo?')) return;
 
     try {
-      await api.delete(`/groups/${groupId}`);
+      await api.delete(`/grupos/${groupId}`);
       toast.success('Grupo eliminado');
       loadGroups();
       loadStats();
@@ -154,12 +174,12 @@ const GroupsPage = () => {
               </p>
             </div>
             <div className="bg-background-light dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
-              <p className="text-gray-600 dark:text-gray-400">Grupos activos</p>
-              <p className="text-4xl font-bold text-green-500 mt-2">{stats.active_groups}</p>
+              <p className="text-gray-600 dark:text-gray-400">Estudiantes principales</p>
+              <p className="text-4xl font-bold text-green-500 mt-2">{stats.total_students}</p>
             </div>
             <div className="bg-background-light dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
-              <p className="text-gray-600 dark:text-gray-400">Grupos inactivos</p>
-              <p className="text-4xl font-bold text-orange-500 mt-2">{stats.inactive_groups}</p>
+              <p className="text-gray-600 dark:text-gray-400">Participaciones en subgrupos</p>
+              <p className="text-4xl font-bold text-blue-500 mt-2">{stats.total_subgrupos}</p>
             </div>
           </div>
         </section>
@@ -211,7 +231,10 @@ const GroupsPage = () => {
                       </td>
                       <td className="p-4 text-gray-500 dark:text-gray-400">{group.course}</td>
                       <td className="p-4 text-gray-500 dark:text-gray-400">
-                        {group.student_count || 0}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{group.total_students || 0} principales</span>
+                          <span className="text-sm text-blue-600">{group.total_subgrupos || 0} subgrupos</span>
+                        </div>
                       </td>
                       <td className="p-4 text-gray-500 dark:text-gray-400">
                         {group.subject_count || 0}
@@ -219,17 +242,17 @@ const GroupsPage = () => {
                       <td className="p-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            group.is_active
+                            (group.total_students || 0) > 0
                               ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                               : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200'
                           }`}
                         >
                           <span
                             className={`w-2 h-2 mr-2 rounded-full ${
-                              group.is_active ? 'bg-green-500' : 'bg-orange-500'
+                              (group.total_students || 0) > 0 ? 'bg-green-500' : 'bg-orange-500'
                             }`}
                           ></span>
-                          {group.is_active ? 'Activo' : 'Inactivo'}
+                          {(group.total_students || 0) > 0 ? 'Con estudiantes' : 'Vacío'}
                         </span>
                       </td>
                       <td className="p-4 space-x-3">

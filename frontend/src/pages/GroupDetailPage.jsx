@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
+import CreateStudentModal from '../components/CreateStudentModal';
 
 const GroupDetailPage = () => {
   const { id } = useParams();
@@ -10,17 +11,19 @@ const GroupDetailPage = () => {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
 
   useEffect(() => {
     loadGroupDetails();
+    loadGroupStudents();
     loadAvailableStudents();
   }, [id]);
 
   const loadGroupDetails = async () => {
     try {
-      const response = await api.get(`/groups/${id}`);
+      const response = await api.get(`/grupos/${id}`);
       setGroup(response.data);
     } catch (error) {
       console.error('Error loading group:', error);
@@ -31,13 +34,26 @@ const GroupDetailPage = () => {
     }
   };
 
+  const loadGroupStudents = async () => {
+    try {
+      const response = await api.get(`/grupos/${id}/alumnos/`);
+      setGroup(prev => ({
+        ...prev,
+        students: response.data.students || [],
+        counts: response.data.counts || {}
+      }));
+    } catch (error) {
+      console.error('Error loading group students:', error);
+      toast.error('Error al cargar estudiantes del grupo');
+    }
+  };
+
   const loadAvailableStudents = async () => {
     try {
-      const response = await api.get('/students');
-      const studentsData = response.data.results || response.data;
-      setAvailableStudents(Array.isArray(studentsData) ? studentsData : []);
+      const response = await api.get(`/estudiantes/available_for_group/${id}/`);
+      setAvailableStudents(response.data.available_students || []);
     } catch (error) {
-      console.error('Error loading students:', error);
+      console.error('Error loading available students:', error);
     }
   };
 
@@ -48,28 +64,41 @@ const GroupDetailPage = () => {
     }
 
     try {
-      await api.post(`/groups/${id}/students`, {
-        student_ids: selectedStudents
-      });
-      toast.success('Estudiantes añadidos');
-      setShowAddStudentModal(false);
+      for (const studentId of selectedStudents) {
+        await api.post(`/grupos/${id}/add_existing_alumno/`, {
+          alumno_id: studentId
+        });
+      }
+      
+      toast.success(`${selectedStudents.length} estudiante(s) añadido(s) como subgrupo`);
       setSelectedStudents([]);
-      loadGroupDetails();
+      setShowAddStudentModal(false);
+      loadGroupStudents(); // Recargar estudiantes del grupo
     } catch (error) {
       console.error('Error adding students:', error);
       toast.error('Error al añadir estudiantes');
     }
   };
 
-  const handleRemoveStudent = async (studentId) => {
-    if (!window.confirm('¿Quitar este estudiante del grupo?')) return;
+  const handleCreateStudentSuccess = (newStudent) => {
+    loadGroupStudents(); // Recargar la lista de estudiantes
+    toast.success(`Estudiante ${newStudent.full_name} creado exitosamente`);
+  };
+
+  const handleRemoveStudent = async (studentId, isSubgrupo = false) => {
+    if (!window.confirm(`¿${isSubgrupo ? 'Quitar este estudiante del subgrupo?' : 'Eliminar este estudiante del grupo principal?'}`)) return;
 
     try {
-      await api.delete(`/groups/${id}/students`, {
-        data: { student_ids: [studentId] }
-      });
-      toast.success('Estudiante eliminado del grupo');
-      loadGroupDetails();
+      if (isSubgrupo) {
+        await api.delete(`/grupos/${id}/remove_subgrupo/${studentId}/`);
+        toast.success('Estudiante removido del subgrupo');
+      } else {
+        // Para estudiantes principales, solo podemos mostrar un mensaje ya que no se pueden eliminar
+        toast.error('No se puede eliminar un estudiante de su grupo principal. Solo se puede remover de subgrupos.');
+        return;
+      }
+      
+      loadGroupStudents();
     } catch (error) {
       console.error('Error removing student:', error);
       toast.error('Error al eliminar estudiante');
