@@ -11,6 +11,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -20,6 +24,13 @@ export default defineConfig({
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['recharts', 'react-chartjs-2', 'chart.js'],
+    force: true,
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
   },
   define: {
     'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://evalai2.onrender.com/api'),
