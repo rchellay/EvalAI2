@@ -2674,3 +2674,86 @@ def non_school_days(request):
     ).values('fecha', 'titulo')
     
     return Response(list(dias_no_lectivos))
+
+
+# ==================== CLEANUP ENDPOINT (SUPERUSER ONLY) ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_cleanup_user_duplicates(request):
+    """
+    Endpoint para que administradores limpien duplicados de cualquier usuario.
+    SOLO para superusuarios.
+    """
+    if not request.user.is_superuser:
+        return Response(
+            {'error': 'Solo administradores pueden ejecutar esta acción'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    username = request.data.get('username')
+    if not username:
+        return Response(
+            {'error': 'Debe proporcionar un username'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        from django.contrib.auth.models import User
+        
+        user = User.objects.get(username=username)
+        report = {
+            'username': username,
+            'actions': [],
+            'duplicates_removed': []
+        }
+        
+        # 1. Limpiar asignaturas duplicadas
+        subjects = Subject.objects.filter(teacher=user).order_by('created_at')
+        seen_keys = {}
+        count_removed = 0
+        
+        for subject in subjects:
+            key = f"{subject.name}|{subject.start_time}|{subject.end_time}"
+            if key in seen_keys:
+                report['duplicates_removed'].append({
+                    'name': subject.name,
+                    'time': f"{subject.start_time}-{subject.end_time}",
+                    'id': subject.id
+                })
+                subject.delete()
+                count_removed += 1
+            else:
+                seen_keys[key] = subject.id
+        
+        if count_removed > 0:
+            report['actions'].append(f"Eliminadas {count_removed} asignaturas duplicadas")
+        else:
+            report['actions'].append("No se encontraron asignaturas duplicadas")
+        
+        # 2. Crear grupo 4to si no existe
+        grupo_4to = Group.objects.filter(teacher=user, name__icontains='4').first()
+        if not grupo_4to:
+            grupo_4to = Group.objects.create(name='4to', teacher=user)
+            report['actions'].append(f"Creado grupo '4to' (ID: {grupo_4to.id})")
+        else:
+            report['actions'].append(f"Ya existe grupo '{grupo_4to.name}'")
+        
+        # 3. Estadísticas finales
+        report['summary'] = {
+            'total_subjects': Subject.objects.filter(teacher=user).count(),
+            'total_groups': Group.objects.filter(teacher=user).count(),
+        }
+        
+        return Response(report, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response(
+            {'error': f'Usuario "{username}" no encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

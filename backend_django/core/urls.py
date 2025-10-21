@@ -21,7 +21,8 @@ from .views import (
     # procesar_imagen_ocr, procesar_y_corregir_imagen, idiomas_ocr_soportados, validar_imagen_ocr,
     guardar_correccion_como_evidencia, evidencias_correccion_estudiante, evidencias_correccion_profesor,
     actualizar_evidencia_correccion, estadisticas_correccion_estudiante,
-    CustomEventViewSet, user_settings, change_password, test_notification, non_school_days
+    CustomEventViewSet, user_settings, change_password, test_notification, non_school_days,
+    admin_cleanup_user_duplicates
 )
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
@@ -157,4 +158,7 @@ urlpatterns = [
     
     # Calendario - días no lectivos
     path('calendario/dias-no-lectivos/', non_school_days, name='non-school-days'),
+    
+    # Admin cleanup (solo superusers)
+    path('admin/cleanup-user/', admin_cleanup_user_duplicates, name='admin-cleanup-user'),
 ]
