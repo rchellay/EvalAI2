@@ -1,3 +1,10 @@
+# Auto-fix para tablas faltantes
+try:
+    from .auto_fix_tables import verificar_y_crear_tablas
+    verificar_y_crear_tablas()
+except Exception as e:
+    print(f"⚠️  Error en auto-fix de tablas desde admin: {e}")
+
 from django.contrib import admin
 from .models import (
     Student, Subject, Group, CalendarEvent, Comment, Attendance

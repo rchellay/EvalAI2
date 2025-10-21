@@ -212,6 +212,13 @@ GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-educ
 GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
 GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
+# Auto-fix para tablas faltantes en deployment
+try:
+    from core.auto_fix_tables import verificar_y_crear_tablas
+    verificar_y_crear_tablas()
+except Exception as e:
+    print(f"⚠️  Error en auto-fix de tablas: {e}")
+
 # Cache Configuration
 CACHES = {
     'default': {
