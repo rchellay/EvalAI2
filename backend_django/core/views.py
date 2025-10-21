@@ -255,9 +255,15 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class CalendarEventViewSet(viewsets.ModelViewSet):
-    queryset = CalendarEvent.objects.all()
     serializer_class = CalendarEventSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return CalendarEvent.objects.all()
+        # Usuarios normales solo ven sus eventos
+        return CalendarEvent.objects.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -268,9 +274,15 @@ class GeminiGenerateThrottle(UserRateThrottle):
 
 
 class RubricViewSet(viewsets.ModelViewSet):
-    queryset = Rubric.objects.all()
     serializer_class = RubricSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Rubric.objects.all()
+        # Usuarios normales solo ven sus rúbricas
+        return Rubric.objects.filter(teacher=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -387,30 +399,54 @@ class RubricViewSet(viewsets.ModelViewSet):
 
 
 class RubricCriterionViewSet(viewsets.ModelViewSet):
-    queryset = RubricCriterion.objects.all()
     serializer_class = RubricCriterionSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return RubricCriterion.objects.all()
+        # Usuarios normales solo ven criterios de sus rúbricas
+        return RubricCriterion.objects.filter(rubric__teacher=self.request.user)
 
 
 class RubricLevelViewSet(viewsets.ModelViewSet):
-    queryset = RubricLevel.objects.all()
     serializer_class = RubricLevelSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return RubricLevel.objects.all()
+        # Usuarios normales solo ven niveles de sus rúbricas
+        return RubricLevel.objects.filter(rubric__teacher=self.request.user)
 
 
 class RubricScoreViewSet(viewsets.ModelViewSet):
-    queryset = RubricScore.objects.all()
     serializer_class = RubricScoreSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return RubricScore.objects.all()
+        # Usuarios normales solo ven sus puntuaciones
+        return RubricScore.objects.filter(evaluator=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(evaluator=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Comment.objects.all()
+        # Usuarios normales solo ven sus comentarios
+        return Comment.objects.filter(author=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -1139,9 +1175,15 @@ class StudentDetailViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ObjectiveViewSet(viewsets.ModelViewSet):
     """ViewSet para objetivos/metas de estudiantes"""
-    queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Objective.objects.all()
+        # Usuarios normales solo ven sus objetivos
+        return Objective.objects.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -1149,9 +1191,15 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
 
 class EvidenceViewSet(viewsets.ModelViewSet):
     """ViewSet para evidencias/archivos adjuntos"""
-    queryset = Evidence.objects.all()
     serializer_class = EvidenceSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Evidence.objects.all()
+        # Usuarios normales solo ven sus evidencias
+        return Evidence.objects.filter(uploaded_by=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
@@ -1171,9 +1219,15 @@ class SelfEvaluationViewSet(viewsets.ModelViewSet):
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """ViewSet para notificaciones push"""
-    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Notification.objects.all()
+        # Usuarios normales solo ven sus notificaciones
+        return Notification.objects.filter(recipient=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(recipient=self.request.user)
