@@ -327,5 +327,6 @@ export default function CalendarView() {
         onEventCreated={handleEventCreated}
       />
     </div>
+    </div>
   );
 }
