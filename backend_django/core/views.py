@@ -1018,6 +1018,11 @@ class SubjectGroupsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         subject_id = self.kwargs.get('subject_pk')
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Group.objects.filter(
+                subjects__id=subject_id
+            ).distinct().prefetch_related('students', 'subjects')
         return Group.objects.filter(
             subjects__id=subject_id,
             subjects__teacher=self.request.user
@@ -1031,6 +1036,11 @@ class GroupStudentsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         group_id = self.kwargs.get('group_pk')
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Student.objects.filter(
+                groups__id=group_id
+            ).distinct().prefetch_related('evaluations__subject')
         return Student.objects.filter(
             groups__id=group_id,
             groups__subjects__teacher=self.request.user
@@ -1046,14 +1056,19 @@ class StudentEvaluationsViewSet(viewsets.ModelViewSet):
         student_id = self.kwargs.get('student_pk')
         subject_id = self.request.query_params.get('subject_id')
 
-        queryset = Evaluation.objects.filter(
-            student_id=student_id
-        ).select_related('student', 'subject', 'evaluator')
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = Evaluation.objects.filter(student_id=student_id)
+        else:
+            queryset = Evaluation.objects.filter(
+                student_id=student_id,
+                evaluator=self.request.user
+            )
 
         if subject_id:
             queryset = queryset.filter(subject_id=subject_id)
 
-        return queryset
+        return queryset.select_related('student', 'subject', 'evaluator')
 
     def perform_create(self, serializer):
         # Asignar automáticamente el estudiante desde la URL
@@ -1075,6 +1090,12 @@ class SubjectDetailViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Subject.objects.all().prefetch_related(
+                'groups__students',
+                'groups__subjects'
+            )
         # Solo mostrar asignaturas del profesor autenticado
         return Subject.objects.filter(teacher=self.request.user).prefetch_related(
             'groups__students',
@@ -1089,6 +1110,9 @@ class GroupDetailViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Group.objects.all().prefetch_related('students', 'subjects')
         # Solo mostrar grupos que contengan asignaturas del profesor autenticado
         return Group.objects.filter(subjects__teacher=self.request.user).distinct().prefetch_related(
             'students', 'subjects'
@@ -1102,6 +1126,9 @@ class StudentDetailViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Student.objects.all().prefetch_related('evaluations__subject')
         # Solo mostrar estudiantes de grupos que tengan asignaturas del profesor
         return Student.objects.filter(groups__subjects__teacher=self.request.user).distinct().prefetch_related(
             'evaluations__subject'
@@ -1136,6 +1163,9 @@ class SelfEvaluationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return SelfEvaluation.objects.all().select_related('student', 'subject')
         return SelfEvaluation.objects.filter(student__groups__subjects__teacher=self.request.user).select_related('student', 'subject')
 
 
@@ -2653,7 +2683,11 @@ class CustomEventViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filtrar eventos por usuario y opcionalmente por fecha"""
-        queryset = CustomEvent.objects.filter(created_by=self.request.user)
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = CustomEvent.objects.all()
+        else:
+            queryset = CustomEvent.objects.filter(created_by=self.request.user)
         
         # Filtro opcional por fecha
         fecha_inicio = self.request.query_params.get('fecha_inicio')

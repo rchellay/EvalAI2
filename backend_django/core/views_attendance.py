@@ -35,7 +35,16 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filtrado por query params."""
-        queryset = super().get_queryset()
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = Attendance.objects.select_related(
+                'student', 'subject', 'recorded_by'
+            ).all()
+        else:
+            # Usuarios normales solo ven sus asistencias
+            queryset = Attendance.objects.select_related(
+                'student', 'subject', 'recorded_by'
+            ).filter(recorded_by=self.request.user)
         
         # Filtrar por asignatura
         subject_id = self.request.query_params.get('asignatura')
