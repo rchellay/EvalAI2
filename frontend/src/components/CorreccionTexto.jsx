@@ -281,7 +281,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Escribe aquí el texto que quieres corregir..."
-          className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full h-32 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-gray-400"
         />
       </div>
 
@@ -302,7 +302,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
                 const estudiante = estudiantes.find(s => s.id === parseInt(e.target.value));
                 setEstudianteSeleccionado(estudiante);
               }}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecciona un estudiante</option>
               {Array.isArray(estudiantes) && estudiantes.map(estudiante => (
@@ -322,7 +322,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
                 const asignatura = asignaturas.find(s => s.id === parseInt(e.target.value));
                 setAsignaturaSeleccionada(asignatura);
               }}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecciona una asignatura</option>
               {Array.isArray(asignaturas) && asignaturas.map(asignatura => (
@@ -342,7 +342,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
             value={tituloCorreccion}
             onChange={(e) => setTituloCorreccion(e.target.value)}
             placeholder="Ej: Redacción sobre el medio ambiente"
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
           />
         </div>
         <div className="mt-3">
@@ -353,7 +353,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
             value={comentarioProfesor}
             onChange={(e) => setComentarioProfesor(e.target.value)}
             placeholder="Comentarios adicionales sobre la corrección..."
-            className="w-full h-20 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full h-20 p-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder:text-gray-400"
           />
         </div>
       </div>
