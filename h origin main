@@ -1,0 +1,24 @@
+[1mdiff --git a/backend_django/requirements.txt b/backend_django/requirements.txt[m
+[1mindex 98b287ee..89242636 100644[m
+[1m--- a/backend_django/requirements.txt[m
+[1m+++ b/backend_django/requirements.txt[m
+[36m@@ -4,9 +4,9 @@[m [mdjangorestframework-simplejwt==5.3.0[m
+ django-cors-headers==4.3.1[m
+ python-decouple==3.8[m
+ requests==2.31.0[m
+[31m-Pillow==10.1.0[m
+[32m+[m[32mPillow==10.3.0[m
+ gunicorn==21.2.0[m
+[31m-psycopg2-binary==2.9.7[m
+[32m+[m[32mpsycopg2-binary==2.9.9[m
+ whitenoise==6.6.0[m
+ google-cloud-vision==3.4.4[m
+ google-auth==2.23.4[m
+[1mdiff --git a/runtime.txt b/runtime.txt[m
+[1mnew file mode 100644[m
+[1mindex 00000000..cd0aac54[m
+[1m--- /dev/null[m
+[1m+++ b/runtime.txt[m
+[36m@@ -0,0 +1 @@[m
+[32m+[m[32mpython-3.11.9[m
+\ No newline at end of file[m
