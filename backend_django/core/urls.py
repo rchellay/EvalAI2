@@ -1,5 +1,6 @@
 ﻿from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .diagnostic_dashboard import diagnosticar_dashboard_endpoints
 from .diagnostic_views import diagnosticar_deployment
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
@@ -68,6 +69,9 @@ urlpatterns = [
     
     # Endpoint de diagnóstico para deployment
     path('diagnostico-deployment/', diagnosticar_deployment, name='diagnostico-deployment'),
+    
+    # Endpoint de diagnóstico para dashboard
+    path('diagnostico-dashboard/', diagnosticar_dashboard_endpoints, name='diagnostico-dashboard'),
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),
