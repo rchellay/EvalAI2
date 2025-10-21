@@ -15,7 +15,8 @@ import json
 from .models import (
     Student, Subject, Group, CalendarEvent,
     Rubric, RubricCriterion, RubricLevel, RubricScore, Comment, Evaluation,
-    Objective, Evidence, SelfEvaluation, Notification, Attendance, CorrectionEvidence
+    Objective, Evidence, SelfEvaluation, Notification, Attendance, CorrectionEvidence,
+    UserSettings, CustomEvent
 )
 from .serializers import (
     StudentSerializer, SubjectSerializer, SubjectCreateSerializer, GroupSerializer, CalendarEventSerializer,
@@ -23,7 +24,8 @@ from .serializers import (
     RubricLevelSerializer, RubricScoreSerializer, RubricEvaluationSerializer, CommentSerializer,
     EvaluationSerializer, StudentDetailSerializer, GroupDetailSerializer, SubjectDetailSerializer,
     ObjectiveSerializer, EvidenceSerializer, SelfEvaluationSerializer, AttendanceSerializer, NotificationSerializer,
-    CorrectionEvidenceSerializer, CorrectionEvidenceCreateSerializer, CorrectionEvidenceUpdateSerializer
+    CorrectionEvidenceSerializer, CorrectionEvidenceCreateSerializer, CorrectionEvidenceUpdateSerializer,
+    UserSettingsSerializer, CustomEventSerializer
 )
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
 
@@ -2528,3 +2530,117 @@ def estadisticas_correccion_estudiante(request, student_id):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ===================== AJUSTES DE USUARIO =====================
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def user_settings(request):
+    """Obtener o actualizar configuración del usuario"""
+    # Obtener o crear configuración del usuario
+    settings, created = UserSettings.objects.get_or_create(user=request.user)
+    
+    if request.method == 'GET':
+        serializer = UserSettingsSerializer(settings)
+        return Response(serializer.data)
+    
+    elif request.method == 'PATCH':
+        serializer = UserSettingsSerializer(settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    """Cambiar contraseña del usuario"""
+    current_password = request.data.get('current_password')
+    new_password = request.data.get('new_password')
+    
+    if not current_password or not new_password:
+        return Response(
+            {'error': 'Se requiere contraseña actual y nueva'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Verificar contraseña actual
+    if not request.user.check_password(current_password):
+        return Response(
+            {'error': 'Contraseña actual incorrecta'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Establecer nueva contraseña
+    request.user.set_password(new_password)
+    request.user.save()
+    
+    return Response({'message': 'Contraseña actualizada correctamente'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def test_notification(request):
+    """Enviar notificación de prueba"""
+    # Crear una notificación de prueba
+    notification = Notification.objects.create(
+        recipient=request.user,
+        title='Notificación de prueba',
+        message='Esta es una notificación de prueba desde la configuración de EvalAI.',
+        notification_type='info'
+    )
+    
+    return Response({
+        'message': 'Notificación de prueba enviada',
+        'notification_id': notification.id
+    })
+
+
+# ===================== EVENTOS PERSONALIZADOS DEL CALENDARIO =====================
+
+class CustomEventViewSet(viewsets.ModelViewSet):
+    """ViewSet para eventos personalizados del calendario"""
+    queryset = CustomEvent.objects.all()
+    serializer_class = CustomEventSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filtrar eventos por usuario y opcionalmente por fecha"""
+        queryset = CustomEvent.objects.filter(created_by=self.request.user)
+        
+        # Filtro opcional por fecha
+        fecha_inicio = self.request.query_params.get('fecha_inicio')
+        fecha_fin = self.request.query_params.get('fecha_fin')
+        
+        if fecha_inicio:
+            queryset = queryset.filter(fecha__gte=fecha_inicio)
+        if fecha_fin:
+            queryset = queryset.filter(fecha__lte=fecha_fin)
+        
+        return queryset
+    
+    def perform_create(self, serializer):
+        # Asignar color automático según el tipo
+        tipo = serializer.validated_data.get('tipo', 'normal')
+        if tipo == 'no_lectivo' and not serializer.validated_data.get('color'):
+            serializer.validated_data['color'] = '#ef4444'  # Rojo para días no lectivos
+        elif tipo == 'reminder' and not serializer.validated_data.get('color'):
+            serializer.validated_data['color'] = '#f59e0b'  # Naranja para recordatorios
+        elif tipo == 'meeting' and not serializer.validated_data.get('color'):
+            serializer.validated_data['color'] = '#8b5cf6'  # Morado para reuniones
+        
+        serializer.save(created_by=self.request.user)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def non_school_days(request):
+    """Obtener lista de días no lectivos"""
+    dias_no_lectivos = CustomEvent.objects.filter(
+        created_by=request.user,
+        tipo='no_lectivo'
+    ).values('fecha', 'titulo')
+    
+    return Response(list(dias_no_lectivos))

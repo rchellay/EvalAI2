@@ -20,7 +20,8 @@ from .views import (
     noticias_educacion, corregir_texto, obtener_estadisticas_texto,
     # procesar_imagen_ocr, procesar_y_corregir_imagen, idiomas_ocr_soportados, validar_imagen_ocr,
     guardar_correccion_como_evidencia, evidencias_correccion_estudiante, evidencias_correccion_profesor,
-    actualizar_evidencia_correccion, estadisticas_correccion_estudiante
+    actualizar_evidencia_correccion, estadisticas_correccion_estudiante,
+    CustomEventViewSet, user_settings, change_password, test_notification, non_school_days
 )
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
@@ -43,6 +44,9 @@ router.register(r'objectives', ObjectiveViewSet, basename='objective')
 router.register(r'evidences', EvidenceViewSet, basename='evidence')
 router.register(r'self-evaluations', SelfEvaluationViewSet, basename='self-evaluation')
 router.register(r'notifications', NotificationViewSet, basename='notification')
+
+# Eventos personalizados del calendario
+router.register(r'eventos', CustomEventViewSet, basename='evento')
 
 # ViewSets con datos anidados para navegación desde calendario
 router.register(r'subjects-detail', SubjectDetailViewSet, basename='subject-detail')
@@ -145,4 +149,12 @@ urlpatterns = [
     path('correccion/evidencias/profesor/', evidencias_correccion_profesor, name='evidencias-correccion-profesor'),
     path('correccion/evidencias/<int:evidence_id>/actualizar/', actualizar_evidencia_correccion, name='actualizar-evidencia-correccion'),
     path('correccion/estadisticas/estudiante/<int:student_id>/', estadisticas_correccion_estudiante, name='estadisticas-correccion-estudiante'),
+    
+    # Ajustes de usuario
+    path('settings/', user_settings, name='user-settings'),
+    path('settings/change-password/', change_password, name='change-password'),
+    path('settings/test-notification/', test_notification, name='test-notification'),
+    
+    # Calendario - días no lectivos
+    path('calendario/dias-no-lectivos/', non_school_days, name='non-school-days'),
 ]

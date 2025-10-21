@@ -723,3 +723,96 @@ class CorrectionEvidence(models.Model):
         """Solicita mejora de la corrección"""
         self.status = 'necesita_mejora'
         self.mark_as_reviewed()
+
+
+class UserSettings(models.Model):
+    """Configuración personalizada del usuario/docente"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+    
+    # Ajustes generales
+    nombre_mostrado = models.CharField(max_length=200, blank=True)
+    centro_educativo = models.CharField(max_length=300, blank=True)
+    curso_periodo = models.CharField(max_length=100, blank=True, default='2024-2025')
+    idioma = models.CharField(max_length=10, choices=[
+        ('es', 'Español'),
+        ('ca', 'Català'),
+        ('en', 'English'),
+        ('fr', 'Français'),
+    ], default='es')
+    
+    # Interfaz y personalización
+    tema = models.CharField(max_length=20, choices=[
+        ('light', 'Claro'),
+        ('dark', 'Oscuro'),
+        ('system', 'Sistema'),
+    ], default='light')
+    tamano_fuente = models.CharField(max_length=20, choices=[
+        ('small', 'Pequeña'),
+        ('medium', 'Media'),
+        ('large', 'Grande'),
+    ], default='medium')
+    escala_ui = models.IntegerField(default=100)  # 50-120%
+    color_principal = models.CharField(max_length=7, default='#4f46e5')
+    
+    # Notificaciones
+    notif_email = models.BooleanField(default=True)
+    notif_in_app = models.BooleanField(default=True)
+    recordatorio_minutos = models.IntegerField(default=15, choices=[
+        (5, '5 minutos'),
+        (15, '15 minutos'),
+        (30, '30 minutos'),
+        (60, '1 hora'),
+    ])
+    notif_evaluaciones_pendientes = models.BooleanField(default=True)
+    notif_informes_listos = models.BooleanField(default=True)
+    notif_asistencias = models.BooleanField(default=True)
+    
+    # Seguridad
+    auto_logout_minutos = models.IntegerField(default=30, choices=[
+        (15, '15 minutos'),
+        (30, '30 minutos'),
+        (60, '1 hora'),
+    ])
+    cifrar_datos = models.BooleanField(default=False)
+    consentimiento_ia = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Configuración de Usuario"
+        verbose_name_plural = "Configuraciones de Usuarios"
+    
+    def __str__(self):
+        return f"Configuración de {self.user.username}"
+
+
+class CustomEvent(models.Model):
+    """Eventos y recordatorios personalizados del docente"""
+    EVENT_TYPE_CHOICES = [
+        ('normal', 'Normal'),
+        ('no_lectivo', 'Día no lectivo'),
+        ('reminder', 'Recordatorio'),
+        ('meeting', 'Reunión'),
+    ]
+    
+    titulo = models.CharField(max_length=300)
+    descripcion = models.TextField(blank=True)
+    fecha = models.DateField()
+    hora_inicio = models.TimeField(null=True, blank=True)
+    hora_fin = models.TimeField(null=True, blank=True)
+    tipo = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default='normal')
+    color = models.CharField(max_length=7, default='#3b82f6')
+    todo_el_dia = models.BooleanField(default=True)
+    
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='custom_events')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-fecha', '-hora_inicio']
+        verbose_name = "Evento Personalizado"
+        verbose_name_plural = "Eventos Personalizados"
+    
+    def __str__(self):
+        return f"{self.titulo} - {self.fecha}"

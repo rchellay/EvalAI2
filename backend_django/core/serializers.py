@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from .models import (
     Student, Subject, Group, CalendarEvent,
     Rubric, RubricCriterion, RubricLevel, RubricScore, Comment, Evaluation,
-    Objective, Evidence, SelfEvaluation, Attendance, Notification, CorrectionEvidence
+    Objective, Evidence, SelfEvaluation, Attendance, Notification, CorrectionEvidence,
+    UserSettings, CustomEvent
 )
 
 
@@ -404,3 +405,40 @@ class CorrectionEvidenceUpdateSerializer(serializers.ModelSerializer):
             validated_data.pop('status')  # No actualizar directamente
         
         return super().update(instance, validated_data)
+
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    """Serializer para configuración de usuario"""
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    
+    class Meta:
+        model = UserSettings
+        fields = [
+            'id', 'user', 'username', 'email',
+            # Generales
+            'nombre_mostrado', 'centro_educativo', 'curso_periodo', 'idioma',
+            # UI
+            'tema', 'tamano_fuente', 'escala_ui', 'color_principal',
+            # Notificaciones
+            'notif_email', 'notif_in_app', 'recordatorio_minutos',
+            'notif_evaluaciones_pendientes', 'notif_informes_listos', 'notif_asistencias',
+            # Seguridad
+            'auto_logout_minutos', 'cifrar_datos', 'consentimiento_ia',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'username', 'email', 'created_at', 'updated_at']
+
+
+class CustomEventSerializer(serializers.ModelSerializer):
+    """Serializer para eventos personalizados del calendario"""
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+    
+    class Meta:
+        model = CustomEvent
+        fields = [
+            'id', 'titulo', 'descripcion', 'fecha', 'hora_inicio', 'hora_fin',
+            'tipo', 'color', 'todo_el_dia', 'created_by', 'created_by_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_by_name', 'created_at', 'updated_at']
