@@ -36,6 +36,12 @@ class GroupAdmin(admin.ModelAdmin):
         return obj.teacher.username if obj.teacher else '-'
     get_teacher_username.short_description = 'Teacher'
     get_teacher_username.admin_order_field = 'teacher__username'
+    
+    def save_model(self, request, obj, form, change):
+        # Si es un nuevo objeto y no tiene teacher asignado, asignar el usuario actual
+        if not change and not obj.teacher_id:
+            obj.teacher = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(CalendarEvent)
@@ -65,3 +71,9 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_filter = ['status', 'date']
     search_fields = ['student__name']
     list_per_page = 50
+    
+    def save_model(self, request, obj, form, change):
+        # Si es un nuevo objeto y no tiene recorded_by asignado, asignar el usuario actual
+        if not change and not obj.recorded_by_id:
+            obj.recorded_by = request.user
+        super().save_model(request, obj, form, change)
