@@ -39,6 +39,22 @@ def diagnosticar_deployment(request):
                     """)
                     print("✅ Tabla core_attendance creada desde endpoint")
                 
+                # Crear tabla core_evaluation directamente
+                cursor.execute("""
+                    CREATE TABLE core_evaluation (
+                        id SERIAL PRIMARY KEY,
+                        student_id INTEGER NOT NULL,
+                        subject_id INTEGER NOT NULL,
+                        evaluator_id INTEGER NOT NULL,
+                        score DECIMAL(5,2),
+                        comment TEXT,
+                        rubric_id INTEGER,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                    );
+                """)
+                print("✅ Tabla core_evaluation creada desde endpoint")
+                
                 # Verificar si teacher_id existe en core_group
                 cursor.execute("""
                     SELECT EXISTS (
@@ -63,6 +79,10 @@ def diagnosticar_deployment(request):
                     cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_attendance_subject ON core_attendance(subject_id);")
                     cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_attendance_date ON core_attendance(date);")
                     cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_group_teacher ON core_group(teacher_id);")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_evaluation_student ON core_evaluation(student_id);")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_evaluation_subject ON core_evaluation(subject_id);")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_evaluation_evaluator ON core_evaluation(evaluator_id);")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_core_evaluation_created ON core_evaluation(created_at);")
                     print("✅ Índices creados desde endpoint")
                 except Exception as e:
                     print(f"⚠️  Error creando índices: {e}")
