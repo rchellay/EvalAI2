@@ -3,23 +3,36 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-class Student(models.Model):
-    name = models.CharField(max_length=200)
-    email = models.EmailField(unique=True)
-    photo = models.FileField(upload_to="students/", null=True, blank=True)
-    course = models.CharField(max_length=100, blank=True)
-    attendance_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
+class Group(models.Model):
+    """Modelo para grupos de estudiantes (ej: 4tA, 4tB, etc.)"""
+    name = models.CharField(max_length=200, help_text="Nombre del grupo (ej: 4tA, 4tB)")
+    course = models.CharField(max_length=50, help_text="Curso académico (ej: 4t ESO)")
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="teacher_groups")
+    subjects = models.ManyToManyField('Subject', related_name="groups", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["course", "name"]
+        verbose_name = "Grupo"
+        verbose_name_plural = "Grupos"
 
     def __str__(self):
-        return self.name
+        return f"{self.course} - {self.name}"
+
+    @property
+    def total_students(self):
+        """Total de estudiantes con este grupo como principal"""
+        return self.alumnos.count()
+
+    @property
+    def total_subgrupos(self):
+        """Total de estudiantes que participan como subgrupo"""
+        return self.subgrupos.count()
 
 
 class Subject(models.Model):
+    """Modelo para asignaturas"""
     name = models.CharField(max_length=200)
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subjects")
     days = models.JSONField(default=list)
@@ -31,24 +44,66 @@ class Subject(models.Model):
 
     class Meta:
         ordering = ["name"]
+        verbose_name = "Asignatura"
+        verbose_name_plural = "Asignaturas"
 
     def __str__(self):
         return self.name
 
 
-class Group(models.Model):
-    name = models.CharField(max_length=200)
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="teacher_groups")
-    students = models.ManyToManyField(Student, related_name="groups", blank=True)
-    subjects = models.ManyToManyField(Subject, related_name="groups", blank=True)
+class Student(models.Model):
+    """Modelo para estudiantes con relación jerárquica a grupos"""
+    name = models.CharField(max_length=200, help_text="Nombre del estudiante")
+    apellidos = models.CharField(max_length=200, help_text="Apellidos del estudiante")
+    email = models.EmailField(unique=True, help_text="Email único del estudiante")
+    photo = models.FileField(upload_to="students/", null=True, blank=True)
+    attendance_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
+    
+    # Relación principal obligatoria
+    grupo_principal = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="alumnos", help_text="Grupo principal del estudiante")
+    
+    # Relaciones secundarias (subgrupos)
+    subgrupos = models.ManyToManyField(Group, related_name="subgrupos", blank=True, help_text="Grupos adicionales donde participa el estudiante")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["grupo_principal__course", "grupo_principal__name", "apellidos", "name"]
+        verbose_name = "Estudiante"
+        verbose_name_plural = "Estudiantes"
 
     def __str__(self):
-        return self.name
+        return f"{self.name} {self.apellidos} ({self.grupo_principal})"
+
+    @property
+    def full_name(self):
+        """Nombre completo del estudiante"""
+        return f"{self.name} {self.apellidos}"
+
+    @property
+    def course(self):
+        """Curso del grupo principal"""
+        return self.grupo_principal.course
+
+    @property
+    def all_groups(self):
+        """Todos los grupos donde participa el estudiante"""
+        groups = [self.grupo_principal]
+        groups.extend(self.subgrupos.all())
+        return groups
+
+    def is_in_group(self, group):
+        """Verifica si el estudiante pertenece a un grupo específico"""
+        return self.grupo_principal == group or group in self.subgrupos.all()
+
+    def is_principal_in_group(self, group):
+        """Verifica si el estudiante tiene este grupo como principal"""
+        return self.grupo_principal == group
+
+    def is_subgrupo_in_group(self, group):
+        """Verifica si el estudiante participa como subgrupo en este grupo"""
+        return group in self.subgrupos.all()
 
 
 class CalendarEvent(models.Model):

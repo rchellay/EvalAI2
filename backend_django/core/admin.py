@@ -11,11 +11,46 @@ from .models import (
 )
 
 
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'course', 'get_teacher_username', 'total_students', 'total_subgrupos']
+    list_filter = ['teacher', 'course']
+    search_fields = ['name', 'course']
+    filter_horizontal = ['subjects']
+    list_per_page = 50
+    
+    def get_teacher_username(self, obj):
+        return obj.teacher.username if obj.teacher else '-'
+    get_teacher_username.short_description = 'Teacher'
+    get_teacher_username.admin_order_field = 'teacher__username'
+    
+    def save_model(self, request, obj, form, change):
+        # Si es un nuevo objeto y no tiene teacher asignado, asignar el usuario actual
+        if not change and not obj.teacher_id:
+            obj.teacher = request.user
+        super().save_model(request, obj, form, change)
+
+
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'email', 'course']
-    search_fields = ['name', 'email']
+    list_display = ['id', 'name', 'apellidos', 'email', 'grupo_principal', 'get_subgrupos_count']
+    list_filter = ['grupo_principal', 'grupo_principal__course']
+    search_fields = ['name', 'apellidos', 'email']
+    filter_horizontal = ['subgrupos']
     list_per_page = 50
+    
+    def get_subgrupos_count(self, obj):
+        return obj.subgrupos.count()
+    get_subgrupos_count.short_description = 'Subgrupos'
+    
+    def save_model(self, request, obj, form, change):
+        # Validar que siempre tenga un grupo principal
+        if not obj.grupo_principal_id:
+            # Si no tiene grupo principal, asignar el primer grupo disponible
+            first_group = Group.objects.first()
+            if first_group:
+                obj.grupo_principal = first_group
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Subject)
@@ -29,26 +64,6 @@ class SubjectAdmin(admin.ModelAdmin):
         return obj.teacher.username if obj.teacher else '-'
     get_teacher_username.short_description = 'Teacher'
     get_teacher_username.admin_order_field = 'teacher__username'
-
-
-@admin.register(Group)
-class GroupAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'get_teacher_username']
-    list_filter = ['teacher']
-    search_fields = ['name']
-    filter_horizontal = ['students', 'subjects']
-    list_per_page = 50
-    
-    def get_teacher_username(self, obj):
-        return obj.teacher.username if obj.teacher else '-'
-    get_teacher_username.short_description = 'Teacher'
-    get_teacher_username.admin_order_field = 'teacher__username'
-    
-    def save_model(self, request, obj, form, change):
-        # Si es un nuevo objeto y no tiene teacher asignado, asignar el usuario actual
-        if not change and not obj.teacher_id:
-            obj.teacher = request.user
-        super().save_model(request, obj, form, change)
 
 
 @admin.register(CalendarEvent)

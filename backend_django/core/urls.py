@@ -29,6 +29,7 @@ from .views import (
 )
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
+from .views_hierarchy import GroupHierarchyViewSet, StudentHierarchyViewSet
 from .auth_views import login_view, register_view, google_login_view, ping_view
 from .admin_views import cleanup_duplicates_view
 
@@ -64,6 +65,10 @@ router.register(r'estudiantes', StudentContextualViewSet, basename='estudiante')
 
 # Rutas de asistencia
 router.register(r'asistencia', AttendanceViewSet, basename='asistencia')
+
+# Rutas jerárquicas para grupos y estudiantes
+router.register(r'grupos', GroupHierarchyViewSet, basename='grupo-hierarchy')
+router.register(r'estudiantes', StudentHierarchyViewSet, basename='estudiante-hierarchy')
 
 urlpatterns = [
     path('', include(router.urls)),

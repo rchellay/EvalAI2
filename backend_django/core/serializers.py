@@ -16,10 +16,48 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='full_name', read_only=True)
+    grupo_principal_name = serializers.CharField(source='grupo_principal.name', read_only=True)
+    grupo_principal_course = serializers.CharField(source='grupo_principal.course', read_only=True)
+    subgrupos_count = serializers.SerializerMethodField()
+    all_groups_info = serializers.SerializerMethodField()
+    
     class Meta:
         model = Student
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'apellidos', 'email', 'photo', 'attendance_percentage',
+            'grupo_principal', 'grupo_principal_name', 'grupo_principal_course',
+            'subgrupos', 'subgrupos_count', 'all_groups_info',
+            'full_name', 'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_subgrupos_count(self, obj):
+        return obj.subgrupos.count()
+    
+    def get_all_groups_info(self, obj):
+        groups_info = []
+        
+        # Grupo principal
+        groups_info.append({
+            'id': obj.grupo_principal.id,
+            'name': obj.grupo_principal.name,
+            'course': obj.grupo_principal.course,
+            'type': 'principal',
+            'type_label': 'Grupo Principal'
+        })
+        
+        # Subgrupos
+        for subgrupo in obj.subgrupos.all():
+            groups_info.append({
+                'id': subgrupo.id,
+                'name': subgrupo.name,
+                'course': subgrupo.course,
+                'type': 'subgrupo',
+                'type_label': 'Subgrupo'
+            })
+        
+        return groups_info
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -34,16 +72,18 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.username', read_only=True)
-    student_count = serializers.SerializerMethodField()
+    total_students = serializers.IntegerField(source='total_students', read_only=True)
+    total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
     subject_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Group
-        fields = ['id', 'name', 'teacher', 'teacher_name', 'student_count', 'subject_count', 'created_at', 'updated_at']
+        fields = [
+            'id', 'name', 'course', 'teacher', 'teacher_name', 
+            'subjects', 'total_students', 'total_subgrupos', 'subject_count',
+            'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def get_student_count(self, obj):
-        return obj.students.count()
     
     def get_subject_count(self, obj):
         return obj.subjects.count()
