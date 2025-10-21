@@ -34,8 +34,8 @@ try:
     for row in cur.fetchall():
         print(f"   ID: {row[0]} | {row[1]} ({row[2]}-{row[3]}) | Creada: {row[4]}")
     
-    # 3. ELIMINAR duplicados
-    print("\n🗑️  Eliminando duplicados...")
+    # 3. Obtener IDs de duplicados
+    print("\n🗑️  Identificando duplicados...")
     cur.execute("""
         WITH duplicates AS (
             SELECT 
@@ -47,13 +47,47 @@ try:
             FROM core_subject 
             WHERE teacher_id = (SELECT id FROM auth_user WHERE username = 'clara')
         )
-        DELETE FROM core_subject
-        WHERE id IN (
-            SELECT id FROM duplicates WHERE rn > 1
-        )
+        SELECT id FROM duplicates WHERE rn > 1
     """)
-    duplicados_eliminados = cur.rowcount
-    print(f"   ✅ Eliminados {duplicados_eliminados} duplicados")
+    duplicate_ids = [row[0] for row in cur.fetchall()]
+    print(f"   Encontrados {len(duplicate_ids)} duplicados: {duplicate_ids}")
+    
+    if duplicate_ids:
+        placeholders = ','.join(['%s'] * len(duplicate_ids))
+        
+        # 3.1. Eliminar referencias en core_group_subjects
+        print("\n🔗 Eliminando relaciones con grupos...")
+        cur.execute(f"""
+            DELETE FROM core_group_subjects 
+            WHERE subject_id IN ({placeholders})
+        """, duplicate_ids)
+        relaciones_eliminadas = cur.rowcount
+        print(f"   ✅ Eliminadas {relaciones_eliminadas} relaciones grupo-asignatura")
+        
+        # 3.2. Actualizar rúbricas para que no apunten a asignaturas duplicadas
+        print("\n📋 Actualizando referencias de rúbricas...")
+        cur.execute(f"""
+            UPDATE core_rubric 
+            SET subject_id = NULL 
+            WHERE subject_id IN ({placeholders})
+        """, duplicate_ids)
+        rubricas_actualizadas = cur.rowcount
+        print(f"   ✅ Actualizadas {rubricas_actualizadas} rúbricas")
+        
+        # 3.3. Actualizar otras referencias si existen
+        print("\n📝 Actualizando otras referencias...")
+        
+        # 3.4. Ahora eliminar las asignaturas duplicadas
+        print("\n🗑️  Eliminando asignaturas duplicadas...")
+        cur.execute(f"""
+            DELETE FROM core_subject
+            WHERE id IN ({placeholders})
+        """, duplicate_ids)
+        duplicados_eliminados = cur.rowcount
+        print(f"   ✅ Eliminados {duplicados_eliminados} duplicados")
+    else:
+        duplicados_eliminados = 0
+        print("   ✅ No hay duplicados para eliminar")
     
     # 4. Verificar estructura de la tabla core_group
     print("\n🔍 Verificando estructura de core_group...")
