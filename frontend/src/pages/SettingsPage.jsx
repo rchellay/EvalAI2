@@ -219,10 +219,10 @@ const SettingsPage = () => {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      {tema === 'light' && <Sun className="h-5 w-5 mx-auto" />}
-                      {tema === 'dark' && <Moon className="h-5 w-5 mx-auto" />}
-                      {tema === 'system' && <Monitor className="h-5 w-5 mx-auto" />}
-                      <span className="block text-xs mt-1 capitalize">{tema === 'light' ? 'Claro' : tema === 'dark' ? 'Oscuro' : 'Sistema'}</span>
+                      {tema === 'light' && <Sun className="h-5 w-5 mx-auto text-gray-700" />}
+                      {tema === 'dark' && <Moon className="h-5 w-5 mx-auto text-gray-700" />}
+                      {tema === 'system' && <Monitor className="h-5 w-5 mx-auto text-gray-700" />}
+                      <span className="block text-xs mt-1 capitalize text-gray-900">{tema === 'light' ? 'Claro' : tema === 'dark' ? 'Oscuro' : 'Sistema'}</span>
                     </button>
                   ))}
                 </div>
@@ -295,7 +295,7 @@ const SettingsPage = () => {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <Mail className="mr-2 h-5 w-5 text-gray-600" />
-                  <span className="text-sm font-medium">Notificaciones por correo</span>
+                  <span className="text-sm font-medium text-gray-900">Notificaciones por correo</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -311,7 +311,7 @@ const SettingsPage = () => {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <Bell className="mr-2 h-5 w-5 text-gray-600" />
-                  <span className="text-sm font-medium">Notificaciones en la app</span>
+                  <span className="text-sm font-medium text-gray-900">Notificaciones en la app</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -352,7 +352,7 @@ const SettingsPage = () => {
                     onChange={(e) => handleChange('notif_evaluaciones_pendientes', e.target.checked)}
                     className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm">Evaluaciones pendientes</span>
+                  <span className="text-sm text-gray-900">Evaluaciones pendientes</span>
                 </label>
 
                 <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
@@ -362,7 +362,7 @@ const SettingsPage = () => {
                     onChange={(e) => handleChange('notif_informes_listos', e.target.checked)}
                     className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm">Informes listos</span>
+                  <span className="text-sm text-gray-900">Informes listos</span>
                 </label>
 
                 <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
@@ -372,7 +372,7 @@ const SettingsPage = () => {
                     onChange={(e) => handleChange('notif_asistencias', e.target.checked)}
                     className="mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm">Asistencias no marcadas</span>
+                  <span className="text-sm text-gray-900">Asistencias no marcadas</span>
                 </label>
               </div>
 
@@ -421,7 +421,7 @@ const SettingsPage = () => {
                 <div>
                   <div className="flex items-center">
                     <Lock className="mr-2 h-5 w-5 text-gray-600" />
-                    <span className="text-sm font-medium">Cifrado de datos sensibles</span>
+                    <span className="text-sm font-medium text-gray-900">Cifrado de datos sensibles</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1 ml-7">Encripta transcripciones y audios</p>
                 </div>

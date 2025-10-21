@@ -230,9 +230,11 @@ class SubjectViewSet(viewsets.ModelViewSet):
 
 
 class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Group.objects.filter(teacher=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
