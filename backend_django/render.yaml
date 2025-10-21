@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: evalai-backend
+    env: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python fix_render_deployment.py
+      python manage.py migrate --fake --noinput
+    startCommand: gunicorn config.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: evalai-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: evalai-backend.onrender.com
+    healthCheckPath: /api/
+
+databases:
+  - name: evalai-db
+    plan: free
