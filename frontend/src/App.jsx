@@ -28,15 +28,14 @@ import api from './lib/axios';
 
 function TopBar() {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
+  // Tema oscuro eliminado - solo modo claro
   useEffect(() => {
     const root = document.documentElement;    
-    if (theme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    root.classList.remove('dark'); // Siempre modo claro
+  }, []);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -56,14 +55,7 @@ function TopBar() {
     <header className="flex items-center justify-between h-16 px-6 bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200 dark:border-slate-800">
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white">EvalIA</h2>
       <div className="flex items-center gap-4">
-        <button 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          title="Cambiar tema"
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        <button className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100">
           <Bell size={20} />
         </button>
         <div className="relative">
