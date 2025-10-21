@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   User, School, Calendar, Globe, Sun, Moon, Monitor, 
   Type, Palette, Bell, Mail, Clock, Shield, Lock, 
-  Key, AlertTriangle, CheckCircle, Save, Send, Wrench 
+  Key, AlertTriangle, CheckCircle, Save, Send 
 } from 'lucide-react';
 import api from '../lib/axios';
 import { toast } from 'react-hot-toast';
 
 const SettingsPage = () => {
-  const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -476,24 +474,6 @@ const SettingsPage = () => {
               <span className="ml-2 font-medium text-gray-900">{settings?.email}</span>
             </div>
           </div>
-        </div>
-
-        {/* Herramientas de administración */}
-        <div className="mt-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl shadow-md p-6 border border-orange-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-            <Wrench className="h-5 w-5 mr-2 text-orange-600" />
-            Herramientas de Administración
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Herramientas para limpiar y mantener tus datos en orden
-          </p>
-          <button
-            onClick={() => navigate('/admin/cleanup')}
-            className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow-sm"
-          >
-            <Wrench className="h-4 w-4" />
-            Limpiar Datos Duplicados
-          </button>
         </div>
       </div>
 

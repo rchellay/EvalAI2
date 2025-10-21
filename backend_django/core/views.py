@@ -1752,27 +1752,34 @@ def student_analytics_data(request, student_id):
 def dashboard_resumen(request):
     """Resumen general del dashboard del docente"""
     try:
+        user = request.user
         today = timezone.now().date()
         week_ago = today - timedelta(days=7)
         
-        # Total de alumnos activos
-        total_alumnos = Student.objects.count()
+        # Total de alumnos activos (del profesor)
+        total_alumnos = Student.objects.filter(groups__teacher=user).distinct().count()
         
-        # Total de asignaturas
-        total_asignaturas = Subject.objects.count()
+        # Total de asignaturas (del profesor)
+        total_asignaturas = Subject.objects.filter(teacher=user).count()
         
-        # Evaluaciones registradas esta semana
+        # Evaluaciones registradas esta semana (del profesor)
         evaluaciones_semana = Evaluation.objects.filter(
+            evaluator=user,
             created_at__gte=week_ago
         ).count()
         
-        # Asistencias de hoy
+        # Asistencias de hoy (de los estudiantes del profesor)
+        student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
         asistencias_hoy = Attendance.objects.filter(
+            student_id__in=student_ids,
             date=today,
             status='presente'
         ).count()
         
-        total_asistencias_hoy = Attendance.objects.filter(date=today).count()
+        total_asistencias_hoy = Attendance.objects.filter(
+            student_id__in=student_ids,
+            date=today
+        ).count()
         porcentaje_asistencia = round((asistencias_hoy / total_asistencias_hoy * 100), 1) if total_asistencias_hoy > 0 else 0
         
         return Response({
@@ -1828,11 +1835,13 @@ def evolucion_rendimiento(request):
     try:
         from django.db.models.functions import TruncDate
         
+        user = request.user
         thirty_days_ago = timezone.now().date() - timedelta(days=30)
         subject_id = request.GET.get('subject_id')
         
-        # Filtro por asignatura si se especifica
+        # Filtro por asignatura si se especifica (del profesor)
         evaluations_filter = Evaluation.objects.filter(
+            evaluator=user,
             created_at__gte=thirty_days_ago,
             score__isnull=False
         )
@@ -1992,18 +2001,28 @@ def insights_ia(request):
     try:
         if request.method == 'GET':
             # Obtener insights existentes o generar nuevos
+            user = request.user
             thirty_days_ago = timezone.now().date() - timedelta(days=30)
             
-            # Obtener datos del aula
-            total_students = Student.objects.count()
-            total_evaluations = Evaluation.objects.filter(created_at__gte=thirty_days_ago).count()
+            # Obtener datos del aula (del profesor)
+            total_students = Student.objects.filter(groups__teacher=user).distinct().count()
+            total_evaluations = Evaluation.objects.filter(
+                evaluator=user,
+                created_at__gte=thirty_days_ago
+            ).count()
             avg_score = Evaluation.objects.filter(
+                evaluator=user,
                 created_at__gte=thirty_days_ago,
                 score__isnull=False
             ).aggregate(avg=Avg('score'))['avg'] or 0
             
-            total_attendance = Attendance.objects.filter(date__gte=thirty_days_ago).count()
+            student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
+            total_attendance = Attendance.objects.filter(
+                student_id__in=student_ids,
+                date__gte=thirty_days_ago
+            ).count()
             present_attendance = Attendance.objects.filter(
+                student_id__in=student_ids,
                 date__gte=thirty_days_ago,
                 status='presente'
             ).count()
@@ -2085,12 +2104,16 @@ def rubricas_estadisticas(request):
 def evaluaciones_pendientes(request):
     """Alumnos sin evaluación en la última semana"""
     try:
+        user = request.user
         week_ago = timezone.now().date() - timedelta(days=7)
         
-        # Obtener alumnos que no han sido evaluados en la última semana
-        students_without_evaluation = Student.objects.exclude(
-            evaluations__created_at__gte=week_ago
-        ).order_by('name')
+        # Obtener alumnos del profesor que no han sido evaluados en la última semana
+        students_without_evaluation = Student.objects.filter(
+            groups__teacher=user
+        ).exclude(
+            evaluations__created_at__gte=week_ago,
+            evaluations__evaluator=user
+        ).distinct().order_by('name')
         
         pendientes_data = []
         for student in students_without_evaluation:
@@ -2651,73 +2674,3 @@ def non_school_days(request):
     ).values('fecha', 'titulo')
     
     return Response(list(dias_no_lectivos))
-
-
-# ==================== ENDPOINT DE LIMPIEZA TEMPORAL ====================
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def cleanup_duplicates(request):
-    """
-    Endpoint temporal para limpiar datos duplicados.
-    SOLO para uso del administrador.
-    """
-    try:
-        user = request.user
-        report = {
-            'user': user.username,
-            'actions': [],
-            'errors': []
-        }
-        
-        # 1. Limpiar asignaturas duplicadas del usuario actual
-        subjects = Subject.objects.filter(teacher=user)
-        seen_names = {}
-        duplicates_removed = []
-        
-        for subject in subjects.order_by('created_at'):
-            key = f"{subject.name}_{subject.start_time}_{subject.end_time}"
-            if key in seen_names:
-                # Es un duplicado, eliminar
-                duplicates_removed.append(f"{subject.name} (ID: {subject.id})")
-                subject.delete()
-            else:
-                seen_names[key] = subject.id
-        
-        if duplicates_removed:
-            report['actions'].append(f"✅ Eliminadas {len(duplicates_removed)} asignaturas duplicadas")
-            report['duplicates_removed'] = duplicates_removed
-        else:
-            report['actions'].append("✅ No se encontraron asignaturas duplicadas")
-        
-        # 2. Verificar y crear grupo "4to" si no existe para usuarios específicos
-        grupo_4to = Group.objects.filter(teacher=user, name__icontains='4').first()
-        
-        if not grupo_4to:
-            # Crear grupo 4to
-            grupo_4to = Group.objects.create(
-                name='4to',
-                teacher=user
-            )
-            report['actions'].append(f"✅ Creado grupo '4to' (ID: {grupo_4to.id})")
-        else:
-            report['actions'].append(f"✅ Ya existe grupo '{grupo_4to.name}' (ID: {grupo_4to.id})")
-        
-        # 3. Estadísticas finales
-        total_subjects = Subject.objects.filter(teacher=user).count()
-        total_groups = Group.objects.filter(teacher=user).count()
-        total_students = Student.objects.filter(groups__teacher=user).distinct().count()
-        
-        report['summary'] = {
-            'total_asignaturas': total_subjects,
-            'total_grupos': total_groups,
-            'total_estudiantes': total_students
-        }
-        
-        return Response(report, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'message': 'Error al limpiar duplicados'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
