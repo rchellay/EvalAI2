@@ -71,7 +71,7 @@ class RubricCriterionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RubricCriterion
-        fields = ['id', 'name', 'description', 'order', 'weight', 'levels', 'created_at']
+        fields = ['id', 'rubric', 'name', 'description', 'order', 'weight', 'levels', 'created_at']
         read_only_fields = ['id', 'created_at']
     
     def validate_weight(self, value):
