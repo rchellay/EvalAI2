@@ -19,6 +19,7 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import InformesPage from './pages/InformesPage';
 import CorreccionPage from './pages/CorreccionPage';
 import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
+import SettingsPage from './pages/SettingsPage';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -129,7 +130,7 @@ function App() {
             <Route path="/evidencias-correccion/:studentId" element={<ProtectedRoute><EvidenciasCorreccionPage /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
             <Route path="/informes" element={<ProtectedRoute><InformesPage /></ProtectedRoute>} />
-            <Route path="/ajustes" element={<ProtectedRoute><PlaceholderPage title="Ajustes" /></ProtectedRoute>} />
+            <Route path="/ajustes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           </Route>
         </Routes>
       </div>

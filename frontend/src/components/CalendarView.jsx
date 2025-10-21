@@ -8,6 +8,8 @@ import api from "../lib/axios";
 import { toast } from "react-hot-toast";
 import { RRule } from "rrule";
 import "moment/locale/es";
+import { Plus } from "lucide-react";
+import CreateEventModal from "./CreateEventModal";
 
 // Configurar español como idioma predeterminado con lunes como primer día
 moment.updateLocale("es", {
@@ -26,6 +28,8 @@ export default function CalendarView() {
   const [subjects, setSubjects] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDayEvents, setSelectedDayEvents] = useState([]);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [customEvents, setCustomEvents] = useState([]);
 
   useEffect(() => {
     const loadSubjects = async () => {
@@ -44,7 +48,38 @@ export default function CalendarView() {
       }
     };
     loadSubjects();
+    loadCustomEvents();
   }, []);
+
+  const loadCustomEvents = async () => {
+    try {
+      const response = await api.get('/eventos/');
+      const eventosData = Array.isArray(response.data) ? response.data : response.data.results || [];
+      setCustomEvents(eventosData);
+      
+      // Convertir eventos a formato del calendario
+      const calendarEvents = eventosData.map(evento => ({
+        id: `custom-${evento.id}`,
+        title: evento.titulo,
+        start: new Date(evento.fecha + 'T' + (evento.hora_inicio || '00:00')),
+        end: new Date(evento.fecha + 'T' + (evento.hora_fin || '23:59')),
+        allDay: evento.todo_el_dia,
+        type: evento.tipo,
+        color: evento.color,
+        description: evento.descripcion,
+        isCustomEvent: true
+      }));
+      
+      // Agregar eventos personalizados a los eventos del calendario
+      setEvents(prev => [...prev, ...calendarEvents]);
+    } catch (error) {
+      console.error('Error cargando eventos personalizados:', error);
+    }
+  };
+
+  const handleEventCreated = (newEvent) => {
+    loadCustomEvents(); // Recargar eventos
+  };
 
   const loadEventsForCurrentMonth = (subjectsData) => {
     // Primer día visible: lunes de la semana que contiene el primer día del mes
@@ -268,6 +303,13 @@ export default function CalendarView() {
           />
         </div>
       </div>
+      
+      {/* Modal para crear eventos */}
+      <CreateEventModal
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        onEventCreated={handleEventCreated}
+      />
     </div>
   );
 }
