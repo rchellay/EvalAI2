@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://evalai-backend.onrender.com/api/$1"
+      "dest": "https://evalai2.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
@@ -20,7 +20,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://evalai-backend.onrender.com"
+    "VITE_API_URL": "https://evalai2.onrender.com/api"
   },
   "buildCommand": "npm run build",
   "outputDirectory": "dist"
