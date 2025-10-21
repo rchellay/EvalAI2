@@ -91,31 +91,19 @@ const WidgetRendimiento = () => {
         </button>
       </div>
 
-      {/* Gráfico */}
+      {/* Gráfico temporalmente deshabilitado */}
       <div className="h-48 mb-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis 
-              dataKey="date" 
-              stroke="#64748b"
-              fontSize={12}
-              tickFormatter={(value) => new Date(value).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
-            />
-            <YAxis stroke="#64748b" fontSize={12} domain={[0, 10]} />
-            <Tooltip 
-              labelFormatter={(value) => new Date(value).toLocaleDateString('es-ES')}
-              formatter={(value) => [`${value}/10`, 'Promedio']}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="avg_score" 
-              stroke="#3b82f6" 
-              strokeWidth={2}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {summary?.avg_score_general || 0}
+            </div>
+            <div className="text-sm text-blue-800">Promedio General</div>
+            <div className="text-xs text-gray-500 mt-1">
+              {summary?.total_evaluations || 0} evaluaciones
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Resumen estadístico */}

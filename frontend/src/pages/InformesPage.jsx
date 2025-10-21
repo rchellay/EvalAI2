@@ -45,29 +45,32 @@ const FortalezasAreas = ({ fortalezas, areas }) => (
 const NotasChart = ({ data }) => (
   <div className="bg-white p-4 rounded-lg mb-4 shadow">
     <h4 className="font-semibold mb-2">Evolución de notas</h4>
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={data}>
-        <XAxis dataKey="fecha" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="nota" stroke="#2563eb" />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="h-48 flex items-center justify-center bg-gray-50 rounded">
+      <div className="text-center">
+        <div className="text-lg font-bold text-blue-600">
+          {data.length > 0 ? data[data.length - 1]?.nota || 0 : 0}
+        </div>
+        <div className="text-sm text-blue-800">Última Nota</div>
+        <div className="text-xs text-gray-500 mt-1">
+          {data.length} evaluaciones
+        </div>
+      </div>
+    </div>
   </div>
 );
 
 const AsistenciaChart = ({ presente, ausente }) => (
   <div className="bg-white p-4 rounded-lg mb-4 shadow">
     <h4 className="font-semibold mb-2">Asistencia</h4>
-    <ResponsiveContainer width="100%" height={200}>
-      <PieChart>
-        <Pie data={[{ name: 'Presente', value: presente }, { name: 'Ausente', value: ausente }]} dataKey="value" cx="50%" cy="50%" outerRadius={60} label>
-          <Cell key="Presente" fill="#22c55e" />
-          <Cell key="Ausente" fill="#ef4444" />
-        </Pie>
-        <Tooltip />
-      </PieChart>
-    </ResponsiveContainer>
+    <div className="h-48 flex items-center justify-center bg-gray-50 rounded">
+      <div className="text-center">
+        <div className="text-lg font-bold text-green-600">{presente}</div>
+        <div className="text-sm text-green-800">Presentes</div>
+        <div className="text-xs text-gray-500 mt-1">
+          {ausente} ausentes
+        </div>
+      </div>
+    </div>
   </div>
 );
 

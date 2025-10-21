@@ -14,41 +14,18 @@ export default function ActivityChart({ data }) {
         Actividad
       </h3>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b86e3" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3b86e3" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis 
-              dataKey="date" 
-              stroke="#94a3b8"
-              style={{ fontSize: '12px' }}
-            />
-            <YAxis 
-              stroke="#94a3b8"
-              style={{ fontSize: '12px' }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1e293b', 
-                border: 'none', 
-                borderRadius: '8px',
-                color: '#fff'
-              }}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="count" 
-              stroke="#3b86e3" 
-              strokeWidth={3}
-              fill="url(#colorActivity)" 
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      {/* Gráfico temporalmente deshabilitado */}
+      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+        <div className="text-center">
+          <div className="text-lg font-bold text-blue-600">
+            {chartData.length > 0 ? chartData[chartData.length - 1]?.count || 0 : 0}
+          </div>
+          <div className="text-sm text-blue-800">Actividad Reciente</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {chartData.length} registros
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

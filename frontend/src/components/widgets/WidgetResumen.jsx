@@ -87,24 +87,15 @@ const WidgetResumen = () => {
           </div>
         </div>
 
-        {/* Gráfico circular */}
+        {/* Gráfico circular temporalmente deshabilitado */}
         <div className="flex items-center justify-center">
-          <ResponsiveContainer width="100%" height={120}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={30}
-                outerRadius={50}
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-600">{data.asistencias_hoy}</div>
+            <div className="text-sm text-green-800">Presentes</div>
+            <div className="text-xs text-gray-500 mt-1">
+              de {data.total_asistencias_hoy} total
+            </div>
+          </div>
         </div>
       </div>
 
