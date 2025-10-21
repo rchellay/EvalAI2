@@ -39,7 +39,7 @@ class StudentViewSet(viewsets.ModelViewSet):
         if self.request.user.is_superuser:
             return Student.objects.all()
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
-        return Student.objects.filter(groups__teacher=self.request.user).distinct()
+        return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
     
     @action(detail=True, methods=['post'], url_path='attendance')
     def add_attendance(self, request, pk=None):
@@ -104,9 +104,10 @@ class StudentViewSet(viewsets.ModelViewSet):
         else:
             # Si no se especifica asignatura, obtener todas las del día para el grupo del estudiante
             # Obtener grupos del estudiante
-            student_groups = student.groups.all()
+            student_groups = [student.grupo_principal]
+            student_groups.extend(student.subgrupos.all())
             
-            if not student_groups.exists():
+            if not student_groups:
                 return Response({
                     'error': 'El estudiante no pertenece a ningún grupo'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -1002,7 +1003,7 @@ def groups_stats(request):
     Returns statistics for groups page.
     """
     total_groups = Group.objects.count()
-    active_groups = Group.objects.filter(students__isnull=False).distinct().count()
+    active_groups = Group.objects.filter(alumnos__isnull=False).distinct().count()
     
     return Response({
         'total': total_groups,
@@ -1075,11 +1076,11 @@ class GroupStudentsViewSet(viewsets.ReadOnlyModelViewSet):
         # Superusers ven todo
         if self.request.user.is_superuser:
             return Student.objects.filter(
-                groups__id=group_id
+                grupo_principal__id=group_id
             ).distinct().prefetch_related('evaluations__subject')
         return Student.objects.filter(
-            groups__id=group_id,
-            groups__subjects__teacher=self.request.user
+            grupo_principal__id=group_id,
+            grupo_principal__subjects__teacher=self.request.user
         ).distinct().prefetch_related('evaluations__subject')
 
 
@@ -1129,12 +1130,12 @@ class SubjectDetailViewSet(viewsets.ReadOnlyModelViewSet):
         # Superusers ven todo
         if self.request.user.is_superuser:
             return Subject.objects.all().prefetch_related(
-                'groups__students',
+                'groups__alumnos',
                 'groups__subjects'
             )
         # Solo mostrar asignaturas del profesor autenticado
         return Subject.objects.filter(teacher=self.request.user).prefetch_related(
-            'groups__students',
+            'groups__alumnos',
             'groups__subjects'
         )
 
@@ -1166,7 +1167,7 @@ class StudentDetailViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.is_superuser:
             return Student.objects.all().prefetch_related('evaluations__subject')
         # Solo mostrar estudiantes de grupos que tengan asignaturas del profesor
-        return Student.objects.filter(groups__subjects__teacher=self.request.user).distinct().prefetch_related(
+        return Student.objects.filter(grupo_principal__subjects__teacher=self.request.user).distinct().prefetch_related(
             'evaluations__subject'
         )
 
@@ -1214,7 +1215,7 @@ class SelfEvaluationViewSet(viewsets.ModelViewSet):
         # Superusers ven todo
         if self.request.user.is_superuser:
             return SelfEvaluation.objects.all().select_related('student', 'subject')
-        return SelfEvaluation.objects.filter(student__groups__subjects__teacher=self.request.user).select_related('student', 'subject')
+        return SelfEvaluation.objects.filter(student__grupo_principal__subjects__teacher=self.request.user).select_related('student', 'subject')
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -1606,7 +1607,8 @@ def download_student_report_pdf(request, student_id):
         # Verificar que el usuario tenga acceso a este estudiante
         has_access = (
             request.user.is_staff or
-            student.groups.filter(teacher=request.user).exists()
+            student.grupo_principal.teacher == request.user or
+            student.subgrupos.filter(teacher=request.user).exists()
         )
 
         if not has_access:
@@ -1649,7 +1651,8 @@ def download_evaluation_summary_pdf(request, student_id):
         # Verificar permisos
         has_access = (
             request.user.is_staff or
-            student.groups.filter(teacher=request.user).exists()
+            student.grupo_principal.teacher == request.user or
+            student.subgrupos.filter(teacher=request.user).exists()
         )
 
         if not has_access:
@@ -1714,7 +1717,8 @@ def student_analytics_data(request, student_id):
         # Verificar permisos
         has_access = (
             request.user.is_staff or
-            student.groups.filter(teacher=request.user).exists()
+            student.grupo_principal.teacher == request.user or
+            student.subgrupos.filter(teacher=request.user).exists()
         )
 
         if not has_access:
@@ -1856,7 +1860,7 @@ def dashboard_resumen(request):
         week_ago = today - timedelta(days=7)
         
         # Total de alumnos activos (del profesor)
-        total_alumnos = Student.objects.filter(groups__teacher=user).distinct().count()
+        total_alumnos = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
         
         # Total de asignaturas (del profesor)
         total_asignaturas = Subject.objects.filter(teacher=user).count()
@@ -1868,7 +1872,7 @@ def dashboard_resumen(request):
         ).count()
         
         # Asistencias de hoy (de los estudiantes del profesor)
-        student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
+        student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
         asistencias_hoy = Attendance.objects.filter(
             student_id__in=student_ids,
             date=today,
@@ -2104,7 +2108,7 @@ def insights_ia(request):
             thirty_days_ago = timezone.now().date() - timedelta(days=30)
             
             # Obtener datos del aula (del profesor)
-            total_students = Student.objects.filter(groups__teacher=user).distinct().count()
+            total_students = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
             total_evaluations = Evaluation.objects.filter(
                 evaluator=user,
                 created_at__gte=thirty_days_ago
@@ -2115,7 +2119,7 @@ def insights_ia(request):
                 score__isnull=False
             ).aggregate(avg=Avg('score'))['avg'] or 0
             
-            student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
+            student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
             total_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
                 date__gte=thirty_days_ago
@@ -2208,7 +2212,7 @@ def evaluaciones_pendientes(request):
         
         # Obtener alumnos del profesor que no han sido evaluados en la última semana
         students_without_evaluation = Student.objects.filter(
-            groups__teacher=user
+            grupo_principal__teacher=user
         ).exclude(
             evaluations__created_at__gte=week_ago,
             evaluations__evaluator=user
@@ -2224,7 +2228,7 @@ def evaluaciones_pendientes(request):
             pendientes_data.append({
                 'id': student.id,
                 'name': student.name,
-                'group_name': ', '.join([g.name for g in student.groups.all()]) if student.groups.exists() else 'Sin grupo',
+                'group_name': student.grupo_principal.name if student.grupo_principal else 'Sin grupo',
                 'last_evaluation_date': last_evaluation.created_at.strftime('%d/%m/%Y') if last_evaluation else 'Nunca',
                 'last_evaluation_score': last_evaluation.score if last_evaluation else None
             })
