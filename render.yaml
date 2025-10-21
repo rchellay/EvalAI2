@@ -6,7 +6,8 @@ services:
     buildCommand: |
       cd backend_django
       pip install -r requirements.txt
-      python manage.py migrate
+      python force_migrate.py
+      python manage.py migrate --noinput
       python manage.py collectstatic --noinput
     startCommand: cd backend_django && gunicorn config.wsgi:application
     envVars:
