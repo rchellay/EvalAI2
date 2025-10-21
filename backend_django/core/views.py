@@ -35,6 +35,9 @@ class StudentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Student.objects.all()
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
         return Student.objects.filter(groups__teacher=self.request.user).distinct()
     
@@ -173,6 +176,9 @@ class SubjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Subject.objects.all()
         return Subject.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
@@ -239,6 +245,9 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Group.objects.all()
         return Group.objects.filter(teacher=self.request.user)
     
     def perform_create(self, serializer):
@@ -973,8 +982,14 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Filtrar evaluaciones del profesor actual
-        queryset = Evaluation.objects.filter(evaluator=self.request.user).select_related('student', 'subject', 'evaluator')
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = Evaluation.objects.all()
+        else:
+            # Filtrar evaluaciones del profesor actual
+            queryset = Evaluation.objects.filter(evaluator=self.request.user)
+        
+        queryset = queryset.select_related('student', 'subject', 'evaluator')
 
         # Filtros opcionales
         student_id = self.request.query_params.get('student_id')

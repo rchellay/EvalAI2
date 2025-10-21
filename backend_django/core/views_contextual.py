@@ -24,6 +24,9 @@ class SubjectNestedViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Subject.objects.all()
         return Subject.objects.filter(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='grupos')
@@ -93,6 +96,9 @@ class StudentContextualViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            return Student.objects.all()
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
         return Student.objects.filter(groups__teacher=self.request.user).distinct()
     
