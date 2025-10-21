@@ -20,6 +20,7 @@ import InformesPage from './pages/InformesPage';
 import CorreccionPage from './pages/CorreccionPage';
 import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
 import SettingsPage from './pages/SettingsPage';
+import AdminCleanupPage from './pages/AdminCleanupPage';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -123,6 +124,7 @@ function App() {
             <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
             <Route path="/informes" element={<ProtectedRoute><InformesPage /></ProtectedRoute>} />
             <Route path="/ajustes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/admin/cleanup" element={<ProtectedRoute><AdminCleanupPage /></ProtectedRoute>} />
           </Route>
         </Routes>
       </div>

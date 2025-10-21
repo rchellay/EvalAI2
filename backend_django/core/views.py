@@ -2651,3 +2651,73 @@ def non_school_days(request):
     ).values('fecha', 'titulo')
     
     return Response(list(dias_no_lectivos))
+
+
+# ==================== ENDPOINT DE LIMPIEZA TEMPORAL ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cleanup_duplicates(request):
+    """
+    Endpoint temporal para limpiar datos duplicados.
+    SOLO para uso del administrador.
+    """
+    try:
+        user = request.user
+        report = {
+            'user': user.username,
+            'actions': [],
+            'errors': []
+        }
+        
+        # 1. Limpiar asignaturas duplicadas del usuario actual
+        subjects = Subject.objects.filter(teacher=user)
+        seen_names = {}
+        duplicates_removed = []
+        
+        for subject in subjects.order_by('created_at'):
+            key = f"{subject.name}_{subject.start_time}_{subject.end_time}"
+            if key in seen_names:
+                # Es un duplicado, eliminar
+                duplicates_removed.append(f"{subject.name} (ID: {subject.id})")
+                subject.delete()
+            else:
+                seen_names[key] = subject.id
+        
+        if duplicates_removed:
+            report['actions'].append(f"✅ Eliminadas {len(duplicates_removed)} asignaturas duplicadas")
+            report['duplicates_removed'] = duplicates_removed
+        else:
+            report['actions'].append("✅ No se encontraron asignaturas duplicadas")
+        
+        # 2. Verificar y crear grupo "4to" si no existe para usuarios específicos
+        grupo_4to = Group.objects.filter(teacher=user, name__icontains='4').first()
+        
+        if not grupo_4to:
+            # Crear grupo 4to
+            grupo_4to = Group.objects.create(
+                name='4to',
+                teacher=user
+            )
+            report['actions'].append(f"✅ Creado grupo '4to' (ID: {grupo_4to.id})")
+        else:
+            report['actions'].append(f"✅ Ya existe grupo '{grupo_4to.name}' (ID: {grupo_4to.id})")
+        
+        # 3. Estadísticas finales
+        total_subjects = Subject.objects.filter(teacher=user).count()
+        total_groups = Group.objects.filter(teacher=user).count()
+        total_students = Student.objects.filter(groups__teacher=user).distinct().count()
+        
+        report['summary'] = {
+            'total_asignaturas': total_subjects,
+            'total_grupos': total_groups,
+            'total_estudiantes': total_students
+        }
+        
+        return Response(report, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'message': 'Error al limpiar duplicados'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
