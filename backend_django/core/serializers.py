@@ -33,19 +33,19 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.username', read_only=True)
-    students = StudentSerializer(many=True, read_only=True)
-    subjects = SubjectSerializer(many=True, read_only=True)
-    student_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Student.objects.all(), write_only=True, source='students'
-    )
-    subject_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Subject.objects.all(), write_only=True, source='subjects'
-    )
+    student_count = serializers.SerializerMethodField()
+    subject_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Group
-        fields = ['id', 'name', 'teacher', 'teacher_name', 'students', 'subjects', 'student_ids', 'subject_ids', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'teacher', 'teacher_name', 'student_count', 'subject_count', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_student_count(self, obj):
+        return obj.students.count()
+    
+    def get_subject_count(self, obj):
+        return obj.subjects.count()
 
 
 class CalendarEventSerializer(serializers.ModelSerializer):
@@ -82,15 +82,18 @@ class RubricCriterionSerializer(serializers.ModelSerializer):
 
 
 class RubricSerializer(serializers.ModelSerializer):
-    criteria = RubricCriterionSerializer(many=True, read_only=True)
     teacher_name = serializers.CharField(source='teacher.username', read_only=True)
-    subject_name = serializers.CharField(source='subject.name', read_only=True)
+    subject_name = serializers.CharField(source='subject.name', read_only=True, allow_null=True)
+    criteria_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Rubric
         fields = ['id', 'title', 'description', 'subject', 'subject_name', 'teacher', 
-                  'teacher_name', 'status', 'criteria', 'created_at', 'updated_at']
+                  'teacher_name', 'status', 'criteria_count', 'created_at', 'updated_at']
         read_only_fields = ['id', 'teacher', 'created_at', 'updated_at']
+    
+    def get_criteria_count(self, obj):
+        return obj.criteria.count()
 
 
 class RubricCreateSerializer(serializers.ModelSerializer):
