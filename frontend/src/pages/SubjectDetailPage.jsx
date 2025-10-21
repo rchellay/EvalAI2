@@ -148,6 +148,7 @@ const SubjectDetailPage = () => {
             <p className='text-3xl font-bold text-gray-900 mt-2'>
               {allStudents.filter(student =>
                 student.recent_evaluations &&
+                Array.isArray(student.recent_evaluations) &&
                 student.recent_evaluations.some(evaluation => evaluation.date === selectedDate)
               ).length}
             </p>

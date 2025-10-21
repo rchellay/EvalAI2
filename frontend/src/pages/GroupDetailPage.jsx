@@ -94,7 +94,7 @@ const GroupDetailPage = () => {
 
   // Estudiantes que no están en el grupo
   const studentsNotInGroup = availableStudents.filter(
-    (student) => !group.students.some((gs) => gs.id === student.id)
+    (student) => !group.students || !Array.isArray(group.students) || !group.students.some((gs) => gs.id === student.id)
   );
 
   return (

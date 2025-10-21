@@ -76,7 +76,7 @@ const AttendancePage = () => {
       const response = await api.get('/groups/');
       const groupsData = response.data.results || response.data;
       const filteredGroups = groupsData.filter(group =>
-        group.subjects && group.subjects.some(s => s.id === parseInt(subjectId))
+        group.subjects && Array.isArray(group.subjects) && group.subjects.some(s => s.id === parseInt(subjectId))
       );
       setGroups(filteredGroups);
       
@@ -293,7 +293,7 @@ const AttendancePage = () => {
       setSubjects(filteredSubjects);
       
       // Si la asignatura seleccionada ya no está en el día, resetearla
-      if (selectedSubject && !filteredSubjects.some(s => s.id === parseInt(selectedSubject))) {
+      if (selectedSubject && Array.isArray(filteredSubjects) && !filteredSubjects.some(s => s.id === parseInt(selectedSubject))) {
         setSelectedSubject(null);
         toast.info('La asignatura seleccionada no tiene clase este día');
       }
