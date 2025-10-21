@@ -1,0 +1,106 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Limpieza de Datos - {{ site_header }}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>🧹 Limpieza de Datos Duplicados</h1>
+    
+    <div class="module" style="max-width: 800px; margin: 20px 0;">
+        <p style="margin-bottom: 20px;">
+            Esta herramienta elimina asignaturas duplicadas (mismo nombre y horario) 
+            y crea el grupo "4to" si no existe para el usuario especificado.
+        </p>
+        
+        <form method="post" style="background: #f8f8f8; padding: 20px; border-radius: 5px;">
+            {% csrf_token %}
+            
+            <div class="form-row" style="margin-bottom: 15px;">
+                <div>
+                    <label for="username" style="display: block; font-weight: bold; margin-bottom: 5px;">
+                        Username del profesor a limpiar:
+                    </label>
+                    <input 
+                        type="text" 
+                        name="username" 
+                        id="username" 
+                        value="clara"
+                        required
+                        style="width: 300px; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 3px;"
+                    >
+                </div>
+            </div>
+            
+            {% if users %}
+            <div style="margin: 15px 0; padding: 10px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 3px;">
+                <strong>💡 Usuarios disponibles:</strong><br>
+                {% for user in users %}
+                    <span style="display: inline-block; margin: 5px; padding: 3px 8px; background: white; border-radius: 3px; font-size: 12px;">
+                        {{ user.username }}
+                    </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 3px;">
+                <strong>⚠️ Advertencia:</strong><br>
+                Esta acción eliminará permanentemente las asignaturas duplicadas.
+                Se conservará la versión más antigua de cada asignatura.
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button 
+                    type="submit" 
+                    class="button default"
+                    style="background: #417690; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; font-size: 14px;"
+                >
+                    🚀 Ejecutar Limpieza
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% if result %}
+    <div class="module" style="max-width: 800px; margin: 30px 0; background: #d4edda; border: 1px solid #c3e6cb; padding: 20px; border-radius: 5px;">
+        <h2 style="margin-top: 0; color: #155724;">✅ Limpieza Completada</h2>
+        
+        <div style="margin: 15px 0;">
+            <strong>Usuario:</strong> {{ result.username }}<br>
+            <strong>Duplicados eliminados:</strong> {{ result.duplicates_removed }}<br>
+        </div>
+        
+        {% if result.duplicates_list %}
+        <div style="margin: 15px 0;">
+            <strong>Asignaturas eliminadas (primeras 20):</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                {% for dup in result.duplicates_list %}
+                <li>{{ dup }}</li>
+                {% endfor %}
+            </ul>
+            {% if result.duplicates_removed > 20 %}
+            <p style="font-style: italic; color: #666;">... y {{ result.duplicates_removed|add:"-20" }} más</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 3px;">
+            <strong>📊 Estado Final:</strong><br>
+            • Total de asignaturas: <strong>{{ result.total_subjects }}</strong><br>
+            • Total de grupos: <strong>{{ result.total_groups }}</strong><br>
+            {% if result.grupo_created %}
+            • Grupo "{{ result.grupo_name }}" creado ✅<br>
+            {% else %}
+            • Grupo "{{ result.grupo_name }}" ya existía<br>
+            {% endif %}
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 3px;">
+            <strong>🔄 Siguiente paso:</strong><br>
+            Recarga la aplicación para ver los cambios.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

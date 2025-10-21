@@ -27,6 +27,7 @@ from .views import (
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
 from .auth_views import login_view, register_view, google_login_view, ping_view
+from .admin_views import cleanup_duplicates_view
 
 router = DefaultRouter()
 router.register(r'students', StudentViewSet, basename='student')
@@ -161,4 +162,7 @@ urlpatterns = [
     
     # Admin cleanup (solo superusers)
     path('admin/cleanup-user/', admin_cleanup_user_duplicates, name='admin-cleanup-user'),
+    
+    # Admin web cleanup (vista HTML en el admin)
+    path('admin/cleanup/', cleanup_duplicates_view, name='admin-cleanup-view'),
 ]
