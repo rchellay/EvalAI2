@@ -82,7 +82,8 @@ def diagnosticar_deployment(request):
             'base_datos': {},
             'modelos': {},
             'admin': {},
-            'pruebas': {}
+            'pruebas': {},
+            'pruebas_borrado': {}
         }
         
         # Verificar conexión a la base de datos
@@ -144,6 +145,60 @@ def diagnosticar_deployment(request):
                 diagnostico['pruebas']['error'] = '❌ No hay superusers'
         except Exception as e:
             diagnostico['pruebas']['error'] = f'❌ Error: {str(e)}'
+        
+        # PRUEBAS ESPECÍFICAS DE BORRADO
+        try:
+            superuser = User.objects.filter(is_superuser=True).first()
+            if superuser:
+                print("🧪 PROBANDO BORRADO DE GRUPOS...")
+                
+                # Crear grupo para prueba de borrado
+                test_group_delete = Group.objects.create(
+                    name="GRUPO_TEST_BORRADO",
+                    teacher=superuser
+                )
+                
+                diagnostico['pruebas_borrado']['grupo_creado_para_borrar'] = f'✅ ID {test_group_delete.id}'
+                
+                # Intentar borrar
+                try:
+                    test_group_delete.delete()
+                    diagnostico['pruebas_borrado']['grupo_borrado'] = '✅ Borrado exitoso'
+                except Exception as delete_error:
+                    diagnostico['pruebas_borrado']['grupo_borrado'] = f'❌ Error al borrar: {str(delete_error)}'
+                
+                # Probar borrado de Attendance
+                print("🧪 PROBANDO BORRADO DE ASISTENCIAS...")
+                try:
+                    # Crear asistencia para prueba
+                    student = Student.objects.first()
+                    subject = Subject.objects.first()
+                    
+                    if student and subject:
+                        test_attendance = Attendance.objects.create(
+                            student=student,
+                            subject=subject,
+                            date='2023-01-01',
+                            status='presente',
+                            recorded_by=superuser
+                        )
+                        
+                        diagnostico['pruebas_borrado']['asistencia_creada_para_borrar'] = f'✅ ID {test_attendance.id}'
+                        
+                        # Intentar borrar
+                        try:
+                            test_attendance.delete()
+                            diagnostico['pruebas_borrado']['asistencia_borrada'] = '✅ Borrado exitoso'
+                        except Exception as delete_error:
+                            diagnostico['pruebas_borrado']['asistencia_borrada'] = f'❌ Error al borrar: {str(delete_error)}'
+                    else:
+                        diagnostico['pruebas_borrado']['asistencia_error'] = '❌ No hay estudiantes o asignaturas para la prueba'
+                        
+                except Exception as e:
+                    diagnostico['pruebas_borrado']['asistencia_error'] = f'❌ Error creando asistencia: {str(e)}'
+                    
+        except Exception as e:
+            diagnostico['pruebas_borrado']['error_general'] = f'❌ Error en pruebas de borrado: {str(e)}'
         
         return JsonResponse(diagnostico)
         
