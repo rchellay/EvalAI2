@@ -79,6 +79,23 @@ def ultra_fix_now(request):
                         results["correcciones"]["core_objective_django"] = f"❌ Error Django: {str(e)}"
                         results["errores"].append(f"Error Django creando tabla core_objective: {e}")
                 
+                # Verificar core_objective
+                try:
+                    cursor.execute("""
+                        SELECT column_name, data_type 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'core_objective' 
+                        ORDER BY ordinal_position
+                    """)
+                    columns = cursor.fetchall()
+                    results["verificaciones"]["core_objective"] = {
+                        "columnas": len(columns),
+                        "estructura": [{"name": col[0], "type": col[1]} for col in columns]
+                    }
+                except Exception as e:
+                    results["verificaciones"]["core_objective"] = f"❌ Error: {str(e)}"
+                    results["errores"].append(f"Error verificando core_objective: {e}")
+                
         except Exception as e:
             results["errores"].append(f"Error con Django connection: {e}")
         
