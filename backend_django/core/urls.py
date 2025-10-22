@@ -6,9 +6,7 @@ from .diagnostic_views import diagnosticar_deployment
 from .fix_database_endpoint import fix_database_now
 from .debug_render_endpoint import debug_render_500
 from .fix_specific_errors_endpoint import fix_specific_errors
-from .ultra_fix_endpoint import ultra_fix_now
-from .restart_django_endpoint import restart_django_connection
-from .create_objective_endpoint import create_objective_table
+from .immediate_fix_endpoint import immediate_fix_now
 from .create_objective_now_endpoint import create_objective_now
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
@@ -93,7 +91,7 @@ urlpatterns = [
     path('ultra-fix-now/', ultra_fix_now, name='ultra-fix-now'),
     path('ultra-fix-now/', create_objective_now, name='create-objective-now'),
     path('restart-django/', restart_django_connection, name='restart-django'),
-    path('create-objective-table/', create_objective_table, name='create-objective-table'),
+    path('immediate-fix-now/', immediate_fix_now, name='immediate-fix-now'),
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),
