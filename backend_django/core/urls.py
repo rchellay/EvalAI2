@@ -4,6 +4,7 @@ from .diagnostic_grupos import diagnosticar_grupos_estudiantes
 from .diagnostic_dashboard import diagnosticar_dashboard_endpoints
 from .diagnostic_views import diagnosticar_deployment
 from .fix_database_endpoint import fix_database_now
+from .debug_render_endpoint import debug_render_500
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
     RubricViewSet, RubricCriterionViewSet, RubricLevelViewSet,
@@ -82,7 +83,7 @@ urlpatterns = [
     
     # Endpoint de diagnóstico para grupos y estudiantes
     path('diagnostico-grupos/', diagnosticar_grupos_estudiantes, name='diagnostico-grupos'),
-    path('fix-database-now/', fix_database_now, name='fix-database-now'),
+    path('debug-render-500/', debug_render_500, name='debug-render-500'),
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),

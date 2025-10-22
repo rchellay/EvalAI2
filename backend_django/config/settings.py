@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.admin_error_middleware.AdminErrorHandlerMiddleware',  # Middleware personalizado para admin
 ]
 
 ROOT_URLCONF = 'config.urls'

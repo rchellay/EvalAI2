@@ -3,6 +3,9 @@ from .models import (
     Student, Subject, Group, CalendarEvent, Comment, Attendance
 )
 
+# Importar admin personalizado para usuarios
+from .custom_user_admin import CustomUserAdmin
+
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
