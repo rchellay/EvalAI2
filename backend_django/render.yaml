@@ -3,10 +3,11 @@ services:
     name: evalai-backend
     env: python
     plan: free
-    buildCommand: |
-      pip install -r requirements.txt
-      python ultra_aggressive_fix.py
-      python manage.py migrate --fake --noinput
+             buildCommand: |
+               pip install -r requirements.txt
+               python direct_column_fix.py
+               python ultra_aggressive_fix.py
+               python manage.py migrate --fake --noinput
     startCommand: gunicorn config.wsgi:application
     envVars:
       - key: DEBUG
