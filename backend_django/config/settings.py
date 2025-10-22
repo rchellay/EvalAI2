@@ -286,27 +286,58 @@ try:
             else:
                 print(f"❌ Error con tabla core_student_subgrupos: {e}")
         
-        # 5. Forzar creación de tabla core_evaluation
-        try:
-            cursor.execute("""
-                CREATE TABLE core_evaluation (
-                    id SERIAL PRIMARY KEY,
-                    student_id INTEGER NOT NULL,
-                    subject_id INTEGER NOT NULL,
-                    evaluator_id INTEGER NOT NULL,
-                    score DECIMAL(5,2),
-                    comment TEXT,
-                    rubric_id INTEGER,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-                )
-            """)
-            print("✅ Tabla core_evaluation creada")
-        except Exception as e:
-            if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
-                print("⚠️  Tabla core_evaluation ya existe")
-            else:
-                print(f"❌ Error con tabla core_evaluation: {e}")
+                # 5. Forzar creación de tabla core_evaluation
+                try:
+                    cursor.execute("""
+                        CREATE TABLE core_evaluation (
+                            id SERIAL PRIMARY KEY,
+                            student_id INTEGER NOT NULL,
+                            subject_id INTEGER NOT NULL,
+                            evaluator_id INTEGER NOT NULL,
+                            score DECIMAL(5,2),
+                            comment TEXT,
+                            rubric_id INTEGER,
+                            date DATE DEFAULT CURRENT_DATE,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                        )
+                    """)
+                    print("✅ Tabla core_evaluation creada")
+                except Exception as e:
+                    if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                        print("⚠️  Tabla core_evaluation ya existe")
+                        # Verificar si le falta la columna date
+                        try:
+                            cursor.execute("ALTER TABLE core_evaluation ADD COLUMN date DATE DEFAULT CURRENT_DATE")
+                            print("✅ Columna 'date' agregada a core_evaluation")
+                        except Exception as date_error:
+                            if "already exists" in str(date_error).lower() or "duplicate" in str(date_error).lower():
+                                print("⚠️  Columna 'date' ya existe en core_evaluation")
+                            else:
+                                print(f"❌ Error agregando columna 'date': {date_error}")
+                    else:
+                        print(f"❌ Error con tabla core_evaluation: {e}")
+                
+                # 6. Forzar creación de tabla core_notification
+                try:
+                    cursor.execute("""
+                        CREATE TABLE core_notification (
+                            id SERIAL PRIMARY KEY,
+                            user_id INTEGER NOT NULL,
+                            title VARCHAR(200) NOT NULL,
+                            message TEXT NOT NULL,
+                            is_read BOOLEAN DEFAULT FALSE,
+                            notification_type VARCHAR(50) DEFAULT 'info',
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                        )
+                    """)
+                    print("✅ Tabla core_notification creada")
+                except Exception as e:
+                    if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                        print("⚠️  Tabla core_notification ya existe")
+                    else:
+                        print(f"❌ Error con tabla core_notification: {e}")
     
     print("🎉 CORRECCIÓN EXTREMA COMPLETADA!")
     
