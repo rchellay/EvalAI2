@@ -1059,11 +1059,11 @@ class SubjectGroupsViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.is_superuser:
             return Group.objects.filter(
                 subjects__id=subject_id
-            ).distinct().prefetch_related('students', 'subjects')
+            ).distinct().prefetch_related('alumnos', 'subjects')
         return Group.objects.filter(
             subjects__id=subject_id,
             subjects__teacher=self.request.user
-        ).distinct().prefetch_related('students', 'subjects')
+        ).distinct().prefetch_related('alumnos', 'subjects')
 
 
 class GroupStudentsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1142,17 +1142,17 @@ class SubjectDetailViewSet(viewsets.ReadOnlyModelViewSet):
 
 class GroupDetailViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet para grupos con estudiantes anidados"""
-    queryset = Group.objects.prefetch_related('students', 'subjects')
+    queryset = Group.objects.prefetch_related('alumnos', 'subjects')
     serializer_class = GroupDetailSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return Group.objects.all().prefetch_related('students', 'subjects')
+            return Group.objects.all().prefetch_related('alumnos', 'subjects')
         # Solo mostrar grupos que contengan asignaturas del profesor autenticado
         return Group.objects.filter(subjects__teacher=self.request.user).distinct().prefetch_related(
-            'students', 'subjects'
+            'alumnos', 'subjects'
         )
 
 

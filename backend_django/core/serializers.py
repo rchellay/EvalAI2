@@ -266,7 +266,7 @@ class SubjectDetailSerializer(serializers.ModelSerializer):
 
     def get_groups(self, obj):
         """Obtener grupos asociados a esta asignatura"""
-        groups = obj.groups.all().prefetch_related('students')
+        groups = obj.groups.all().prefetch_related('alumnos')
         return GroupDetailSerializer(groups, many=True, context=self.context).data
 
 

@@ -1,7 +1,7 @@
 import os
 import django
 from django.db import connection
-from django.core.exceptions import OperationalError
+from django.core.exceptions import ImproperlyConfigured
 
 def verificar_y_crear_tablas():
     """

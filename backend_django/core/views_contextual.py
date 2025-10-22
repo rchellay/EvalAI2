@@ -36,13 +36,13 @@ class SubjectNestedViewSet(viewsets.ReadOnlyModelViewSet):
         Lista todos los grupos de una asignatura específica.
         """
         subject = self.get_object()
-        grupos = subject.groups.all().prefetch_related('students')
+        grupos = subject.groups.all().prefetch_related('alumnos')
         
         # Enriquecer con conteo de estudiantes
         grupos_data = []
         for grupo in grupos:
             grupo_dict = GroupSerializer(grupo).data
-            grupo_dict['student_count'] = grupo.students.count()
+            grupo_dict['student_count'] = grupo.alumnos.count()
             grupo_dict['subject_id'] = subject.id
             grupo_dict['subject_name'] = subject.name
             grupos_data.append(grupo_dict)
@@ -57,7 +57,7 @@ class SubjectNestedViewSet(viewsets.ReadOnlyModelViewSet):
         """
         subject = self.get_object()
         grupo = get_object_or_404(Group, id=group_id, subjects=subject)
-        estudiantes = grupo.students.all()
+        estudiantes = grupo.alumnos.all()
         
         # Enriquecer con información contextual
         estudiantes_data = []
@@ -100,7 +100,7 @@ class StudentContextualViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.is_superuser:
             return Student.objects.all()
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
-        return Student.objects.filter(groups__teacher=self.request.user).distinct()
+        return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
     
     @action(detail=True, methods=['get'], url_path='evaluaciones')
     def evaluaciones(self, request, pk=None):
@@ -278,7 +278,8 @@ class StudentContextualViewSet(viewsets.ReadOnlyModelViewSet):
         asignatura_id = request.query_params.get('asignatura', None)
         
         # Grupos del estudiante
-        grupos = estudiante.groups.all()
+        grupos = [estudiante.grupo_principal]
+        grupos.extend(estudiante.subgrupos.all())
         grupos_data = [{'id': g.id, 'name': g.name} for g in grupos]
         
         # Asignaturas que cursa (a través de sus grupos)
