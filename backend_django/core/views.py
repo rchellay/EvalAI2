@@ -41,6 +41,23 @@ class StudentViewSet(viewsets.ModelViewSet):
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
         return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
     
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            # Verificar permisos antes de eliminar
+            if not request.user.is_superuser and instance.grupo_principal.teacher != request.user:
+                return Response(
+                    {'error': 'No tienes permisos para eliminar este estudiante'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': f'Error al eliminar el estudiante: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=True, methods=['post'], url_path='attendance')
     def add_attendance(self, request, pk=None):
         """
@@ -185,6 +202,23 @@ class SubjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
     
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            # Verificar permisos antes de eliminar
+            if not request.user.is_superuser and instance.teacher != request.user:
+                return Response(
+                    {'error': 'No tienes permisos para eliminar esta asignatura'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': f'Error al eliminar la asignatura: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=True, methods=['get'], url_path='calendar-events')
     def calendar_events(self, request, pk=None):
         """
@@ -253,6 +287,23 @@ class GroupViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            # Verificar permisos antes de eliminar
+            if not request.user.is_superuser and instance.teacher != request.user:
+                return Response(
+                    {'error': 'No tienes permisos para eliminar este grupo'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': f'Error al eliminar el grupo: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CalendarEventViewSet(viewsets.ModelViewSet):

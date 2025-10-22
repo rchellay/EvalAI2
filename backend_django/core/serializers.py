@@ -75,6 +75,7 @@ class GroupSerializer(serializers.ModelSerializer):
     total_students = serializers.IntegerField(source='total_students', read_only=True)
     total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
     subject_count = serializers.SerializerMethodField()
+    course = serializers.CharField(default='4t ESO', required=False)
     
     class Meta:
         model = Group
@@ -87,6 +88,12 @@ class GroupSerializer(serializers.ModelSerializer):
     
     def get_subject_count(self, obj):
         return obj.subjects.count()
+    
+    def create(self, validated_data):
+        # Asegurar que course tenga un valor por defecto
+        if 'course' not in validated_data or not validated_data['course']:
+            validated_data['course'] = '4t ESO'
+        return super().create(validated_data)
 
 
 class CalendarEventSerializer(serializers.ModelSerializer):
