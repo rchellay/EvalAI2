@@ -7,6 +7,7 @@ from .fix_database_endpoint import fix_database_now
 from .debug_render_endpoint import debug_render_500
 from .fix_specific_errors_endpoint import fix_specific_errors
 from .ultra_fix_endpoint import ultra_fix_now
+from .restart_django_endpoint import restart_django_connection
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
     RubricViewSet, RubricCriterionViewSet, RubricLevelViewSet,
@@ -88,6 +89,7 @@ urlpatterns = [
     path('debug-render-500/', debug_render_500, name='debug-render-500'),
     path('fix-specific-errors/', fix_specific_errors, name='fix-specific-errors'),
     path('ultra-fix-now/', ultra_fix_now, name='ultra-fix-now'),
+    path('restart-django/', restart_django_connection, name='restart-django'),
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),
