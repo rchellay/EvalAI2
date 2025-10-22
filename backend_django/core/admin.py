@@ -67,18 +67,31 @@ class StudentAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
     
     def delete_model(self, request, obj):
+        """Eliminar un estudiante individual"""
         try:
-            super().delete_model(request, obj)
+            # Eliminar directamente el objeto
+            obj.delete()
+            from django.contrib import messages
+            messages.success(request, f'Estudiante "{obj.name}" eliminado correctamente.')
         except Exception as e:
             from django.contrib import messages
             messages.error(request, f'Error al eliminar el estudiante: {str(e)}')
     
     def delete_queryset(self, request, queryset):
-        try:
-            super().delete_queryset(request, queryset)
-        except Exception as e:
+        """Eliminar múltiples estudiantes"""
+        deleted_count = 0
+        for obj in queryset:
+            try:
+                # Eliminar directamente el objeto
+                obj.delete()
+                deleted_count += 1
+            except Exception as e:
+                from django.contrib import messages
+                messages.error(request, f'Error al eliminar el estudiante "{obj.name}": {str(e)}')
+        
+        if deleted_count > 0:
             from django.contrib import messages
-            messages.error(request, f'Error al eliminar los estudiantes: {str(e)}')
+            messages.success(request, f'{deleted_count} estudiantes eliminados correctamente.')
 
 
 @admin.register(Subject)
@@ -94,18 +107,31 @@ class SubjectAdmin(admin.ModelAdmin):
     get_teacher_username.admin_order_field = 'teacher__username'
     
     def delete_model(self, request, obj):
+        """Eliminar una asignatura individual"""
         try:
-            super().delete_model(request, obj)
+            # Eliminar directamente el objeto
+            obj.delete()
+            from django.contrib import messages
+            messages.success(request, f'Asignatura "{obj.name}" eliminada correctamente.')
         except Exception as e:
             from django.contrib import messages
             messages.error(request, f'Error al eliminar la asignatura: {str(e)}')
     
     def delete_queryset(self, request, queryset):
-        try:
-            super().delete_queryset(request, queryset)
-        except Exception as e:
+        """Eliminar múltiples asignaturas"""
+        deleted_count = 0
+        for obj in queryset:
+            try:
+                # Eliminar directamente el objeto
+                obj.delete()
+                deleted_count += 1
+            except Exception as e:
+                from django.contrib import messages
+                messages.error(request, f'Error al eliminar la asignatura "{obj.name}": {str(e)}')
+        
+        if deleted_count > 0:
             from django.contrib import messages
-            messages.error(request, f'Error al eliminar las asignaturas: {str(e)}')
+            messages.success(request, f'{deleted_count} asignaturas eliminadas correctamente.')
 
 
 @admin.register(CalendarEvent)
