@@ -1,10 +1,3 @@
-# Auto-fix para tablas faltantes
-try:
-    from .auto_fix_tables import verificar_y_crear_tablas
-    verificar_y_crear_tablas()
-except Exception as e:
-    print(f"⚠️  Error en auto-fix de tablas desde admin: {e}")
-
 from django.contrib import admin
 from .models import (
     Student, Subject, Group, CalendarEvent, Comment, Attendance
@@ -13,57 +6,28 @@ from .models import (
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'course', 'get_teacher_username', 'total_students', 'total_subgrupos']
+    list_display = ['id', 'name', 'course', 'teacher']
     list_filter = ['teacher', 'course']
     search_fields = ['name', 'course']
     filter_horizontal = ['subjects']
     list_per_page = 50
-    
-    def get_teacher_username(self, obj):
-        return obj.teacher.username if obj.teacher else '-'
-    get_teacher_username.short_description = 'Teacher'
-    get_teacher_username.admin_order_field = 'teacher__username'
-    
-    def save_model(self, request, obj, form, change):
-        # Si es un nuevo objeto y no tiene teacher asignado, asignar el usuario actual
-        if not change and not obj.teacher_id:
-            obj.teacher = request.user
-        super().save_model(request, obj, form, change)
 
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'apellidos', 'email', 'grupo_principal', 'get_subgrupos_count']
+    list_display = ['id', 'name', 'apellidos', 'email', 'grupo_principal']
     list_filter = ['grupo_principal', 'grupo_principal__course']
     search_fields = ['name', 'apellidos', 'email']
     filter_horizontal = ['subgrupos']
     list_per_page = 50
-    
-    def get_subgrupos_count(self, obj):
-        return obj.subgrupos.count()
-    get_subgrupos_count.short_description = 'Subgrupos'
-    
-    def save_model(self, request, obj, form, change):
-        # Validar que siempre tenga un grupo principal
-        if not obj.grupo_principal_id:
-            # Si no tiene grupo principal, asignar el primer grupo disponible
-            first_group = Group.objects.first()
-            if first_group:
-                obj.grupo_principal = first_group
-        super().save_model(request, obj, form, change)
 
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'get_teacher_username', 'start_time', 'end_time']
+    list_display = ['id', 'name', 'teacher', 'start_time', 'end_time']
     list_filter = ['teacher']
     search_fields = ['name']
     list_per_page = 50
-    
-    def get_teacher_username(self, obj):
-        return obj.teacher.username if obj.teacher else '-'
-    get_teacher_username.short_description = 'Teacher'
-    get_teacher_username.admin_order_field = 'teacher__username'
 
 
 @admin.register(CalendarEvent)
@@ -76,15 +40,10 @@ class CalendarEventAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'student', 'get_author_username', 'subject', 'created_at']
+    list_display = ['id', 'student', 'author', 'subject', 'created_at']
     list_filter = ['author', 'subject']
     search_fields = ['student__name', 'text']
     list_per_page = 50
-    
-    def get_author_username(self, obj):
-        return obj.author.username if obj.author else '-'
-    get_author_username.short_description = 'Author'
-    get_author_username.admin_order_field = 'author__username'
 
 
 @admin.register(Attendance)
@@ -93,9 +52,3 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_filter = ['status', 'date']
     search_fields = ['student__name']
     list_per_page = 50
-    
-    def save_model(self, request, obj, form, change):
-        # Si es un nuevo objeto y no tiene recorded_by asignado, asignar el usuario actual
-        if not change and not obj.recorded_by_id:
-            obj.recorded_by = request.user
-        super().save_model(request, obj, form, change)
