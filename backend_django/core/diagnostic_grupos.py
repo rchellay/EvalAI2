@@ -47,7 +47,7 @@ def diagnosticar_grupos_estudiantes(request):
             diagnostico['relaciones']['todos_grupos'] = f'✅ {todos_grupos.count()}'
             
             # Grupos con estudiantes
-            grupos_con_estudiantes = Group.objects.filter(students__isnull=False).distinct()
+            grupos_con_estudiantes = Group.objects.filter(alumnos__isnull=False).distinct()
             diagnostico['relaciones']['grupos_con_estudiantes'] = f'✅ {grupos_con_estudiantes.count()}'
             
             # Estudiantes con grupos
@@ -66,7 +66,7 @@ def diagnosticar_grupos_estudiantes(request):
                     'name': grupo.name,
                     'teacher_id': grupo.teacher_id if hasattr(grupo, 'teacher_id') else None,
                     'teacher_username': grupo.teacher.username if grupo.teacher else None,
-                    'students_count': grupo.students.count(),
+                    'students_count': grupo.alumnos.count(),
                     'subjects_count': grupo.subjects.count()
                 }
                 grupos_data.append(grupo_dict)
@@ -86,10 +86,10 @@ def diagnosticar_grupos_estudiantes(request):
         # Probar endpoint estudiantes de un grupo específico
         try:
             # Buscar un grupo que tenga estudiantes
-            grupo_con_estudiantes = Group.objects.filter(students__isnull=False).first()
+            grupo_con_estudiantes = Group.objects.filter(alumnos__isnull=False).first()
             
             if grupo_con_estudiantes:
-                estudiantes_del_grupo = grupo_con_estudiantes.students.all()
+                estudiantes_del_grupo = grupo_con_estudiantes.alumnos.all()
                 
                 estudiantes_data = []
                 for estudiante in estudiantes_del_grupo[:5]:  # Solo los primeros 5

@@ -47,7 +47,7 @@ def diagnosticar_dashboard_endpoints(request):
         # Verificar relaciones específicas del usuario
         try:
             # Estudiantes del profesor
-            estudiantes_profesor = Student.objects.filter(groups__teacher=user).distinct().count()
+            estudiantes_profesor = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
             diagnostico['relaciones']['estudiantes_profesor'] = f'✅ {estudiantes_profesor}'
             
             # Grupos del profesor
@@ -74,7 +74,7 @@ def diagnosticar_dashboard_endpoints(request):
             week_ago = today - timedelta(days=7)
             
             # Total de alumnos activos (del profesor)
-            total_alumnos = Student.objects.filter(groups__teacher=user).distinct().count()
+            total_alumnos = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
             
             # Total de asignaturas (del profesor)
             total_asignaturas = Subject.objects.filter(teacher=user).count()
@@ -86,7 +86,7 @@ def diagnosticar_dashboard_endpoints(request):
             ).count()
             
             # Asistencias de hoy (de los estudiantes del profesor)
-            student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
+            student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
             asistencias_hoy = Attendance.objects.filter(
                 student_id__in=student_ids,
                 date=today,
@@ -175,7 +175,7 @@ def diagnosticar_dashboard_endpoints(request):
             thirty_days_ago = timezone.now().date() - timedelta(days=30)
             
             # Obtener datos del aula (del profesor)
-            total_students = Student.objects.filter(groups__teacher=user).distinct().count()
+            total_students = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
             total_evaluations = Evaluation.objects.filter(
                 evaluator=user,
                 created_at__gte=thirty_days_ago
@@ -186,7 +186,7 @@ def diagnosticar_dashboard_endpoints(request):
                 score__isnull=False
             ).aggregate(avg=Avg('score'))['avg'] or 0
             
-            student_ids = Student.objects.filter(groups__teacher=user).values_list('id', flat=True)
+            student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
             total_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
                 date__gte=thirty_days_ago
@@ -220,7 +220,7 @@ def diagnosticar_dashboard_endpoints(request):
             
             # Obtener alumnos del profesor que no han sido evaluados en la última semana
             students_without_evaluation = Student.objects.filter(
-                groups__teacher=user
+                grupo_principal__teacher=user
             ).exclude(
                 evaluations__created_at__gte=week_ago,
                 evaluations__evaluator=user
@@ -236,7 +236,7 @@ def diagnosticar_dashboard_endpoints(request):
                 pendientes_data.append({
                     'id': student.id,
                     'name': student.name,
-                    'group_name': ', '.join([g.name for g in student.groups.all()]) if student.groups.exists() else 'Sin grupo',
+                    'group_name': student.grupo_principal.name if student.grupo_principal else 'Sin grupo',
                     'last_evaluation_date': last_evaluation.created_at.strftime('%d/%m/%Y') if last_evaluation else 'Nunca',
                     'last_evaluation_score': last_evaluation.score if last_evaluation else None
                 })
