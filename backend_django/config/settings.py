@@ -346,6 +346,7 @@ try:
                             id SERIAL PRIMARY KEY,
                             title VARCHAR(200) NOT NULL,
                             description TEXT,
+                            student_id INTEGER,
                             subject_id INTEGER,
                             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -355,6 +356,15 @@ try:
                 except Exception as e:
                     if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
                         print("⚠️  Tabla core_objective ya existe")
+                        # Agregar columna student_id si falta
+                        try:
+                            cursor.execute("ALTER TABLE core_objective ADD COLUMN student_id INTEGER")
+                            print("✅ Columna student_id agregada a core_objective")
+                        except Exception as add_error:
+                            if "already exists" in str(add_error).lower() or "duplicate" in str(add_error).lower():
+                                print("⚠️  Columna student_id ya existe en core_objective")
+                            else:
+                                print(f"❌ Error agregando student_id: {add_error}")
                     else:
                         print(f"❌ Error con tabla core_objective: {e}")
     

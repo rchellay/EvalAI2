@@ -66,6 +66,7 @@ def ultra_fix_now(request):
                             id SERIAL PRIMARY KEY,
                             title VARCHAR(200) NOT NULL,
                             description TEXT,
+                            student_id INTEGER,
                             subject_id INTEGER,
                             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -74,7 +75,17 @@ def ultra_fix_now(request):
                     results["correcciones"]["core_objective_django"] = "✅ Tabla core_objective creada via Django"
                 except Exception as e:
                     if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
-                        results["correcciones"]["core_objective_django"] = "⚠️ Tabla core_objective ya existe via Django"
+                        print("⚠️ Tabla core_objective ya existe, agregando columna student_id...")
+                        # Si la tabla ya existe, agregar la columna student_id faltante
+                        try:
+                            cursor.execute("ALTER TABLE core_objective ADD COLUMN student_id INTEGER")
+                            results["correcciones"]["core_objective_django"] = "✅ Columna student_id agregada a core_objective"
+                        except Exception as add_error:
+                            if "already exists" in str(add_error).lower() or "duplicate" in str(add_error).lower():
+                                results["correcciones"]["core_objective_django"] = "⚠️ Tabla core_objective ya existe con student_id"
+                            else:
+                                results["correcciones"]["core_objective_django"] = f"❌ Error agregando student_id: {str(add_error)}"
+                                results["errores"].append(f"Error agregando student_id: {add_error}")
                     else:
                         results["correcciones"]["core_objective_django"] = f"❌ Error Django: {str(e)}"
                         results["errores"].append(f"Error Django creando tabla core_objective: {e}")
