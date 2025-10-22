@@ -29,20 +29,6 @@ class GroupAdmin(admin.ModelAdmin):
         if not change and not obj.teacher_id:
             obj.teacher = request.user
         super().save_model(request, obj, form, change)
-    
-    def delete_model(self, request, obj):
-        try:
-            super().delete_model(request, obj)
-        except Exception as e:
-            from django.contrib import messages
-            messages.error(request, f'Error al eliminar el grupo: {str(e)}')
-    
-    def delete_queryset(self, request, queryset):
-        try:
-            super().delete_queryset(request, queryset)
-        except Exception as e:
-            from django.contrib import messages
-            messages.error(request, f'Error al eliminar los grupos: {str(e)}')
 
 
 @admin.register(Student)
@@ -65,33 +51,6 @@ class StudentAdmin(admin.ModelAdmin):
             if first_group:
                 obj.grupo_principal = first_group
         super().save_model(request, obj, form, change)
-    
-    def delete_model(self, request, obj):
-        """Eliminar un estudiante individual"""
-        try:
-            # Eliminar directamente el objeto
-            obj.delete()
-            from django.contrib import messages
-            messages.success(request, f'Estudiante "{obj.name}" eliminado correctamente.')
-        except Exception as e:
-            from django.contrib import messages
-            messages.error(request, f'Error al eliminar el estudiante: {str(e)}')
-    
-    def delete_queryset(self, request, queryset):
-        """Eliminar múltiples estudiantes"""
-        deleted_count = 0
-        for obj in queryset:
-            try:
-                # Eliminar directamente el objeto
-                obj.delete()
-                deleted_count += 1
-            except Exception as e:
-                from django.contrib import messages
-                messages.error(request, f'Error al eliminar el estudiante "{obj.name}": {str(e)}')
-        
-        if deleted_count > 0:
-            from django.contrib import messages
-            messages.success(request, f'{deleted_count} estudiantes eliminados correctamente.')
 
 
 @admin.register(Subject)
@@ -105,33 +64,6 @@ class SubjectAdmin(admin.ModelAdmin):
         return obj.teacher.username if obj.teacher else '-'
     get_teacher_username.short_description = 'Teacher'
     get_teacher_username.admin_order_field = 'teacher__username'
-    
-    def delete_model(self, request, obj):
-        """Eliminar una asignatura individual"""
-        try:
-            # Eliminar directamente el objeto
-            obj.delete()
-            from django.contrib import messages
-            messages.success(request, f'Asignatura "{obj.name}" eliminada correctamente.')
-        except Exception as e:
-            from django.contrib import messages
-            messages.error(request, f'Error al eliminar la asignatura: {str(e)}')
-    
-    def delete_queryset(self, request, queryset):
-        """Eliminar múltiples asignaturas"""
-        deleted_count = 0
-        for obj in queryset:
-            try:
-                # Eliminar directamente el objeto
-                obj.delete()
-                deleted_count += 1
-            except Exception as e:
-                from django.contrib import messages
-                messages.error(request, f'Error al eliminar la asignatura "{obj.name}": {str(e)}')
-        
-        if deleted_count > 0:
-            from django.contrib import messages
-            messages.success(request, f'{deleted_count} asignaturas eliminadas correctamente.')
 
 
 @admin.register(CalendarEvent)
