@@ -157,6 +157,8 @@ else:
     CORS_ALLOWED_ORIGINS = [
         'https://evalai2.onrender.com',
         'https://www.evalai2.onrender.com',
+        'https://eval-ai-2.vercel.app',
+        'https://www.eval-ai-2.vercel.app',
         'http://localhost:5173',  # Permitir desarrollo local
         'http://127.0.0.1:5173',  # Permitir desarrollo local
     ]
