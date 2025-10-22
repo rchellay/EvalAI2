@@ -39,91 +39,91 @@ def diagnosticar_deployment(request):
                     """)
                     print("✅ Tabla core_attendance creada desde endpoint")
                 
-        # Crear tabla core_evaluation directamente
-        cursor.execute("""
-            CREATE TABLE core_evaluation (
-                id SERIAL PRIMARY KEY,
-                student_id INTEGER NOT NULL,
-                subject_id INTEGER NOT NULL,
-                evaluator_id INTEGER NOT NULL,
-                score DECIMAL(5,2),
-                comment TEXT,
-                rubric_id INTEGER,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-            );
-        """)
-        print("✅ Tabla core_evaluation creada desde endpoint")
-        
-        # Agregar columna 'course' a core_group si no existe
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'core_group' AND column_name = 'course'
-        """)
-        if not cursor.fetchone():
-            cursor.execute("""
-                ALTER TABLE core_group 
-                ADD COLUMN course VARCHAR(50) DEFAULT '4t ESO'
-            """)
-            print("✅ Columna 'course' agregada a core_group")
-        
-        # Agregar columna 'grupo_principal_id' a core_student si no existe
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'core_student' AND column_name = 'grupo_principal_id'
-        """)
-        if not cursor.fetchone():
-            cursor.execute("""
-                ALTER TABLE core_student 
-                ADD COLUMN grupo_principal_id INTEGER
-            """)
-            
-            # Asignar estudiantes existentes al primer grupo disponible
-            cursor.execute("SELECT id FROM core_group LIMIT 1")
-            first_group = cursor.fetchone()
-            if first_group:
+                # Crear tabla core_evaluation directamente
                 cursor.execute("""
-                    UPDATE core_student 
-                    SET grupo_principal_id = %s 
-                    WHERE grupo_principal_id IS NULL
-                """, [first_group[0]])
-                cursor.execute("""
-                    ALTER TABLE core_student 
-                    ALTER COLUMN grupo_principal_id SET NOT NULL
+                    CREATE TABLE core_evaluation (
+                        id SERIAL PRIMARY KEY,
+                        student_id INTEGER NOT NULL,
+                        subject_id INTEGER NOT NULL,
+                        evaluator_id INTEGER NOT NULL,
+                        score DECIMAL(5,2),
+                        comment TEXT,
+                        rubric_id INTEGER,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                    );
                 """)
-            print("✅ Columna 'grupo_principal_id' agregada a core_student")
-        
-        # Agregar columna 'apellidos' a core_student si no existe
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'core_student' AND column_name = 'apellidos'
-        """)
-        if not cursor.fetchone():
-            cursor.execute("""
-                ALTER TABLE core_student 
-                ADD COLUMN apellidos VARCHAR(200) DEFAULT 'Sin Apellidos'
-            """)
-            print("✅ Columna 'apellidos' agregada a core_student")
-        
-        # Crear tabla core_student_subgrupos si no existe
-        cursor.execute("""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_name = 'core_student_subgrupos'
-        """)
-        if not cursor.fetchone():
-            cursor.execute("""
-                CREATE TABLE core_student_subgrupos (
-                    id SERIAL PRIMARY KEY,
-                    student_id INTEGER NOT NULL,
-                    group_id INTEGER NOT NULL,
-                    UNIQUE(student_id, group_id)
-                )
-            """)
-            print("✅ Tabla core_student_subgrupos creada")
+                print("✅ Tabla core_evaluation creada desde endpoint")
+                
+                # Agregar columna 'course' a core_group si no existe
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'core_group' AND column_name = 'course'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        ALTER TABLE core_group 
+                        ADD COLUMN course VARCHAR(50) DEFAULT '4t ESO'
+                    """)
+                    print("✅ Columna 'course' agregada a core_group")
+                
+                # Agregar columna 'grupo_principal_id' a core_student si no existe
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'core_student' AND column_name = 'grupo_principal_id'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        ALTER TABLE core_student 
+                        ADD COLUMN grupo_principal_id INTEGER
+                    """)
+                    
+                    # Asignar estudiantes existentes al primer grupo disponible
+                    cursor.execute("SELECT id FROM core_group LIMIT 1")
+                    first_group = cursor.fetchone()
+                    if first_group:
+                        cursor.execute("""
+                            UPDATE core_student 
+                            SET grupo_principal_id = %s 
+                            WHERE grupo_principal_id IS NULL
+                        """, [first_group[0]])
+                        cursor.execute("""
+                            ALTER TABLE core_student 
+                            ALTER COLUMN grupo_principal_id SET NOT NULL
+                        """)
+                    print("✅ Columna 'grupo_principal_id' agregada a core_student")
+                
+                # Agregar columna 'apellidos' a core_student si no existe
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'core_student' AND column_name = 'apellidos'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        ALTER TABLE core_student 
+                        ADD COLUMN apellidos VARCHAR(200) DEFAULT 'Sin Apellidos'
+                    """)
+                    print("✅ Columna 'apellidos' agregada a core_student")
+                
+                # Crear tabla core_student_subgrupos si no existe
+                cursor.execute("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_name = 'core_student_subgrupos'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        CREATE TABLE core_student_subgrupos (
+                            id SERIAL PRIMARY KEY,
+                            student_id INTEGER NOT NULL,
+                            group_id INTEGER NOT NULL,
+                            UNIQUE(student_id, group_id)
+                        )
+                    """)
+                    print("✅ Tabla core_student_subgrupos creada")
                 
                 # Verificar si teacher_id existe en core_group
                 cursor.execute("""
