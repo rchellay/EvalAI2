@@ -59,6 +59,26 @@ def ultra_fix_now(request):
                         results["correcciones"]["core_notification_django"] = f"❌ Error Django: {str(e)}"
                         results["errores"].append(f"Error Django creando tabla core_notification: {e}")
                 
+                # 3. FORZAR tabla core_objective
+                try:
+                    cursor.execute("""
+                        CREATE TABLE core_objective (
+                            id SERIAL PRIMARY KEY,
+                            title VARCHAR(200) NOT NULL,
+                            description TEXT,
+                            subject_id INTEGER,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                        )
+                    """)
+                    results["correcciones"]["core_objective_django"] = "✅ Tabla core_objective creada via Django"
+                except Exception as e:
+                    if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                        results["correcciones"]["core_objective_django"] = "⚠️ Tabla core_objective ya existe via Django"
+                    else:
+                        results["correcciones"]["core_objective_django"] = f"❌ Error Django: {str(e)}"
+                        results["errores"].append(f"Error Django creando tabla core_objective: {e}")
+                
         except Exception as e:
             results["errores"].append(f"Error con Django connection: {e}")
         

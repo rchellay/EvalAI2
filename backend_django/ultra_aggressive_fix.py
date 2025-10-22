@@ -74,6 +74,28 @@ def ultra_aggressive_fix():
                 print(f"   ❌ Error creando tabla core_notification: {e}")
                 conn.rollback()
         
+        # 3. FORZAR creación de tabla core_objective
+        print("\n3. FORZANDO TABLA core_objective:")
+        try:
+            cursor.execute("""
+                CREATE TABLE core_objective (
+                    id SERIAL PRIMARY KEY,
+                    title VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    subject_id INTEGER,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                )
+            """)
+            conn.commit()
+            print("   ✅ Tabla core_objective creada")
+        except Exception as e:
+            if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                print("   ⚠️  Tabla core_objective ya existe")
+            else:
+                print(f"   ❌ Error creando tabla core_objective: {e}")
+                conn.rollback()
+        
         # 3. VERIFICAR estructura final
         print("\n3. VERIFICANDO ESTRUCTURA FINAL:")
         
