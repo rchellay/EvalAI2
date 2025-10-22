@@ -29,6 +29,20 @@ class GroupAdmin(admin.ModelAdmin):
         if not change and not obj.teacher_id:
             obj.teacher = request.user
         super().save_model(request, obj, form, change)
+    
+    def delete_model(self, request, obj):
+        try:
+            super().delete_model(request, obj)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar el grupo: {str(e)}')
+    
+    def delete_queryset(self, request, queryset):
+        try:
+            super().delete_queryset(request, queryset)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar los grupos: {str(e)}')
 
 
 @admin.register(Student)
@@ -51,6 +65,20 @@ class StudentAdmin(admin.ModelAdmin):
             if first_group:
                 obj.grupo_principal = first_group
         super().save_model(request, obj, form, change)
+    
+    def delete_model(self, request, obj):
+        try:
+            super().delete_model(request, obj)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar el estudiante: {str(e)}')
+    
+    def delete_queryset(self, request, queryset):
+        try:
+            super().delete_queryset(request, queryset)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar los estudiantes: {str(e)}')
 
 
 @admin.register(Subject)
@@ -64,6 +92,20 @@ class SubjectAdmin(admin.ModelAdmin):
         return obj.teacher.username if obj.teacher else '-'
     get_teacher_username.short_description = 'Teacher'
     get_teacher_username.admin_order_field = 'teacher__username'
+    
+    def delete_model(self, request, obj):
+        try:
+            super().delete_model(request, obj)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar la asignatura: {str(e)}')
+    
+    def delete_queryset(self, request, queryset):
+        try:
+            super().delete_queryset(request, queryset)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Error al eliminar las asignaturas: {str(e)}')
 
 
 @admin.register(CalendarEvent)
