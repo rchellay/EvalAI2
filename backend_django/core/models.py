@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Group(models.Model):
     """Modelo para grupos de estudiantes (ej: 4tA, 4tB, etc.)"""
     name = models.CharField(max_length=200, help_text="Nombre del grupo (ej: 4tA, 4tB)")
-    course = models.CharField(max_length=50, help_text="Curso académico (ej: 4t ESO)")
+    course = models.CharField(max_length=50, help_text="Curso académico (ej: 4t ESO)", default="Sin especificar")
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="teacher_groups")
     subjects = models.ManyToManyField('Subject', related_name="groups", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -54,13 +54,21 @@ class Subject(models.Model):
 class Student(models.Model):
     """Modelo para estudiantes con relación jerárquica a grupos"""
     name = models.CharField(max_length=200, help_text="Nombre del estudiante")
-    apellidos = models.CharField(max_length=200, help_text="Apellidos del estudiante")
+    apellidos = models.CharField(max_length=255, default='', blank=True, help_text="Apellidos del estudiante")
     email = models.EmailField(unique=True, help_text="Email único del estudiante")
     photo = models.FileField(upload_to="students/", null=True, blank=True)
     attendance_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
     
     # Relación principal obligatoria
-    grupo_principal = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="alumnos", help_text="Grupo principal del estudiante")
+    grupo_principal = models.ForeignKey(
+        Group, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        default=None, 
+        related_name="alumnos", 
+        help_text="Grupo principal del estudiante"
+    )
     
     # Relaciones secundarias (subgrupos)
     subgrupos = models.ManyToManyField(Group, related_name="subgrupos", blank=True, help_text="Grupos adicionales donde participa el estudiante")
@@ -354,7 +362,7 @@ class Objective(models.Model):
         ('logrado', 'Logrado'),
         ('cancelado', 'Cancelado'),
     ]
-    
+
     student = models.ForeignKey(
         Student, 
         on_delete=models.CASCADE, 
