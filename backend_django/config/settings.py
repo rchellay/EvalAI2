@@ -104,7 +104,7 @@ import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.parse(
-        config('DATABASE_URL', default='sqlite:///db.sqlite3')
+        config('DATABASE_URL', default='postgresql://evalai_db_user:FslD10eI04bxQxwRGlZ5JsGCS8fdUG7I@dpg-d3q0ocm3jp1c738a137g-a.frankfurt-postgres.render.com/evalai_db')
     )
 }
 
