@@ -8,7 +8,7 @@ from .debug_render_endpoint import debug_render_500
 from .fix_specific_errors_endpoint import fix_specific_errors
 from .ultra_fix_endpoint import ultra_fix_now
 from .immediate_fix_endpoint import immediate_fix_now
-from .create_objective_now_endpoint import create_objective_now
+from .restart_django_endpoint import restart_django_connection
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
     RubricViewSet, RubricCriterionViewSet, RubricLevelViewSet,
