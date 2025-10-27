@@ -77,6 +77,9 @@ router.register(r'asistencia', AttendanceViewSet, basename='asistencia')
 router.register(r'grupos', GroupHierarchyViewSet, basename='grupo-hierarchy')
 router.register(r'estudiantes', StudentHierarchyViewSet, basename='estudiante-hierarchy')
 
+# Ruta de debug para testing
+from .views_hierarchy import debug_group_endpoint
+
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -195,4 +198,7 @@ urlpatterns = [
     
     # Admin web cleanup (vista HTML en el admin)
     path('admin/cleanup/', cleanup_duplicates_view, name='admin-cleanup-view'),
+
+    # Debug endpoint for Group model
+    path('debug/groups/', debug_group_endpoint, name='debug-groups'),
 ]

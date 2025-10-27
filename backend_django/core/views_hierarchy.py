@@ -8,6 +8,43 @@ from .models import Student, Group, Subject
 from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def debug_group_endpoint(request):
+    """Debug endpoint for Group model testing"""
+    try:
+        from .models import Group
+
+        # Test basic query
+        groups = Group.objects.filter(teacher=request.user)
+        count = groups.count()
+
+        # Try to serialize first group if exists
+        if count > 0:
+            first_group = groups.first()
+            serializer = GroupCreateSerializer(first_group, context={'request': request})
+            data = serializer.data
+            return Response({
+                'status': 'success',
+                'count': count,
+                'first_group': data
+            })
+        else:
+            return Response({
+                'status': 'success',
+                'count': 0,
+                'message': 'No groups found for user'
+            })
+
+    except Exception as e:
+        import traceback
+        return Response({
+            'error': str(e),
+            'traceback': traceback.format_exc(),
+            'error_type': type(e).__name__
+        }, status=500)
+
+
 class GroupHierarchyViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión jerárquica de grupos y estudiantes
