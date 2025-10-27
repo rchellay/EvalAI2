@@ -7,6 +7,7 @@ import json
 
 @csrf_exempt
 # @staff_member_required  # Temporarily commented for testing
+# Forced redeploy test
 def create_sample_groups(request):
     """Endpoint para crear grupos de ejemplo cuando no existen"""
     try:
