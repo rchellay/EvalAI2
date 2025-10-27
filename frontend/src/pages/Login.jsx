@@ -133,7 +133,7 @@ export default function Login() {
           
           <button 
             type="button"
-            onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/accounts/google/login/`}
+            onClick={() => window.location.href = `${import.meta.env.VITE_API_URL.replace('/api', '')}/accounts/google/login/`}
             disabled={loading}
             style={{
               width: '100%',
