@@ -51,17 +51,24 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
     """
     serializer_class = GroupSimpleSerializer  # Usando serializer simplificado temporalmente
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
+        print(f"[DEBUG GroupHierarchyViewSet] User: {self.request.user}, is_superuser: {self.request.user.is_superuser}")
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return Group.objects.all()
+            queryset = Group.objects.all()
+            print(f"[DEBUG GroupHierarchyViewSet] Superuser - returning all groups: {queryset.count()}")
+            return queryset
         # Filtrar grupos del profesor actual
-        return Group.objects.filter(teacher=self.request.user)
+        queryset = Group.objects.filter(teacher=self.request.user)
+        print(f"[DEBUG GroupHierarchyViewSet] User {self.request.user.username} - groups: {queryset.count()}")
+        return queryset
 
     def perform_create(self, serializer):
         # Importante: asegurar que el serializer pueda manejar el campo teacher
-        serializer.save(teacher=self.request.user)
+        instance = serializer.save(teacher=self.request.user)
+        print(f"[DEBUG perform_create] Group created: {instance.name} ({instance.id}) by user: {self.request.user.username}")
+        return instance
     
     @action(detail=True, methods=['get'], url_path='alumnos')
     def get_group_students(self, request, pk=None):
