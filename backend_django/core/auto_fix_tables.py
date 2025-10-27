@@ -3,12 +3,13 @@ import django
 from django.db import connection
 from django.core.exceptions import ImproperlyConfigured
 
-"""
+# This file is disabled to prevent conflicts with Django migrations.
+# All table creation should be handled by migrations.
+
 def verificar_y_crear_tablas():
     """
-    Función que se ejecuta al iniciar la aplicación para verificar y crear tablas faltantes
+    Función deshabilitada - las tablas se crean mediante migraciones de Django
     """
-    # Código deshabilitado para evitar interferencias con migraciones
     pass
-"""
-# verficar_y_crear_tablas()  # Desactivado para evitar conflictos con migraciones
+
+# No ejecutar nada automáticamente
