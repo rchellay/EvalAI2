@@ -10,6 +10,7 @@ from .ultra_fix_endpoint import ultra_fix_now
 from .immediate_fix_endpoint import immediate_fix_now
 from .restart_django_endpoint import restart_django_connection
 from .create_objective_now_endpoint import create_objective_now
+from .create_sample_groups import create_sample_groups
 from .views import (
     StudentViewSet, SubjectViewSet, GroupViewSet, CalendarEventViewSet,
     RubricViewSet, RubricCriterionViewSet, RubricLevelViewSet,
@@ -97,6 +98,7 @@ urlpatterns = [
     path('create-objective-now/', create_objective_now, name='create-objective-now'),
     path('restart-django/', restart_django_connection, name='restart-django'),
     path('immediate-fix-now/', immediate_fix_now, name='immediate-fix-now'),
+    path('create-sample-groups/', create_sample_groups, name='create-sample-groups'),
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),
