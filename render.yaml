@@ -5,13 +5,11 @@ services:
     buildCommand: |
       cd backend_django
       pip install -r requirements.txt
-      python create_tables_directly.py
-      python manage.py migrate --fake --noinput
       python manage.py collectstatic --noinput
     startCommand: |
       cd backend_django && \
-      python manage.py makemigrations && \
       python manage.py migrate && \
+      python manage.py create_admin && \
       gunicorn config.wsgi:application
     plan: free
     region: oregon
