@@ -221,7 +221,7 @@ OPENROUTER_CACHE_TTL = config('OPENROUTER_CACHE_TTL', default=86400, cast=int)
 
 # Modelos específicos para diferentes tareas
 QWEN_MODEL = config('QWEN_MODEL', default='qwen/qwen3-235b-a22b:free')  # Principal para rúbricas
-DEEPSEEK_MODEL = config('DEEPSEEK_MODEL', default='tngtech/deepseek-r1t2-chimera:free')  # Análisis y feedback
+DEEPSEEK_MODEL = config('DEEPSEEK_MODEL', default='google/gemini-flash-1.5')  # Análisis y feedback (soporta imágenes)
 GLM_MODEL = config('GLM_MODEL', default='z-ai/glm-4.5-air:free')  # Tareas rápidas
 
 # Google Cloud Vision OCR Configuration
@@ -290,3 +290,7 @@ REST_AUTH = {
 # Redirect after social login - va a nuestra vista callback que genera el JWT
 LOGIN_REDIRECT_URL = '/auth/google/callback/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Fix for Google OAuth redirect_uri mismatch
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'

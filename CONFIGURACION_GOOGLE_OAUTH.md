@@ -35,7 +35,6 @@ En tu Google Cloud Console (https://console.cloud.google.com), configura estos *
 ### Para Producción:
 ```
 https://evalai2.onrender.com/accounts/google/login/callback/
-https://eval-ai-2.vercel.app/auth/google/callback
 ```
 
 ### Para Desarrollo Local:

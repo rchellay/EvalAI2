@@ -29,7 +29,7 @@ class OpenRouterClient:
         # Modelos disponibles
         self.models = {
             'qwen_rubrics': 'qwen/qwen3-235b-a22b:free',  # Principal para rúbricas
-            'deepseek_analysis': 'tngtech/deepseek-r1t2-chimera:free',  # Análisis y feedback
+            'deepseek_analysis': 'google/gemini-flash-1.5',  # Análisis y feedback (soporta imágenes)
             'glm_quick': 'z-ai/glm-4.5-air:free'  # Tareas rápidas
         }
         

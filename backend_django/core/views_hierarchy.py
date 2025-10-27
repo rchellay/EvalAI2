@@ -21,6 +21,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             return Group.objects.all()
         # Filtrar grupos del profesor actual
         return Group.objects.filter(teacher=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='alumnos')
     def get_group_students(self, request, pk=None):
