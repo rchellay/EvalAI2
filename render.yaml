@@ -2,14 +2,19 @@ services:
   - type: web
     name: evalai-backend
     env: python
-    plan: free
     buildCommand: |
       cd backend_django
       pip install -r requirements.txt
       python create_tables_directly.py
       python manage.py migrate --fake --noinput
       python manage.py collectstatic --noinput
-    startCommand: cd backend_django && gunicorn config.wsgi:application
+    startCommand: |
+      cd backend_django && \
+      python manage.py makemigrations && \
+      python manage.py migrate && \
+      gunicorn config.wsgi:application
+    plan: free
+    region: oregon
     envVars:
       - key: DEBUG
         value: False
@@ -33,6 +38,12 @@ services:
         value: https://evalai-frontend.vercel.app
       - key: LANGUAGE_TOOL_API_URL
         value: https://api.languagetool.org/v2/check
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: admin123
 
   - type: pserv
     name: evalai-db

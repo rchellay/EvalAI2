@@ -112,16 +112,19 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
             <div className="space-y-6">
               {/* Prompt Principal */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="rubric-description" className="block text-sm font-semibold text-gray-700 mb-2">
                   Describe la rúbrica que necesitas
                 </label>
                 <textarea
+                  id="rubric-description"
+                  name="rubric-description"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Ejemplo: rúbrica para evaluar comprensión oral en 6º de primaria, enfocada en claridad, vocabulario, argumentación y expresión"
                   className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none placeholder-gray-400"
                   rows={4}
                   maxLength={2000}
+                  autoComplete="off"
                 />
                 <div className="flex justify-between items-center mt-1">
                   <p className="text-xs text-gray-500">
