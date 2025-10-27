@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Student, Group, Subject
-from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer
+from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer, GroupSimpleSerializer
 
 
 @api_view(['GET'])
@@ -49,7 +49,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión jerárquica de grupos y estudiantes
     """
-    serializer_class = GroupCreateSerializer
+    serializer_class = GroupSimpleSerializer  # Usando serializer simplificado temporalmente
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
