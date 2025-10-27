@@ -10,6 +10,7 @@ import json
 # Forced redeploy test
 def create_sample_groups(request):
     """Endpoint para crear grupos de ejemplo cuando no existen"""
+    return JsonResponse({'test': 'code updated, function called'})
     try:
         # Grupos de ejemplo - asignamos a un profesor existente
         staff_users = User.objects.filter(is_staff=True)
