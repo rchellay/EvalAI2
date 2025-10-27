@@ -26,8 +26,15 @@ urlpatterns = [
     path('health/', health_check, name='health'),  # Health check para Render
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),
+    
+    # JWT Authentication
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # Django Allauth & Social Authentication
+    path('api/auth/', include('dj_rest_auth.urls')),
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 # Servir archivos media en desarrollo
