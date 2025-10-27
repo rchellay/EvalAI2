@@ -67,4 +67,4 @@ def verificar_y_crear_tablas():
         print(f"❌ Error verificando/creando tablas: {e}")
 
 # Ejecutar al importar el módulo
-verificar_y_crear_tablas()
+# verficar_y_crear_tablas()  # Desactivado para evitar conflictos con migraciones
