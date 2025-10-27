@@ -51,3 +51,4 @@ services:
     plan: free
 # Cambio mínimo para forzar despliegue
 # Render debe aplicar migraciones sobre la base de datos limpia
+# Forzar despliegue tras eliminar tabla conflictiva
