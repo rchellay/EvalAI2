@@ -5,14 +5,14 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Student, Group, Subject
-from .serializers import StudentSerializer, GroupSerializer
+from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer
 
 
 class GroupHierarchyViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión jerárquica de grupos y estudiantes
     """
-    serializer_class = GroupSerializer
+    serializer_class = GroupCreateSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
@@ -23,6 +23,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         return Group.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
+        # Importante: asegurar que el serializer pueda manejar el campo teacher
         serializer.save(teacher=self.request.user)
     
     @action(detail=True, methods=['get'], url_path='alumnos')

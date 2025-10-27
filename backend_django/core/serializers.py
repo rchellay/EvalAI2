@@ -76,7 +76,7 @@ class GroupSerializer(serializers.ModelSerializer):
     total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
     subject_count = serializers.SerializerMethodField()
     course = serializers.CharField(default='4t ESO', required=False)
-    
+
     class Meta:
         model = Group
         fields = [
@@ -85,10 +85,37 @@ class GroupSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'teacher', 'teacher_name', 'created_at', 'updated_at']
-    
+
     def get_subject_count(self, obj):
         return obj.subjects.count()
-    
+
+    def create(self, validated_data):
+        # Asegurar que course tenga un valor por defecto
+        if 'course' not in validated_data or not validated_data['course']:
+            validated_data['course'] = '4t ESO'
+        return super().create(validated_data)
+
+
+class GroupCreateSerializer(serializers.ModelSerializer):
+    """Serializer específico para crear grupos - permite asignar teacher automáticamente"""
+    teacher_name = serializers.CharField(source='teacher.username', read_only=True)
+    total_students = serializers.IntegerField(source='total_students', read_only=True)
+    total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
+    subject_count = serializers.SerializerMethodField()
+    course = serializers.CharField(default='4t ESO', required=False)
+
+    class Meta:
+        model = Group
+        fields = [
+            'id', 'name', 'course', 'teacher', 'teacher_name',
+            'subjects', 'total_students', 'total_subgrupos', 'subject_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']  # Teacher es writable aquí
+
+    def get_subject_count(self, obj):
+        return obj.subjects.count()
+
     def create(self, validated_data):
         # Asegurar que course tenga un valor por defecto
         if 'course' not in validated_data or not validated_data['course']:
