@@ -49,3 +49,5 @@ services:
     name: evalai-db
     env: postgresql
     plan: free
+# Cambio mínimo para forzar despliegue
+# Render debe aplicar migraciones sobre la base de datos limpia
