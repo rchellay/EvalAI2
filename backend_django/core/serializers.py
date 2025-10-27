@@ -111,7 +111,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
             'subjects', 'total_students', 'total_subgrupos', 'subject_count',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']  # Teacher es writable aquí
+        read_only_fields = ['id', 'created_at', 'updated_at', 'teacher_name']  # Teacher es writable
 
     def get_subject_count(self, obj):
         return obj.subjects.count()
