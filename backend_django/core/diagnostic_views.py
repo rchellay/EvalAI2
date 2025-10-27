@@ -205,7 +205,40 @@ def diagnosticar_deployment(request):
             diagnostico['modelos']['asistencias'] = f'✅ {asistencias}'
         except Exception as e:
             diagnostico['modelos']['error'] = f'❌ Error: {str(e)}'
-        
+
+        # CREAR GRUPOS DE EJEMPLO SI NO EXISTEN
+        if grupos == 0:
+            try:
+                # Creemos grupos de ejemplo
+                staff_users = User.objects.filter(is_staff=True)
+                if staff_users.exists():
+                    teacher = staff_users.first()
+                    sample_groups = [
+                        {'name': '4tA', 'course': '4t ESO'},
+                        {'name': '4tB', 'course': '4t ESO'},
+                        {'name': '3tA', 'course': '3r ESO'},
+                        {'name': '3tB', 'course': '3r ESO'},
+                        {'name': '2nA', 'course': '2n ESO'},
+                        {'name': '1rA', 'course': '1r ESO'},
+                    ]
+                    created_count = 0
+                    for group_data in sample_groups:
+                        group, created = Group.objects.get_or_create(
+                            name=group_data['name'],
+                            course=group_data['course'],
+                            teacher=teacher,
+                            defaults={'course': group_data['course']}
+                        )
+                        if created:
+                            created_count += 1
+                    diagnostico['modelos']['grupos'] = f'✅ Creados {created_count} grupos de ejemplo, total {Group.objects.count()}'
+                else:
+                    diagnostico['modelos']['grupos'] = f'⚠️ {grupos}, pero no hay staff users para crear ejemplos'
+            except Exception as e:
+                diagnostico['modelos']['grupos'] = f'❌ {grupos}, error creando ejemplos: {str(e)}'
+        else:
+            diagnostico['modelos']['grupos'] = f'✅ {grupos}'
+
         # Verificar admin
         try:
             from django.contrib import admin
