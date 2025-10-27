@@ -20,6 +20,7 @@ import InformesPage from './pages/InformesPage';
 import CorreccionPage from './pages/CorreccionPage';
 import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
 import SettingsPage from './pages/SettingsPage';
+import GoogleCallback from './pages/GoogleCallback';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -98,7 +99,8 @@ function App() {
       <div className="app-shell">
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route element={<LayoutWithSidebar />}> 
+          <Route path="/auth/callback" element={<GoogleCallback />} />
+          <Route element={<LayoutWithSidebar />}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
             <Route path="/estudiantes" element={<ProtectedRoute><Students /></ProtectedRoute>} />

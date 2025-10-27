@@ -20,6 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import home, health_check
+from core.google_oauth_callback import google_callback_view
 
 urlpatterns = [
     path('', home, name='home'),  # Página de inicio
@@ -35,6 +36,9 @@ urlpatterns = [
     path('api/auth/', include('dj_rest_auth.urls')),
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')),
+    
+    # Google OAuth callback with JWT
+    path('auth/google/callback/', google_callback_view, name='google_callback'),
 ]
 
 # Servir archivos media en desarrollo

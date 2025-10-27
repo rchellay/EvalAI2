@@ -286,3 +286,7 @@ REST_AUTH = {
     'JWT_AUTH_REFRESH_COOKIE': 'evalai-refresh-token',
     'SESSION_LOGIN': False,
 }
+
+# Redirect after social login - va a nuestra vista callback que genera el JWT
+LOGIN_REDIRECT_URL = '/auth/google/callback/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
