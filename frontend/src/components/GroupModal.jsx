@@ -19,7 +19,7 @@ const GroupModal = ({ group, onClose }) => {
 
   const loadGroupDetails = async () => {
     try {
-      const response = await api.get(`/groups/${group.id}`);
+      const response = await api.get(`/grupos/${group.id}`);
       const data = response.data;
 
       setFormData({
@@ -45,10 +45,10 @@ const GroupModal = ({ group, onClose }) => {
       };
 
       if (group) {
-        await api.put(`/groups/${group.id}`, payload);
+        await api.put(`/grupos/${group.id}`, payload);
         toast.success('Grupo actualizado');
       } else {
-        await api.post('/groups', payload);
+        await api.post('/grupos', payload);
         toast.success('Grupo creado');
       }
 
