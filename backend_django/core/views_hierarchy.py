@@ -61,7 +61,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             logger.info(f"GroupHierarchyViewSet - ADMINISTRATOR: returning all groups: {queryset.count()}")
         else:
             queryset = Group.objects.filter(teacher=self.request.user)
-            logger.info(f"GroupHierarchyViewSet - User: {self.request.user.username} - returning own groups: {queryset.count()}")
+            logger.info(f"GroupHierarchyViewSet - LIST: User: {self.request.user.username} (ID: {self.request.user.id}) - returning own groups: {queryset.count()}")
+            for group in queryset:
+                logger.info(f"  - Group: {group.name} (ID: {group.id}) teacher: {group.teacher.username if group.teacher else 'None'}")
         return queryset
 
     def perform_create(self, serializer):

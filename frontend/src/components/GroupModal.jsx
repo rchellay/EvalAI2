@@ -49,7 +49,9 @@ const GroupModal = ({ group, onClose }) => {
         await api.put(`/grupos/${group.id}`, payload);
         toast.success('Grupo actualizado');
       } else {
-        await api.post('/grupos', payload);
+        console.log('POST payload:', payload);
+        const response = await api.post('/grupos', payload);
+        console.log('POST response:', response);
         toast.success('Grupo creado');
       }
 
