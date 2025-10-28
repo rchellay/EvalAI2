@@ -35,6 +35,7 @@ const GroupModal = ({ group, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('handleSubmit called');
     setLoading(true);
 
     try {
