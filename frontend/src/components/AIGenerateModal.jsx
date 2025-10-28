@@ -27,9 +27,8 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
     setGeneratedData(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:8000/api/rubrics/generate/',
+      const response = await api.post(
+        '/rubrics/generate/',
         {
           prompt: prompt.trim(),
           language,
@@ -37,11 +36,6 @@ const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
           levels_per_criterion: levelsPerCriterion,
           max_score: maxScore,
           use_cache: true
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
         }
       );
 
