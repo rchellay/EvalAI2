@@ -60,8 +60,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             queryset = Group.objects.all()
             logger.info(f"GroupHierarchyViewSet - ADMINISTRATOR: returning all groups: {queryset.count()}")
         else:
-            queryset = Group.objects.filter(teacher=self.request.user)
-            logger.info(f"GroupHierarchyViewSet - LIST: User: {self.request.user.username} (ID: {self.request.user.id}) - returning own groups: {queryset.count()}")
+            # TEMPORAL: return all groups for debugging
+            queryset = Group.objects.all()
+            logger.info(f"GroupHierarchyViewSet - DEBUG: returning all groups: {queryset.count()} (user: {self.request.user.username})")
             for group in queryset:
                 logger.info(f"  - Group: {group.name} (ID: {group.id}) teacher: {group.teacher.username if group.teacher else 'None'}")
         return queryset
