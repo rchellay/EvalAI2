@@ -94,7 +94,12 @@ class GroupSerializer(serializers.ModelSerializer):
         if 'course' not in validated_data or not validated_data['course']:
             validated_data['course'] = '4t ESO'
         # El teacher se asigna en perform_create del ViewSet
-        return super().create(validated_data)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"GroupSerializer.create - validated_data: {validated_data}")
+        instance = super().create(validated_data)
+        logger.info(f"GroupSerializer.create - instance created: {instance.name} (ID: {instance.id}) with teacher: {instance.teacher}")
+        return instance
 
 
 class GroupSimpleSerializer(serializers.ModelSerializer):

@@ -40,6 +40,7 @@ const GroupModal = ({ group, onClose }) => {
     try {
       const payload = {
         name: formData.name,
+        course: '4t ESO',  // Añadir course por defecto
         student_ids: [],
         subject_ids: []
       };
