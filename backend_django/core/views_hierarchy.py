@@ -49,7 +49,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión jerárquica de grupos y estudiantes
     """
-    serializer_class = GroupSimpleSerializer  # Usando serializer simplificado temporalmente
+    serializer_class = GroupSerializer  # Usando serializer completo
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
