@@ -23,6 +23,7 @@ const CreateStudentModal = ({ groupId, onClose, onSuccess }) => {
     try {
       const response = await api.post(`/grupos/${groupId}/alumnos/`, formData);
       toast.success(`Estudiante ${response.data.student.full_name} creado exitosamente`);
+      await loadStudents();  // Recargar la lista
       onSuccess && onSuccess(response.data.student);
       onClose();
     } catch (error) {
