@@ -253,10 +253,40 @@ def diagnosticar_deployment(request):
         try:
             superuser = User.objects.filter(is_superuser=True).first()
             if superuser:
-                # Crear grupo de prueba
+                if grupos == 0:
+                    # Crear grupos de ejemplo si no existen
+                    sample_groups = [
+                        {'name': '4tA', 'course': '4t ESO'},
+                        {'name': '4tB', 'course': '4t ESO'},
+                        {'name': '3tA', 'course': '3r ESO'},
+                        {'name': '3tB', 'course': '3r ESO'},
+                        {'name': '2nA', 'course': '2n ESO'},
+                        {'name': '1rA', 'course': '1r ESO'},
+                    ]
+                    created_count = 0
+                    for group_data in sample_groups:
+                        group, created = Group.objects.get_or_create(
+                            name=group_data['name'],
+                            course=group_data['course'],
+                    teacher=request.user,
+                            defaults={'course': group_data['course']}
+                        )
+                        if created:
+                            created_count += 1
+
+                    diagnostico['pruebas']['grupos_ejemplo_creados'] = f'✅ {created_count}'
+                    
+                    # Recalcular
+                    grupos_after = Group.objects.count()
+                    diagnostico['modelos']['grupos'] = f'✅ {grupos_after} (creados desde pruebas)'
+                else:
+                    diagnostico['pruebas']['grupos_ejemplo'] = '✅ Ya existen grupos'
+                
+                # Crear grupo de prueba solo para verificar
                 test_group = Group.objects.create(
                     name="GRUPO_TEST_DEPLOYMENT_API",
-                    teacher=superuser
+                    teacher=superuser,
+                    course="Test Course"
                 )
                 
                 diagnostico['pruebas']['grupo_creado'] = f'✅ ID {test_group.id}'

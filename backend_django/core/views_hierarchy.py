@@ -55,12 +55,13 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(f"GroupHierarchyViewSet - User: {self.request.user}, is_superuser: {self.request.user.is_superuser}")
-        # TEMPORAL: Todos los usuarios autenticados ven todos los grupos para debug
-        # TODO: Arreglar permisos después de diagnosticar el problema
-        queryset = Group.objects.all()
-        logger.info(f"GroupHierarchyViewSet - DEBUG MODE - returning all groups: {queryset.count()}")
-        logger.info(f"GroupHierarchyViewSet - First group (if any): {queryset.first()}")
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = Group.objects.all()
+            logger.info(f"GroupHierarchyViewSet - ADMINISTRATOR: returning all groups: {queryset.count()}")
+        else:
+            queryset = Group.objects.filter(teacher=self.request.user)
+            logger.info(f"GroupHierarchyViewSet - User: {self.request.user.username} - returning own groups: {queryset.count()}")
         return queryset
 
     def perform_create(self, serializer):
@@ -302,11 +303,16 @@ class StudentHierarchyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(f"StudentHierarchyViewSet - User: {self.request.user}, is_superuser: {self.request.user.is_superuser}")
-        # TEMPORAL: Todos los usuarios autenticados ven todos los estudiantes para debug
-        # TODO: Arreglar permisos después de diagnosticar el problema
-        queryset = Student.objects.all()
-        logger.info(f"StudentHierarchyViewSet - DEBUG MODE - returning all students: {queryset.count()}")
+        # Superusers ven todo
+        if self.request.user.is_superuser:
+            queryset = Student.objects.all()
+            logger.info(f"StudentHierarchyViewSet - ADMINISTRATOR: returning all students: {queryset.count()}")
+        else:
+            queryset = Student.objects.filter(
+                Q(grupo_principal__teacher=self.request.user) |
+                Q(subgrupos__teacher=self.request.user)
+            ).distinct()
+            logger.info(f"StudentHierarchyViewSet - User: {self.request.user.username} - returning own students: {queryset.count()}")
         return queryset
     
     @action(detail=False, methods=['get'], url_path='available_for_group/(?P<group_id>[^/.]+)')
