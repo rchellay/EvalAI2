@@ -60,17 +60,17 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             queryset = Group.objects.all()
             logger.info(f"GroupHierarchyViewSet - ADMINISTRATOR: returning all groups: {queryset.count()}")
         else:
-            # TEMPORAL: Teachers ven todos los grupos para diagnosticar
-            queryset = Group.objects.all()
-            logger.info(f"GroupHierarchyViewSet - User: {self.request.user.username} - returning ALL groups: {queryset.count()}")
+            queryset = Group.objects.filter(teacher=self.request.user)
+            logger.info(f"GroupHierarchyViewSet - User: {self.request.user.username} - returning own groups: {queryset.count()}")
         return queryset
 
     def perform_create(self, serializer):
         # Importante: asegurar que el serializer pueda manejar el campo teacher
         import logging
         logger = logging.getLogger(__name__)
+        logger.info(f"GroupHierarchyViewSet - Creating group for user: {self.request.user.username} (ID: {self.request.user.id})")
         instance = serializer.save(teacher=self.request.user)
-        logger.info(f"GroupHierarchyViewSet - Group created: {instance.name} ({instance.id}) by user: {self.request.user.username}")
+        logger.info(f"GroupHierarchyViewSet - Group created: {instance.name} (ID: {instance.id}) with teacher: {instance.teacher.username if instance.teacher else 'None'}")
         return instance
     
     @action(detail=True, methods=['get'], url_path='students')
