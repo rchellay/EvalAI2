@@ -72,11 +72,11 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         logger.info(f"GroupHierarchyViewSet - Group created: {instance.name} ({instance.id}) by user: {self.request.user.username}")
         return instance
     
-    @action(detail=True, methods=['get'], url_path='alumnos')
+    @action(detail=True, methods=['get'], url_path='students')
     def get_group_students(self, request, pk=None):
         """
         Obtener estudiantes de un grupo específico
-        GET /api/grupos/{id}/alumnos/
+        GET /api/grupos/{id}/students/
         """
         try:
             group = self.get_object()
