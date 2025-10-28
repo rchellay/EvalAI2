@@ -93,6 +93,7 @@ class GroupSerializer(serializers.ModelSerializer):
         # Asegurar que course tenga un valor por defecto
         if 'course' not in validated_data or not validated_data['course']:
             validated_data['course'] = '4t ESO'
+        # El teacher se asigna en perform_create del ViewSet
         return super().create(validated_data)
 
 
