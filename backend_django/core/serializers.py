@@ -84,7 +84,7 @@ class GroupSerializer(serializers.ModelSerializer):
             'subjects', 'total_students', 'total_subgrupos', 'subject_count',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'teacher_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'teacher', 'teacher_name', 'created_at', 'updated_at']
 
     def get_subject_count(self, obj):
         try:
