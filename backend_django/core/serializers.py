@@ -71,7 +71,7 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source='teacher.username', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
     total_students = serializers.IntegerField(source='total_students', read_only=True)
     total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
     subject_count = serializers.SerializerMethodField()
@@ -88,6 +88,9 @@ class GroupSerializer(serializers.ModelSerializer):
 
     def get_subject_count(self, obj):
         return obj.subjects.count()
+
+    def get_teacher_name(self, obj):
+        return obj.teacher.username if obj.teacher else 'Sin profesor'
 
 
 class GroupSimpleSerializer(serializers.ModelSerializer):
