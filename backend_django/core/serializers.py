@@ -72,6 +72,8 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     teacher_name = serializers.SerializerMethodField()
+    total_students = serializers.SerializerMethodField()
+    total_subgrupos = serializers.SerializerMethodField()
     subject_count = serializers.SerializerMethodField()
     course = serializers.CharField(default='4t ESO', required=False)
 
@@ -79,13 +81,28 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = [
             'id', 'name', 'course', 'teacher', 'teacher_name',
-            'subjects', 'subject_count',
+            'subjects', 'total_students', 'total_subgrupos', 'subject_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'teacher_name', 'created_at', 'updated_at']
 
     def get_subject_count(self, obj):
-        return obj.subjects.count()
+        try:
+            return obj.subjects.count()
+        except Exception as e:
+            return 0
+
+    def get_total_students(self, obj):
+        try:
+            return obj.alumnos.count()
+        except Exception as e:
+            return 0
+
+    def get_total_subgrupos(self, obj):
+        try:
+            return obj.subgrupos.count()
+        except Exception as e:
+            return 0
 
     def get_teacher_name(self, obj):
         return obj.teacher.username if obj.teacher else 'Sin profesor'
