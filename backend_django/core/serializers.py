@@ -72,8 +72,6 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     teacher_name = serializers.SerializerMethodField()
-    total_students = serializers.IntegerField(source='total_students', read_only=True)
-    total_subgrupos = serializers.IntegerField(source='total_subgrupos', read_only=True)
     subject_count = serializers.SerializerMethodField()
     course = serializers.CharField(default='4t ESO', required=False)
 
@@ -81,7 +79,7 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = [
             'id', 'name', 'course', 'teacher', 'teacher_name',
-            'subjects', 'total_students', 'total_subgrupos', 'subject_count',
+            'subjects', 'subject_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'teacher_name', 'created_at', 'updated_at']
