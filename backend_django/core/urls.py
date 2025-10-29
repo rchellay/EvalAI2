@@ -102,7 +102,7 @@ urlpatterns = [
     
     # Nuevas rutas para integración de evaluaciones en asignaturas
     path('asignaturas/<int:subject_pk>/grupos/', SubjectGroupsViewSet.as_view({'get': 'list'}), name='subject-groups'),
-    path('grupos/<int:group_pk>/alumnos/', GroupStudentsViewSet.as_view({'get': 'list'}), name='group-students'),
+    # path('grupos/<int:group_pk>/alumnos/', GroupStudentsViewSet.as_view({'get': 'list'}), name='group-students'),  # Commented out - using action on GroupHierarchyViewSet instead
     path('alumnos/<int:student_pk>/evaluaciones/', StudentEvaluationsViewSet.as_view({
         'get': 'list',
         'post': 'create'
