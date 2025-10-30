@@ -41,17 +41,15 @@ const GroupModal = ({ group, onClose }) => {
     try {
       const payload = {
         name: formData.name,
-        course: '4t ESO',  // Añadir course por defecto
-        student_ids: [],
-        subject_ids: []
+        course: '4t ESO'  // Añadir course por defecto
       };
 
       if (group) {
-        await api.put(`/grupos/${group.id}`, payload);
+        await api.put(`/grupos/${group.id}/`, payload);
         toast.success('Grupo actualizado');
       } else {
         console.log('POST payload:', payload);
-        const response = await api.post('/grupos', payload);
+        const response = await api.post('/grupos/', payload);
         console.log('POST response:', response);
         toast.success('Grupo creado');
       }

@@ -75,6 +75,8 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         import logging
         logger = logging.getLogger(__name__)
         logger.info(f"GroupHierarchyViewSet - Creating group for user: {self.request.user.username} (ID: {self.request.user.id})")
+        logger.info(f"GroupHierarchyViewSet - User is authenticated: {self.request.user.is_authenticated}")
+        logger.info(f"GroupHierarchyViewSet - User is superuser: {self.request.user.is_superuser}")
         instance = serializer.save(teacher=self.request.user)
         logger.info(f"GroupHierarchyViewSet - Group created: {instance.name} (ID: {instance.id}) with teacher: {instance.teacher.username if instance.teacher else 'None'}")
         return instance
