@@ -127,16 +127,19 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    @action(detail=True, methods=['get'], url_path='alumnos')
-    def get_group_students_spanish(self, request, pk=None):
+    @action(detail=True, methods=['get', 'post'], url_path='alumnos')
+    def alumnos(self, request, pk=None):
         """
-        Obtener estudiantes de un grupo específico (versión en español)
-        GET /api/grupos/{id}/alumnos/
+        Gestionar estudiantes de un grupo específico
+        GET /api/grupos/{id}/alumnos/ - Obtener estudiantes
+        POST /api/grupos/{id}/alumnos/ - Crear nuevo estudiante
         """
-        return self.get_group_students(request, pk)
+        if request.method == 'GET':
+            return self.get_group_students(request, pk)
+        elif request.method == 'POST':
+            return self.create_student_in_group_handler(request, pk)
     
-    @action(detail=True, methods=['post'], url_path='alumnos')
-    def create_student_in_group(self, request, pk=None):
+    def create_student_in_group_handler(self, request, pk=None):
         """
         Crear nuevo estudiante dentro de un grupo específico
         POST /api/grupos/{id}/alumnos/
