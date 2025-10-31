@@ -202,7 +202,7 @@ const GroupDetailPage = () => {
             </h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate('/estudiantes/nuevo')}
+                onClick={() => setShowCreateStudentModal(true)}
                 className="flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 transition"
               >
                 <span className="material-symbols-outlined text-base">add_circle</span>
@@ -395,6 +395,17 @@ const GroupDetailPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Create Student Modal */}
+      {showCreateStudentModal && (
+        <CreateStudentModal
+          groupId={id}
+          onClose={() => setShowCreateStudentModal(false)}
+          onSuccess={() => {
+            loadGroupStudents(); // Recargar la lista de estudiantes
+          }}
+        />
       )}
     </div>
   );
