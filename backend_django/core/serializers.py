@@ -17,8 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class StudentSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='full_name', read_only=True)
-    grupo_principal_name = serializers.CharField(source='grupo_principal.name', read_only=True)
-    grupo_principal_course = serializers.CharField(source='grupo_principal.course', read_only=True)
+    grupo_principal_name = serializers.SerializerMethodField()
+    grupo_principal_course = serializers.SerializerMethodField()
     subgrupos_count = serializers.SerializerMethodField()
     all_groups_info = serializers.SerializerMethodField()
     
@@ -35,17 +35,24 @@ class StudentSerializer(serializers.ModelSerializer):
     def get_subgrupos_count(self, obj):
         return obj.subgrupos.count()
     
+    def get_grupo_principal_name(self, obj):
+        return obj.grupo_principal.name if obj.grupo_principal else 'Sin grupo principal'
+    
+    def get_grupo_principal_course(self, obj):
+        return obj.grupo_principal.course if obj.grupo_principal else 'Sin curso'
+    
     def get_all_groups_info(self, obj):
         groups_info = []
         
         # Grupo principal
-        groups_info.append({
-            'id': obj.grupo_principal.id,
-            'name': obj.grupo_principal.name,
-            'course': obj.grupo_principal.course,
-            'type': 'principal',
-            'type_label': 'Grupo Principal'
-        })
+        if obj.grupo_principal:
+            groups_info.append({
+                'id': obj.grupo_principal.id,
+                'name': obj.grupo_principal.name,
+                'course': obj.grupo_principal.course,
+                'type': 'principal',
+                'type_label': 'Grupo Principal'
+            })
         
         # Subgrupos
         for subgrupo in obj.subgrupos.all():

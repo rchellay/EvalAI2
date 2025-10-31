@@ -87,19 +87,25 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         Obtener estudiantes de un grupo específico
         GET /api/grupos/{id}/students/
         """
+        print(f"DEBUG: get_group_students called for group {pk}")
         try:
             group = self.get_object()
+            print(f"DEBUG: Found group {group.name} (ID: {group.id})")
             
             # Estudiantes principales del grupo
             main_students = Student.objects.filter(grupo_principal=group)
+            print(f"DEBUG: Found {main_students.count()} main students")
             
             # Estudiantes que participan como subgrupo
             subgrupo_students = Student.objects.filter(subgrupos=group)
+            print(f"DEBUG: Found {subgrupo_students.count()} subgrupo students")
             
             # Combinar ambos tipos
             all_students = main_students.union(subgrupo_students).distinct()
+            print(f"DEBUG: Total students: {all_students.count()}")
             
             serializer = StudentSerializer(all_students, many=True, context={'request': request})
+            print(f"DEBUG: Serialization successful")
             
             return Response({
                 'status': 'success',
@@ -117,11 +123,15 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             })
             
         except Group.DoesNotExist:
+            print(f"DEBUG: Group {pk} not found")
             return Response(
                 {'error': 'Grupo no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            print(f"DEBUG: Error in get_group_students: {str(e)}")
+            import traceback
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error al obtener estudiantes: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -151,20 +161,26 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             "email": "jesmeen@example.com"
         }
         """
+        print(f"DEBUG: create_student_in_group_handler called for group {pk}")
         try:
             group = self.get_object()
+            print(f"DEBUG: Found group {group.name} (ID: {group.id})")
             
             # Validar datos requeridos
             required_fields = ['name', 'apellidos', 'email']
             for field in required_fields:
                 if field not in request.data:
+                    print(f"DEBUG: Missing required field: {field}")
                     return Response(
                         {'error': f'Campo requerido: {field}'}, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
             
+            print(f"DEBUG: Creating student with data: {request.data}")
+            
             # Verificar que el email no exista
             if Student.objects.filter(email=request.data['email']).exists():
+                print(f"DEBUG: Email already exists: {request.data['email']}")
                 return Response(
                     {'error': 'Ya existe un estudiante con este email'}, 
                     status=status.HTTP_400_BAD_REQUEST
@@ -177,6 +193,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             serializer = StudentSerializer(data=student_data)
             if serializer.is_valid():
                 student = serializer.save()
+                print(f"DEBUG: Student created successfully: {student.full_name} (ID: {student.id})")
                 
                 return Response({
                     'status': 'success',
@@ -184,17 +201,22 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                     'student': StudentSerializer(student, context={'request': request}).data
                 }, status=status.HTTP_201_CREATED)
             else:
+                print(f"DEBUG: Serializer errors: {serializer.errors}")
                 return Response(
                     {'error': 'Datos inválidos', 'details': serializer.errors}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
                 
         except Group.DoesNotExist:
+            print(f"DEBUG: Group {pk} not found")
             return Response(
                 {'error': 'Grupo no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            print(f"DEBUG: Error in create_student_in_group_handler: {str(e)}")
+            import traceback
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error al crear estudiante: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
