@@ -21,7 +21,9 @@ const CreateStudentModal = ({ groupId, onClose, onSuccess }) => {
 
     setLoading(true);
     try {
+      console.log('FRONTEND DEBUG: Creating student with data:', formData);
       const response = await api.post(`/grupos/${groupId}/alumnos/`, formData);
+      console.log('FRONTEND DEBUG: Student creation response:', response.data);
       toast.success(`Estudiante ${response.data.student.full_name} creado exitosamente`);
       onSuccess && onSuccess(response.data.student);
       onClose();

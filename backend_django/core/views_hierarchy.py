@@ -107,6 +107,10 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             students = Student.objects.filter(grupo_principal=group)
             print(f"FORCED DEBUG: Found {students.count()} students in group")
             
+            # Debug: Mostrar todos los estudiantes encontrados
+            for s in students:
+                print(f"FORCED DEBUG: Student found - ID: {s.id}, Name: {s.name} {s.apellidos}, Email: {s.email}")
+            
             # Serializar de forma simple
             student_data = []
             for student in students:
@@ -117,7 +121,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                     'email': student.email,
                     'full_name': student.full_name,
                     'photo': student.photo,
-                    'attendance_percentage': student.attendance_percentage,
+                    'attendance_percentage': student.attendance_percentage if hasattr(student, 'attendance_percentage') else 0,
                     'created_at': student.created_at,
                     'updated_at': student.updated_at
                 })
@@ -151,6 +155,8 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             print(f"FORCED DEBUG: Found group {group.name} (ID: {group.id})")
             
             # Crear estudiante directamente sin validaciones complejas
+            print(f"FORCED DEBUG: Creating student with data - name: {request.data.get('name')}, apellidos: {request.data.get('apellidos')}, email: {request.data.get('email')}")
+            
             student = Student.objects.create(
                 name=request.data.get('name', ''),
                 apellidos=request.data.get('apellidos', ''),
@@ -158,7 +164,12 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                 grupo_principal=group
             )
             
-            print(f"FORCED DEBUG: Student created: {student.full_name} (ID: {student.id})")
+            print(f"FORCED DEBUG: Student created: {student.full_name} (ID: {student.id}) in group {group.id}")
+            print(f"FORCED DEBUG: Student's grupo_principal: {student.grupo_principal.id if student.grupo_principal else None}")
+            
+            # Verificar que efectivamente se creó
+            verify_count = Student.objects.filter(grupo_principal=group).count()
+            print(f"FORCED DEBUG: Total students in group after creation: {verify_count}")
             
             return Response({
                 'status': 'success',

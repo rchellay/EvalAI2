@@ -35,13 +35,16 @@ const GroupDetailPage = () => {
   };
 
   const loadGroupStudents = async () => {
+    console.log(`FRONTEND DEBUG: Loading students for group ${id}`);
     try {
       const response = await api.get(`/grupos/${id}/alumnos/`);
+      console.log('FRONTEND DEBUG: Students response:', response.data);
       setGroup(prev => ({
         ...prev,
         students: response.data.students || [],
         counts: response.data.counts || {}
       }));
+      console.log(`FRONTEND DEBUG: Set ${response.data.students?.length || 0} students in state`);
     } catch (error) {
       console.error('Error loading group students:', error);
       toast.error('Error al cargar estudiantes del grupo');
