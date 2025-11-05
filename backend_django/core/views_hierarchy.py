@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import User
 from django.db.models import Q
+import sys
+import datetime
+import traceback
 from .models import Student, Group, Subject
 from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer, GroupSimpleSerializer
 
@@ -37,7 +40,6 @@ def debug_group_endpoint(request):
             })
 
     except Exception as e:
-        import traceback
         return Response({
             'error': str(e),
             'traceback': traceback.format_exc(),
@@ -105,8 +107,6 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         POST /api/grupos/{id}/alumnos/ - Crear nuevo estudiante
         """
         # DIRECT LOGGING - NO IMPORTS
-        import sys
-        import datetime
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         def direct_log(msg):
@@ -129,9 +129,6 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         Versión simplificada para obtener estudiantes
         """
         # DIRECT LOGGING
-        import sys
-        import datetime
-        
         def direct_log(msg):
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_msg = f"[{timestamp}] EVALAI_GET: {msg}"
@@ -180,7 +177,6 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             
         except Exception as e:
             direct_log(f"ERROR in get_group_students_simple: {str(e)}")
-            import traceback
             direct_log(f"Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
@@ -192,9 +188,6 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         Versión simplificada para crear estudiante
         """
         # DIRECT LOGGING
-        import sys
-        import datetime
-        
         def direct_log(msg):
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_msg = f"[{timestamp}] EVALAI_POST: {msg}"
@@ -239,7 +232,6 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             
         except Exception as e:
             direct_log(f"ERROR in create_student_in_group_simple: {str(e)}")
-            import traceback
             direct_log(f"Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
