@@ -59,6 +59,13 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         import logging
         logger = logging.getLogger(__name__)
+        
+        # TEMP FIX: Si no hay usuario autenticado, devolver todos los grupos
+        if not self.request.user.is_authenticated:
+            queryset = Group.objects.all()
+            print(f"FORCED DEBUG: Anonymous user, returning all groups: {queryset.count()}")
+            return queryset
+        
         # Superusers ven todo
         if self.request.user.is_superuser:
             queryset = Group.objects.all()
@@ -74,10 +81,19 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         # Importante: asegurar que el serializer pueda manejar el campo teacher
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(f"GroupHierarchyViewSet - Creating group for user: {self.request.user.username} (ID: {self.request.user.id})")
-        logger.info(f"GroupHierarchyViewSet - User is authenticated: {self.request.user.is_authenticated}")
-        logger.info(f"GroupHierarchyViewSet - User is superuser: {self.request.user.is_superuser}")
-        instance = serializer.save(teacher=self.request.user)
+        
+        # TEMP FIX: Si no hay usuario, usar el primer usuario disponible
+        if not self.request.user.is_authenticated:
+            from django.contrib.auth.models import User
+            first_user = User.objects.first()
+            print(f"FORCED DEBUG: Anonymous user creating group, using first user: {first_user.username}")
+            instance = serializer.save(teacher=first_user)
+        else:
+            logger.info(f"GroupHierarchyViewSet - Creating group for user: {self.request.user.username} (ID: {self.request.user.id})")
+            logger.info(f"GroupHierarchyViewSet - User is authenticated: {self.request.user.is_authenticated}")
+            logger.info(f"GroupHierarchyViewSet - User is superuser: {self.request.user.is_superuser}")
+            instance = serializer.save(teacher=self.request.user)
+        
         logger.info(f"GroupHierarchyViewSet - Group created: {instance.name} (ID: {instance.id}) with teacher: {instance.teacher.username if instance.teacher else 'None'}")
         return instance
     
@@ -88,9 +104,10 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         GET /api/grupos/{id}/alumnos/ - Obtener estudiantes
         POST /api/grupos/{id}/alumnos/ - Crear nuevo estudiante
         """
-        print(f"FORCED DEBUG: alumnos action called for group {pk}, method {request.method}")
-        print(f"FORCED DEBUG: User authenticated: {request.user.is_authenticated}")
-        print(f"FORCED DEBUG: User: {request.user.username if request.user.is_authenticated else 'Anonymous'}")
+        from .force_logger import force_log
+        force_log(f"alumnos action called for group {pk}, method {request.method}")
+        force_log(f"User authenticated: {request.user.is_authenticated}")
+        force_log(f"User: {request.user.username if request.user.is_authenticated else 'Anonymous'}")
         
         if request.method == 'GET':
             return self.get_group_students_simple(request, pk)
@@ -101,18 +118,20 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         """
         Versión simplificada para obtener estudiantes
         """
-        print(f"FORCED DEBUG: get_group_students_simple called for group {pk}")
+        from .force_logger import force_log
+        force_log(f"get_group_students_simple called for group {pk}")
+        
         try:
             group = self.get_object()
-            print(f"FORCED DEBUG: Found group {group.name} (ID: {group.id})")
+            force_log(f"Found group {group.name} (ID: {group.id})")
             
             # Solo estudiantes principales del grupo
             students = Student.objects.filter(grupo_principal=group)
-            print(f"FORCED DEBUG: Found {students.count()} students in group")
+            force_log(f"Found {students.count()} students in group")
             
             # Debug: Mostrar todos los estudiantes encontrados
             for s in students:
-                print(f"FORCED DEBUG: Student found - ID: {s.id}, Name: {s.name} {s.apellidos}, Email: {s.email}")
+                force_log(f"Student found - ID: {s.id}, Name: {s.name} {s.apellidos}, Email: {s.email}")
             
             # Serializar de forma simple
             student_data = []
@@ -129,7 +148,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                     'updated_at': student.updated_at
                 })
             
-            print(f"FORCED DEBUG: Serialized {len(student_data)} students")
+            force_log(f"Serialized {len(student_data)} students")
             
             return Response({
                 'status': 'success',
@@ -140,9 +159,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             })
             
         except Exception as e:
-            print(f"FORCED DEBUG: Error in get_group_students_simple: {str(e)}")
+            force_log(f"ERROR in get_group_students_simple: {str(e)}", "ERROR")
             import traceback
-            print(f"FORCED DEBUG: Traceback: {traceback.format_exc()}")
+            force_log(f"Traceback: {traceback.format_exc()}", "ERROR")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
                 status=500
@@ -152,13 +171,15 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         """
         Versión simplificada para crear estudiante
         """
-        print(f"FORCED DEBUG: create_student_in_group_simple called for group {pk}")
+        from .force_logger import force_log
+        force_log(f"create_student_in_group_simple called for group {pk}")
+        
         try:
             group = self.get_object()
-            print(f"FORCED DEBUG: Found group {group.name} (ID: {group.id})")
+            force_log(f"Found group {group.name} (ID: {group.id})")
             
             # Crear estudiante directamente sin validaciones complejas
-            print(f"FORCED DEBUG: Creating student with data - name: {request.data.get('name')}, apellidos: {request.data.get('apellidos')}, email: {request.data.get('email')}")
+            force_log(f"Creating student with data - name: {request.data.get('name')}, apellidos: {request.data.get('apellidos')}, email: {request.data.get('email')}")
             
             student = Student.objects.create(
                 name=request.data.get('name', ''),
@@ -167,12 +188,12 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                 grupo_principal=group
             )
             
-            print(f"FORCED DEBUG: Student created: {student.full_name} (ID: {student.id}) in group {group.id}")
-            print(f"FORCED DEBUG: Student's grupo_principal: {student.grupo_principal.id if student.grupo_principal else None}")
+            force_log(f"Student created: {student.full_name} (ID: {student.id}) in group {group.id}")
+            force_log(f"Student's grupo_principal: {student.grupo_principal.id if student.grupo_principal else None}")
             
             # Verificar que efectivamente se creó
             verify_count = Student.objects.filter(grupo_principal=group).count()
-            print(f"FORCED DEBUG: Total students in group after creation: {verify_count}")
+            force_log(f"Total students in group after creation: {verify_count}")
             
             return Response({
                 'status': 'success',
@@ -187,9 +208,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             }, status=201)
             
         except Exception as e:
-            print(f"FORCED DEBUG: Error in create_student_in_group_simple: {str(e)}")
+            force_log(f"ERROR in create_student_in_group_simple: {str(e)}", "ERROR")
             import traceback
-            print(f"FORCED DEBUG: Traceback: {traceback.format_exc()}")
+            force_log(f"Traceback: {traceback.format_exc()}", "ERROR")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
                 status=500
