@@ -40,12 +40,15 @@ const GroupDetailPage = () => {
     try {
       const response = await api.get(`/grupos/${id}/alumnos/`);
       console.log('FRONTEND DEBUG: Students response:', response.data);
-      setGroup(prev => ({
-        ...prev,
+      const updatedGroup = {
+        ...group,
         students: response.data.students || [],
         counts: response.data.counts || {}
-      }));
+      };
+      setGroup(updatedGroup);
       console.log(`FRONTEND DEBUG: Set ${response.data.students?.length || 0} students in state`);
+      console.log('FRONTEND DEBUG: Updated group object:', updatedGroup);
+      console.log('FRONTEND DEBUG: Students array:', updatedGroup.students);
     } catch (error) {
       console.error('Error loading group students:', error);
       toast.error('Error al cargar estudiantes del grupo');
@@ -223,7 +226,13 @@ const GroupDetailPage = () => {
           </div>
 
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-            {!group.students || group.students.length === 0 ? (
+            {(() => {
+              console.log('FRONTEND DEBUG: Rendering students. Group:', group);
+              console.log('FRONTEND DEBUG: Group.students:', group?.students);
+              console.log('FRONTEND DEBUG: Students length:', group?.students?.length);
+              return null;
+            })()}
+            {!group?.students || group.students.length === 0 ? (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 No hay estudiantes en este grupo. Añade estudiantes para empezar.
               </div>
