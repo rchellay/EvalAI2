@@ -104,10 +104,20 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         GET /api/grupos/{id}/alumnos/ - Obtener estudiantes
         POST /api/grupos/{id}/alumnos/ - Crear nuevo estudiante
         """
-        from .force_logger import force_log
-        force_log(f"alumnos action called for group {pk}, method {request.method}")
-        force_log(f"User authenticated: {request.user.is_authenticated}")
-        force_log(f"User: {request.user.username if request.user.is_authenticated else 'Anonymous'}")
+        # DIRECT LOGGING - NO IMPORTS
+        import sys
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        def direct_log(msg):
+            log_msg = f"[{timestamp}] EVALAI_DEBUG: {msg}"
+            print(log_msg, flush=True)
+            sys.stderr.write(log_msg + "\n")
+            sys.stderr.flush()
+        
+        direct_log(f"alumnos action called for group {pk}, method {request.method}")
+        direct_log(f"User authenticated: {request.user.is_authenticated}")
+        direct_log(f"User: {request.user.username if request.user.is_authenticated else 'Anonymous'}")
         
         if request.method == 'GET':
             return self.get_group_students_simple(request, pk)
@@ -118,20 +128,30 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         """
         Versión simplificada para obtener estudiantes
         """
-        from .force_logger import force_log
-        force_log(f"get_group_students_simple called for group {pk}")
+        # DIRECT LOGGING
+        import sys
+        import datetime
+        
+        def direct_log(msg):
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_msg = f"[{timestamp}] EVALAI_GET: {msg}"
+            print(log_msg, flush=True)
+            sys.stderr.write(log_msg + "\n")
+            sys.stderr.flush()
+            
+        direct_log(f"get_group_students_simple called for group {pk}")
         
         try:
             group = self.get_object()
-            force_log(f"Found group {group.name} (ID: {group.id})")
+            direct_log(f"Found group {group.name} (ID: {group.id})")
             
             # Solo estudiantes principales del grupo
             students = Student.objects.filter(grupo_principal=group)
-            force_log(f"Found {students.count()} students in group")
+            direct_log(f"Found {students.count()} students in group")
             
             # Debug: Mostrar todos los estudiantes encontrados
             for s in students:
-                force_log(f"Student found - ID: {s.id}, Name: {s.name} {s.apellidos}, Email: {s.email}")
+                direct_log(f"Student found - ID: {s.id}, Name: {s.name} {s.apellidos}, Email: {s.email}")
             
             # Serializar de forma simple
             student_data = []
@@ -148,7 +168,7 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                     'updated_at': student.updated_at
                 })
             
-            force_log(f"Serialized {len(student_data)} students")
+            direct_log(f"Serialized {len(student_data)} students")
             
             return Response({
                 'status': 'success',
@@ -159,9 +179,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             })
             
         except Exception as e:
-            force_log(f"ERROR in get_group_students_simple: {str(e)}", "ERROR")
+            direct_log(f"ERROR in get_group_students_simple: {str(e)}")
             import traceback
-            force_log(f"Traceback: {traceback.format_exc()}", "ERROR")
+            direct_log(f"Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
                 status=500
@@ -171,15 +191,25 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         """
         Versión simplificada para crear estudiante
         """
-        from .force_logger import force_log
-        force_log(f"create_student_in_group_simple called for group {pk}")
+        # DIRECT LOGGING
+        import sys
+        import datetime
+        
+        def direct_log(msg):
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_msg = f"[{timestamp}] EVALAI_POST: {msg}"
+            print(log_msg, flush=True)
+            sys.stderr.write(log_msg + "\n")
+            sys.stderr.flush()
+            
+        direct_log(f"create_student_in_group_simple called for group {pk}")
         
         try:
             group = self.get_object()
-            force_log(f"Found group {group.name} (ID: {group.id})")
+            direct_log(f"Found group {group.name} (ID: {group.id})")
             
             # Crear estudiante directamente sin validaciones complejas
-            force_log(f"Creating student with data - name: {request.data.get('name')}, apellidos: {request.data.get('apellidos')}, email: {request.data.get('email')}")
+            direct_log(f"Creating student with data - name: {request.data.get('name')}, apellidos: {request.data.get('apellidos')}, email: {request.data.get('email')}")
             
             student = Student.objects.create(
                 name=request.data.get('name', ''),
@@ -188,12 +218,12 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                 grupo_principal=group
             )
             
-            force_log(f"Student created: {student.full_name} (ID: {student.id}) in group {group.id}")
-            force_log(f"Student's grupo_principal: {student.grupo_principal.id if student.grupo_principal else None}")
+            direct_log(f"Student created: {student.full_name} (ID: {student.id}) in group {group.id}")
+            direct_log(f"Student's grupo_principal: {student.grupo_principal.id if student.grupo_principal else None}")
             
             # Verificar que efectivamente se creó
             verify_count = Student.objects.filter(grupo_principal=group).count()
-            force_log(f"Total students in group after creation: {verify_count}")
+            direct_log(f"Total students in group after creation: {verify_count}")
             
             return Response({
                 'status': 'success',
@@ -208,9 +238,9 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             }, status=201)
             
         except Exception as e:
-            force_log(f"ERROR in create_student_in_group_simple: {str(e)}", "ERROR")
+            direct_log(f"ERROR in create_student_in_group_simple: {str(e)}")
             import traceback
-            force_log(f"Traceback: {traceback.format_exc()}", "ERROR")
+            direct_log(f"Traceback: {traceback.format_exc()}")
             return Response(
                 {'error': f'Error: {str(e)}'}, 
                 status=500
