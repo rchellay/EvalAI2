@@ -191,7 +191,8 @@ export default function StudentFormPage() {
         };
         await api.post(`/grupos/${groupId}/alumnos/`, studentData);
         toast.success('Estudiante creado correctamente en el grupo');
-        navigate(`/grupos/${groupId}`);
+        // Usar replace y forzar recarga con timestamp
+        navigate(`/grupos/${groupId}?refresh=${Date.now()}`, { replace: true });
       } else {
         // Crear estudiante sin grupo específico (usar endpoint original)
         await api.post('/auth/register', {

@@ -1,6 +1,6 @@
 // frontend/src/pages/GroupDetailPage.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
 import CreateStudentModal from '../components/CreateStudentModal';
@@ -8,6 +8,7 @@ import CreateStudentModal from '../components/CreateStudentModal';
 const GroupDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
@@ -19,7 +20,7 @@ const GroupDetailPage = () => {
     loadGroupDetails();
     loadGroupStudents();
     loadAvailableStudents();
-  }, [id]);
+  }, [id, location.search]); // También recargar cuando cambien los search params
 
   const loadGroupDetails = async () => {
     try {
