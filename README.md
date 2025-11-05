@@ -263,4 +263,5 @@ Si tienes preguntas o necesitas ayuda:
 
 [![Star](https://img.shields.io/github/stars/rchellay/EvalAI2?style=social)](https://github.com/rchellay/EvalAI2)
 [![Fork](https://img.shields.io/github/forks/rchellay/EvalAI2?style=social)](https://github.com/rchellay/EvalAI2)
-[![Watch](https://img.shields.io/github/watchers/rchellay/EvalAI2?style=social)](https://github.com/rchellay/EvalAI2)
+[![Watch](https://img.shields.io/github/watchers/rchellay/EvalAI2?style=social)](https://github.com/rchellay/EvalAI2)#   L a s t   u p d a t e :   1 1 / 0 6 / 2 0 2 5   0 0 : 3 5 : 0 9  
+ 
