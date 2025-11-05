@@ -155,14 +155,14 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             for student in students:
                 student_data.append({
                     'id': student.id,
-                    'name': student.name,
-                    'apellidos': student.apellidos,
-                    'email': student.email,
-                    'full_name': student.full_name,
-                    'photo': student.photo,
-                    'attendance_percentage': student.attendance_percentage if hasattr(student, 'attendance_percentage') else 0,
-                    'created_at': student.created_at,
-                    'updated_at': student.updated_at
+                    'name': student.name or '',
+                    'apellidos': student.apellidos or '',
+                    'email': student.email or '',
+                    'full_name': student.full_name or '',
+                    'photo': str(student.photo) if student.photo else None,
+                    'attendance_percentage': getattr(student, 'attendance_percentage', 0),
+                    'created_at': student.created_at.isoformat() if student.created_at else None,
+                    'updated_at': student.updated_at.isoformat() if student.updated_at else None
                 })
             
             direct_log(f"Serialized {len(student_data)} students")
