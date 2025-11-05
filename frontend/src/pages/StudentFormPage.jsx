@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
 
@@ -38,12 +38,15 @@ const PRESET_AVATARS = [
 export default function StudentFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId');
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
+    apellidos: '',
     email: '',
     birth_date: '',
     student_id: isEditMode ? '' : generateStudentId(),
@@ -79,6 +82,7 @@ export default function StudentFormPage() {
       const student = response.data;
       setFormData({
         username: student.username || '',
+        apellidos: student.apellidos || '',
         email: student.email || '',
         birth_date: student.birth_date || '',
         student_id: student.student_id || generateStudentId(),
@@ -177,17 +181,29 @@ export default function StudentFormPage() {
       if (isEditMode) {
         await api.put(`/students/${id}`, formData);
         toast.success('Estudiante actualizado correctamente');
+        navigate('/estudiantes');
+      } else if (groupId) {
+        // Crear estudiante en grupo específico
+        const studentData = {
+          name: formData.username,
+          apellidos: formData.apellidos,
+          email: formData.email
+        };
+        await api.post(`/grupos/${groupId}/alumnos/`, studentData);
+        toast.success('Estudiante creado correctamente en el grupo');
+        navigate(`/grupos/${groupId}`);
       } else {
+        // Crear estudiante sin grupo específico (usar endpoint original)
         await api.post('/auth/register', {
           ...formData,
-          password: 'temporal123' // Contraseña temporal
+          password: 'temporal123'
         });
         toast.success('Estudiante creado correctamente');
+        navigate('/estudiantes');
       }
-      navigate('/estudiantes');
     } catch (error) {
       console.error('Error saving student:', error);
-      toast.error(error.response?.data?.detail || 'Error al guardar estudiante');
+      toast.error(error.response?.data?.detail || error.response?.data?.error || 'Error al guardar estudiante');
     } finally {
       setLoading(false);
     }
@@ -248,14 +264,29 @@ export default function StudentFormPage() {
               {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nombre Completo *
+                  Nombre *
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Ej: Sophia Rodriguez"
+                  placeholder="Ej: Sophia"
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                />
+              </div>
+
+              {/* Apellidos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Apellidos *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.apellidos || ''}
+                  onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                  placeholder="Ej: Rodriguez Martinez"
                   className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>

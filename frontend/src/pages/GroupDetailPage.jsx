@@ -205,7 +205,7 @@ const GroupDetailPage = () => {
             </h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowCreateStudentModal(true)}
+                onClick={() => navigate(`/estudiantes/nuevo?groupId=${id}`)}
                 className="flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 transition"
               >
                 <span className="material-symbols-outlined text-base">add_circle</span>
