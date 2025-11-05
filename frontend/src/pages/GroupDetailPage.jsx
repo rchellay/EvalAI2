@@ -25,7 +25,11 @@ const GroupDetailPage = () => {
   const loadGroupDetails = async () => {
     try {
       const response = await api.get(`/grupos/${id}`);
-      setGroup(response.data);
+      setGroup(prev => ({
+        ...response.data,
+        students: prev?.students || [], // Preservar students existentes
+        counts: prev?.counts || {}      // Preservar counts existentes
+      }));
     } catch (error) {
       console.error('Error loading group:', error);
       toast.error('Error al cargar el grupo');
