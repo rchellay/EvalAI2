@@ -44,9 +44,9 @@ class StudentViewSet(viewsets.ModelViewSet):
         return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
     
     def list(self, request, *args, **kwargs):
-        """List all students with debug logging"""
+        """List all students with complete debug logging"""
         try:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Starting", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Starting list()", file=sys.stderr, flush=True)
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: User {request.user}", file=sys.stderr, flush=True)
             
             queryset = self.filter_queryset(self.get_queryset())
