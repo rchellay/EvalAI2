@@ -11,6 +11,8 @@ from dateutil.rrule import rrule, WEEKLY, MO, TU, WE, TH, FR, SA, SU
 import uuid
 import hashlib
 import json
+import sys
+import traceback
 
 from .models import (
     Student, Subject, Group, CalendarEvent,
@@ -40,6 +42,34 @@ class StudentViewSet(viewsets.ModelViewSet):
             return Student.objects.all()
         # Filtrar estudiantes que pertenecen a grupos del profesor actual
         return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
+    
+    def list(self, request, *args, **kwargs):
+        """List all students with debug logging"""
+        try:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Starting", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: User {request.user}", file=sys.stderr, flush=True)
+            
+            queryset = self.filter_queryset(self.get_queryset())
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Found {queryset.count()} students", file=sys.stderr, flush=True)
+            
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Paginated response", file=sys.stderr, flush=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Returning {len(serializer.data)} students", file=sys.stderr, flush=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: ERROR - {str(e)}", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: TRACEBACK:", file=sys.stderr, flush=True)
+            traceback.print_exc(file=sys.stderr)
+            return Response(
+                {'error': f'Error loading students: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def destroy(self, request, *args, **kwargs):
         try:
