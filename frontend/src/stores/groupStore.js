@@ -26,10 +26,12 @@ const useGroupStore = create(
         set({ loading: true, error: null });
         try {
           const response = await api.get('/grupos/');
-          set({ groups: response.data, loading: false });
-          return response.data;
+          const groupsData = Array.isArray(response.data) ? response.data : [];
+          set({ groups: groupsData, loading: false });
+          return groupsData;
         } catch (error) {
-          set({ error: error.message, loading: false });
+          console.error('[groupStore] fetchGroups error:', error);
+          set({ error: error.message, loading: false, groups: [] }); // Asegurar que groups sea array
           throw error;
         }
       },
@@ -73,9 +75,9 @@ const useGroupStore = create(
           const response = await api.post('/grupos/', groupData);
           const newGroup = response.data;
           
-          // Actualizar lista de grupos
+          // Actualizar lista de grupos (con validación defensiva)
           set((state) => ({
-            groups: [...state.groups, newGroup],
+            groups: Array.isArray(state.groups) ? [...state.groups, newGroup] : [newGroup],
             loading: false
           }));
           
@@ -93,9 +95,11 @@ const useGroupStore = create(
           const response = await api.put(`/grupos/${groupId}/`, groupData);
           const updatedGroup = response.data;
           
-          // Actualizar en la lista
+          // Actualizar en la lista (con validación defensiva)
           set((state) => ({
-            groups: state.groups.map((g) => g.id === groupId ? updatedGroup : g),
+            groups: Array.isArray(state.groups) 
+              ? state.groups.map((g) => g.id === groupId ? updatedGroup : g)
+              : [updatedGroup],
             currentGroup: state.currentGroup?.id === groupId ? updatedGroup : state.currentGroup,
             loading: false
           }));
@@ -114,7 +118,7 @@ const useGroupStore = create(
           await api.delete(`/grupos/${groupId}/`);
           
           set((state) => ({
-            groups: state.groups.filter((g) => g.id !== groupId),
+            groups: Array.isArray(state.groups) ? state.groups.filter((g) => g.id !== groupId) : [],
             currentGroup: state.currentGroup?.id === groupId ? null : state.currentGroup,
             loading: false
           }));
