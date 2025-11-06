@@ -127,12 +127,20 @@ const StudentEvaluationPanel = () => {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => navigate(-1)}
-                  className="px-4 py-2 text-black hover:text-white border border-black rounded-md hover:bg-black"
-                >
-                  ← Volver
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => navigate(`/estudiantes/${id}/editar`)}
+                    className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  >
+                    ✏️ Ver/Editar Perfil
+                  </button>
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="px-4 py-2 text-black hover:text-white border border-black rounded-md hover:bg-black"
+                  >
+                    ← Volver
+                  </button>
+                </div>
               </div>
             </div>
           </div>
