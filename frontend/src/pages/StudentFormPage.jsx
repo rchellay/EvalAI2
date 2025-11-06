@@ -42,6 +42,8 @@ export default function StudentFormPage() {
   const groupId = searchParams.get('groupId');
   const isEditMode = !!id;
 
+  console.log('[StudentFormPage] Mounted. groupId:', groupId, 'isEditMode:', isEditMode);
+
   const [loading, setLoading] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -178,6 +180,9 @@ export default function StudentFormPage() {
     e.preventDefault();
     setLoading(true);
 
+    console.log('[StudentFormPage] handleSubmit - groupId:', groupId);
+    console.log('[StudentFormPage] isEditMode:', isEditMode);
+
     try {
       if (isEditMode) {
         // Mapear formData a los campos que el backend espera
@@ -207,6 +212,7 @@ export default function StudentFormPage() {
         navigate(-1); // Volver a la página anterior
       } else if (groupId) {
         // Crear estudiante en grupo específico
+        console.log('[StudentFormPage] Path: Crear EN grupo con groupId:', groupId);
         const studentData = {
           name: formData.username,
           apellidos: formData.apellidos,
@@ -214,10 +220,12 @@ export default function StudentFormPage() {
         };
         await api.post(`/grupos/${groupId}/alumnos/`, studentData);
         toast.success('Estudiante creado correctamente en el grupo');
+        console.log('[StudentFormPage] Navegando a /grupos/' + groupId);
         // Usar replace y forzar recarga con timestamp
         navigate(`/grupos/${groupId}?refresh=${Date.now()}`, { replace: true });
       } else {
         // Crear estudiante sin grupo específico - solo requiere name
+        console.log('[StudentFormPage] Path: Crear SIN grupo (fallback)');
         const studentData = {
           name: formData.username,
           apellidos: formData.apellidos || '',
@@ -259,6 +267,13 @@ export default function StudentFormPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             {isEditMode ? 'Actualiza la información del estudiante' : 'Completa el perfil del nuevo estudiante'}
           </p>
+          {groupId && (
+            <div className="mt-3 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                ℹ️ Este estudiante se añadirá al grupo seleccionado
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Main Card */}
