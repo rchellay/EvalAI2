@@ -1,4 +1,5 @@
 // frontend/src/pages/GroupsPage.jsx
+// v2.0 - Con debugging completo
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +7,7 @@ import useGroupStore, { selectGroups, selectLoading } from '../stores/groupStore
 import GroupModal from '../components/GroupModal';
 
 const GroupsPage = () => {
+  console.log('[GroupsPage v2.0] Component mounted');
   const navigate = useNavigate();
   
   // Zustand store
