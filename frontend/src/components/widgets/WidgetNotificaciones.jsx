@@ -13,8 +13,10 @@ const WidgetNotificaciones = ({ teacherId, titleClassName }) => {
 
   const loadNotifications = async () => {
     try {
-      const response = await axios.get('/api/notifications/');
-      setNotifications(response.data);
+      // TODO: Implementar endpoint /api/notifications/ en el backend
+      // const response = await axios.get('/api/notifications/');
+      // setNotifications(response.data);
+      setNotifications([]); // Temporal: sin notificaciones hasta implementar endpoint
     } catch (error) {
       console.error('Error cargando notificaciones:', error);
     } finally {
@@ -24,8 +26,10 @@ const WidgetNotificaciones = ({ teacherId, titleClassName }) => {
 
   const loadUnreadCount = async () => {
     try {
-      const response = await axios.get('/api/notifications/unread_count/');
-      setUnreadCount(response.data.unread_count);
+      // TODO: Implementar endpoint /api/notifications/unread_count/ en el backend
+      // const response = await axios.get('/api/notifications/unread_count/');
+      // setUnreadCount(response.data.unread_count);
+      setUnreadCount(0); // Temporal: 0 notificaciones hasta implementar endpoint
     } catch (error) {
       console.error('Error cargando conteo de no leídas:', error);
     }
