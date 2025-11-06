@@ -92,19 +92,25 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             "data": [...]
         }
         """
+        print(f"[ATTENDANCE_VIEW] POST /api/asistencia/registrar/ - User: {request.user.username}")
+        print(f"[ATTENDANCE_VIEW] Request data: {request.data}")
+        
         serializer = BulkAttendanceSerializer(
             data=request.data,
             context={'request': request}
         )
         
         if serializer.is_valid():
+            print(f"[ATTENDANCE_VIEW] Serializer valid, saving...")
             attendances = serializer.save()
+            print(f"[ATTENDANCE_VIEW] Successfully created {len(attendances)} attendance records")
             return Response({
                 'success': True,
                 'message': f'{len(attendances)} asistencias registradas correctamente',
                 'data': AttendanceSerializer(attendances, many=True).data
             }, status=status.HTTP_201_CREATED)
         
+        print(f"[ATTENDANCE_VIEW] Serializer validation failed: {serializer.errors}")
         return Response({
             'success': False,
             'errors': serializer.errors

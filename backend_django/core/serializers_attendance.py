@@ -50,16 +50,18 @@ class BulkAttendanceSerializer(serializers.Serializer):
     
     def validate_attendances(self, value):
         """Valida que cada asistencia tenga los campos requeridos."""
+        print(f"[ATTENDANCE] Validating attendances: {value}")
         valid_statuses = ['presente', 'ausente', 'tarde', 'present', 'absent', 'late', 'excused']
-        for item in value:
+        for i, item in enumerate(value):
             if 'student' not in item or 'status' not in item:
-                raise serializers.ValidationError(
-                    "Cada asistencia debe tener 'student' y 'status'"
-                )
+                error_msg = f"Asistencia #{i+1}: debe tener 'student' y 'status'. Recibido: {item}"
+                print(f"[ATTENDANCE] Validation error: {error_msg}")
+                raise serializers.ValidationError(error_msg)
             if item['status'] not in valid_statuses:
-                raise serializers.ValidationError(
-                    f"Estado inválido: {item['status']}. Valores permitidos: {valid_statuses}"
-                )
+                error_msg = f"Asistencia #{i+1}: Estado inválido '{item['status']}'. Valores permitidos: {valid_statuses}"
+                print(f"[ATTENDANCE] Validation error: {error_msg}")
+                raise serializers.ValidationError(error_msg)
+        print(f"[ATTENDANCE] Validation passed for {len(value)} attendances")
         return value
     
     def create(self, validated_data):
@@ -77,38 +79,51 @@ class BulkAttendanceSerializer(serializers.Serializer):
         attendances_data = validated_data['attendances']
         user = self.context['request'].user
         
+        print(f"[ATTENDANCE] Creating attendances - subject: {subject}, group_id: {group_id}, date: {date}, count: {len(attendances_data)}")
+        
         created_attendances = []
         
         # Si no hay subject, obtener todas las asignaturas del día para el grupo
         subjects_to_register = []
         if subject:
             subjects_to_register = [subject]
+            print(f"[ATTENDANCE] Using specified subject: {subject.id} - {subject.name}")
         elif group_id:
             try:
                 group = Group.objects.prefetch_related('subjects').get(id=group_id)
+                print(f"[ATTENDANCE] Found group: {group.id} - {group.name}")
             except Group.DoesNotExist:
-                raise serializers.ValidationError(
-                    f"Grupo con ID {group_id} no encontrado"
-                )
+                error_msg = f"Grupo con ID {group_id} no encontrado"
+                print(f"[ATTENDANCE] Error: {error_msg}")
+                raise serializers.ValidationError(error_msg)
             
             # Mapeo de día de la semana a nombre en inglés
             day_names = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
             day_of_week = date.weekday()
             day_name = day_names[day_of_week]
+            print(f"[ATTENDANCE] Day of week: {day_of_week} ({day_name})")
             
             # Filtrar asignaturas que tienen clase este día
-            for subject_obj in group.subjects.all():
+            all_subjects = group.subjects.all()
+            print(f"[ATTENDANCE] Group has {all_subjects.count()} total subjects")
+            for subject_obj in all_subjects:
+                print(f"[ATTENDANCE] Checking subject {subject_obj.id} - {subject_obj.name}, days: {subject_obj.days}")
                 if subject_obj.days and day_name in subject_obj.days:
                     subjects_to_register.append(subject_obj)
+                    print(f"[ATTENDANCE] ✓ Subject {subject_obj.name} scheduled for {day_name}")
+                else:
+                    print(f"[ATTENDANCE] ✗ Subject {subject_obj.name} NOT scheduled for {day_name}")
             
             if not subjects_to_register:
-                raise serializers.ValidationError(
-                    f"No se encontraron asignaturas programadas para el grupo {group_id} el día {day_name}"
-                )
+                error_msg = f"No se encontraron asignaturas programadas para el grupo '{group.name}' el día {day_name}. Por favor, selecciona una asignatura específica o verifica que el grupo tenga asignaturas configuradas para este día."
+                print(f"[ATTENDANCE] Error: {error_msg}")
+                raise serializers.ValidationError(error_msg)
+            
+            print(f"[ATTENDANCE] Will register for {len(subjects_to_register)} subjects: {[s.name for s in subjects_to_register]}")
         else:
-            raise serializers.ValidationError(
-                "Debe especificar 'subject' o 'group'"
-            )
+            error_msg = "Debe especificar 'subject' o 'group'"
+            print(f"[ATTENDANCE] Error: {error_msg}")
+            raise serializers.ValidationError(error_msg)
         
         # Registrar asistencia para cada asignatura
         for current_subject in subjects_to_register:
