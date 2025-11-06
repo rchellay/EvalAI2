@@ -25,9 +25,11 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
       if (subjectId) params.subject = subjectId;
 
       const response = await api.get('/objectives/', { params });
-      setObjectives(response.data);
+      const objectivesData = Array.isArray(response.data) ? response.data : [];
+      setObjectives(objectivesData);
     } catch (error) {
       console.error('Error cargando objetivos:', error);
+      setObjectives([]); // Asegurar que siempre sea array
     } finally {
       setLoading(false);
     }
