@@ -40,6 +40,7 @@ from .views_attendance import AttendanceViewSet
 from .views_hierarchy import GroupHierarchyViewSet, StudentHierarchyViewSet
 from .auth_views import login_view, register_view, google_login_view, ping_view
 from .admin_views import cleanup_duplicates_view
+from .migration_views import run_migrations_view, check_migrations_view
 
 router = DefaultRouter()
 router.register(r'students', StudentViewSet, basename='student')
@@ -199,6 +200,10 @@ urlpatterns = [
     
     # Admin web cleanup (vista HTML en el admin)
     path('admin/cleanup/', cleanup_duplicates_view, name='admin-cleanup-view'),
+    
+    # Admin migrations (solo superusers)
+    path('admin/run-migrations/', run_migrations_view, name='admin-run-migrations'),
+    path('admin/check-migrations/', check_migrations_view, name='admin-check-migrations'),
 
     # Debug endpoint for Group model
     path('debug/groups/', debug_group_endpoint, name='debug-groups'),
