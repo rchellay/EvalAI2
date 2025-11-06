@@ -337,6 +337,26 @@ class GroupViewSet(viewsets.ModelViewSet):
             return Group.objects.all()
         return Group.objects.filter(teacher=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        try:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Starting create", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Request data: {request.data}", file=sys.stderr, flush=True)
+            
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Success", file=sys.stderr, flush=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: ERROR - {str(e)}", file=sys.stderr, flush=True)
+            traceback.print_exc(file=sys.stderr)
+            return Response(
+                {'error': f'Error creating group: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
     

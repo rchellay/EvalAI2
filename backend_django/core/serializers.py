@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source='full_name', read_only=True)
+    full_name = serializers.CharField(read_only=True)
     grupo_principal_name = serializers.SerializerMethodField()
     grupo_principal_course = serializers.SerializerMethodField()
     subgrupos_count = serializers.SerializerMethodField()
