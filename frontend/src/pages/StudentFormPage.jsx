@@ -217,11 +217,13 @@ export default function StudentFormPage() {
         // Usar replace y forzar recarga con timestamp
         navigate(`/grupos/${groupId}?refresh=${Date.now()}`, { replace: true });
       } else {
-        // Crear estudiante sin grupo específico (usar endpoint original)
-        await api.post('/auth/register', {
-          ...formData,
-          password: 'temporal123'
-        });
+        // Crear estudiante sin grupo específico - solo requiere name
+        const studentData = {
+          name: formData.username,
+          apellidos: formData.apellidos || '',
+          email: formData.email || ''
+        };
+        await api.post('/students/', studentData);
         toast.success('Estudiante creado correctamente');
         navigate('/estudiantes');
       }
