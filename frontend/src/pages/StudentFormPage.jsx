@@ -225,7 +225,13 @@ export default function StudentFormPage() {
         };
         await api.post('/students/', studentData);
         toast.success('Estudiante creado correctamente');
-        navigate('/estudiantes');
+        
+        // Si viene de un grupo, volver al detalle del grupo
+        if (groupId) {
+          navigate(`/grupos/${groupId}`);
+        } else {
+          navigate('/estudiantes');
+        }
       }
     } catch (error) {
       console.error('Error saving student:', error);
