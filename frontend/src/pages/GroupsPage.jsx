@@ -99,10 +99,13 @@ const GroupsPage = () => {
   };
 
   const handleModalClose = async (refresh) => {
+    console.log('[GroupsPage] handleModalClose - refresh:', refresh);
     setIsModalOpen(false);
     setSelectedGroup(null);
     if (refresh) {
+      console.log('[GroupsPage] Fetching groups...');
       await fetchGroups();
+      console.log('[GroupsPage] Groups after fetch:', useGroupStore.getState().groups);
     }
   };
 

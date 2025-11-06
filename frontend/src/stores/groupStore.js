@@ -71,18 +71,26 @@ const useGroupStore = create(
       // Crear grupo
       createGroup: async (groupData) => {
         set({ loading: true, error: null });
+        console.log('[groupStore] createGroup - groupData:', groupData);
         try {
           const response = await api.post('/grupos/', groupData);
           const newGroup = response.data;
+          console.log('[groupStore] createGroup - response:', newGroup);
           
           // Actualizar lista de grupos (con validación defensiva)
-          set((state) => ({
-            groups: Array.isArray(state.groups) ? [...state.groups, newGroup] : [newGroup],
-            loading: false
-          }));
+          set((state) => {
+            const updatedGroups = Array.isArray(state.groups) ? [...state.groups, newGroup] : [newGroup];
+            console.log('[groupStore] createGroup - updating state. Old groups:', state.groups, 'New groups:', updatedGroups);
+            return {
+              groups: updatedGroups,
+              loading: false
+            };
+          });
           
+          console.log('[groupStore] createGroup - state after update:', get().groups);
           return newGroup;
         } catch (error) {
+          console.error('[groupStore] createGroup error:', error);
           set({ error: error.message, loading: false });
           throw error;
         }

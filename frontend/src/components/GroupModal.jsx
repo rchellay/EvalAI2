@@ -35,20 +35,28 @@ const GroupModal = ({ group, onClose }) => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('[GroupModal] handleSubmit - formData:', formData);
+
     try {
       const payload = {
         name: formData.name,
         course: formData.course
       };
 
+      console.log('[GroupModal] Payload:', payload);
+
       if (group) {
+        console.log('[GroupModal] Updating group:', group.id);
         await updateGroup(group.id, payload);
         toast.success('Grupo actualizado');
       } else {
-        await createGroup(payload);
+        console.log('[GroupModal] Creating new group');
+        const newGroup = await createGroup(payload);
+        console.log('[GroupModal] Group created:', newGroup);
         toast.success('Grupo creado');
       }
 
+      console.log('[GroupModal] Calling onClose(true)');
       onClose(true);
     } catch (error) {
       console.error('Error saving group:', error);
