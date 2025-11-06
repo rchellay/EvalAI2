@@ -349,6 +349,56 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                 {'error': f'Error al remover estudiante: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    @action(detail=True, methods=['delete'], url_path='remove_student/(?P<student_id>[^/.]+)')
+    def remove_student_from_group(self, request, pk=None, student_id=None):
+        """
+        Remover estudiante del grupo principal (pone grupo_principal a None)
+        DELETE /api/grupos/{id}/remove_student/{student_id}/
+        """
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Removing student {student_id} from group {pk}", file=sys.stderr, flush=True)
+        
+        try:
+            group = self.get_object()
+            
+            try:
+                student = Student.objects.get(id=student_id)
+            except Student.DoesNotExist:
+                return Response(
+                    {'error': 'Estudiante no encontrado'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Verificar que este grupo sea el grupo principal del estudiante
+            if student.grupo_principal != group:
+                return Response(
+                    {'error': 'Este estudiante no pertenece a este grupo como grupo principal'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Quitar del grupo principal (lo deja sin grupo)
+            student.grupo_principal = None
+            student.save()
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Student {student.full_name} removed from group {group.name}", file=sys.stderr, flush=True)
+            
+            return Response({
+                'status': 'success',
+                'message': f'Estudiante {student.full_name} removido del grupo {group.name}'
+            }, status=status.HTTP_200_OK)
+            
+        except Group.DoesNotExist:
+            return Response(
+                {'error': 'Grupo no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: ERROR - {str(e)}", file=sys.stderr, flush=True)
+            traceback.print_exc(file=sys.stderr)
+            return Response(
+                {'error': f'Error al remover estudiante: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class StudentHierarchyViewSet(viewsets.ModelViewSet):

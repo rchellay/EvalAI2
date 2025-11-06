@@ -280,11 +280,10 @@ export default function StudentFormPage() {
               {/* Apellidos */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Apellidos *
+                  Apellidos <span className="text-gray-400 text-xs">(opcional)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.apellidos || ''}
                   onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
                   placeholder="Ej: Rodriguez Martinez"

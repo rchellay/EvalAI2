@@ -97,22 +97,23 @@ const GroupDetailPage = () => {
   };
 
   const handleRemoveStudent = async (studentId, isSubgrupo = false) => {
-    if (!window.confirm(`¿${isSubgrupo ? 'Quitar este estudiante del subgrupo?' : 'Eliminar este estudiante del grupo principal?'}`)) return;
+    if (!window.confirm(`¿${isSubgrupo ? 'Quitar este estudiante del subgrupo?' : 'Quitar este estudiante del grupo? (El estudiante no se eliminará, solo se quitará de este grupo)'}`)) return;
 
     try {
       if (isSubgrupo) {
         await api.delete(`/grupos/${id}/remove_subgrupo/${studentId}/`);
         toast.success('Estudiante removido del subgrupo');
       } else {
-        // Para estudiantes principales, solo podemos mostrar un mensaje ya que no se pueden eliminar
-        toast.error('No se puede eliminar un estudiante de su grupo principal. Solo se puede remover de subgrupos.');
-        return;
+        // Remover del grupo principal
+        await api.delete(`/grupos/${id}/remove_student/${studentId}/`);
+        toast.success('Estudiante removido del grupo');
       }
       
       loadGroupStudents();
     } catch (error) {
       console.error('Error removing student:', error);
-      toast.error('Error al eliminar estudiante');
+      const errorMsg = error.response?.data?.error || 'Error al remover estudiante';
+      toast.error(errorMsg);
     }
   };
 

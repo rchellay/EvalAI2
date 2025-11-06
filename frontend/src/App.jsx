@@ -102,8 +102,9 @@ function App() {
           <Route path="/auth/callback" element={<GoogleCallback />} />
           <Route element={<LayoutWithSidebar />}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
-            <Route path="/estudiantes" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+            {/* Rutas de lista de estudiantes comentadas - gestión desde grupos */}
+            {/* <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} /> */}
+            {/* <Route path="/estudiantes" element={<ProtectedRoute><Students /></ProtectedRoute>} /> */}
             <Route path="/estudiantes/nuevo" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
             <Route path="/estudiantes/:id/editar" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
             <Route path="/estudiantes/:id" element={<ProtectedRoute><StudentEvaluationPanel /></ProtectedRoute>} />

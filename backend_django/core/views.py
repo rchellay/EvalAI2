@@ -71,6 +71,28 @@ class StudentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
+    def retrieve(self, request, *args, **kwargs):
+        """Get single student with debug logging"""
+        try:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: Starting retrieve()", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: Student ID {kwargs.get('pk')}", file=sys.stderr, flush=True)
+            
+            instance = self.get_object()
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: Found student {instance.name}", file=sys.stderr, flush=True)
+            
+            serializer = self.get_serializer(instance)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: Serialized successfully", file=sys.stderr, flush=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: ERROR - {str(e)}", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_RETRIEVE: TRACEBACK:", file=sys.stderr, flush=True)
+            traceback.print_exc(file=sys.stderr)
+            return Response(
+                {'error': f'Error loading student: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()

@@ -55,7 +55,7 @@ class Student(models.Model):
     """Modelo para estudiantes con relación jerárquica a grupos"""
     name = models.CharField(max_length=200, help_text="Nombre del estudiante")
     apellidos = models.CharField(max_length=255, default='', blank=True, help_text="Apellidos del estudiante")
-    email = models.EmailField(unique=True, help_text="Email único del estudiante")
+    email = models.EmailField(blank=True, null=True, default=None, help_text="Email del estudiante (opcional)")
     photo = models.FileField(upload_to="students/", null=True, blank=True)
     attendance_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
     
