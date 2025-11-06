@@ -203,18 +203,20 @@ const GroupDetailPage = () => {
 
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
             {(() => {
-              console.log('FRONTEND DEBUG: Rendering students. Group:', group);
-              console.log('FRONTEND DEBUG: Group.students:', group?.students);
-              console.log('FRONTEND DEBUG: Students length:', group?.students?.length);
+              console.log('[GroupDetailPage] Rendering students section');
+              console.log('[GroupDetailPage] group:', group);
+              console.log('[GroupDetailPage] group?.students:', group?.students);
+              console.log('[GroupDetailPage] students (selector):', students);
+              console.log('[GroupDetailPage] students.length:', students?.length);
               return null;
             })()}
-            {!group?.students || group.students.length === 0 ? (
+            {!students || students.length === 0 ? (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 No hay estudiantes en este grupo. Añade estudiantes para empezar.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {group.students.map((student) => (
+                {students.map((student) => (
                   <div
                     key={student.id}
                     className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md hover:border-primary transition cursor-pointer group relative"
