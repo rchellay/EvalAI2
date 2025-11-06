@@ -184,7 +184,23 @@ export default function StudentFormPage() {
         const studentData = {
           name: formData.username,
           apellidos: formData.apellidos || '',
-          email: formData.email || ''
+          email: formData.email || '',
+          birth_date: formData.birth_date || null,
+          student_id: formData.student_id || '',
+          phone: formData.phone || '',
+          address: formData.address || '',
+          city: formData.city || '',
+          postal_code: formData.postal_code || '',
+          emergency_contact_name: formData.emergency_contact_name || '',
+          emergency_contact_phone: formData.emergency_contact_phone || '',
+          guardian_name: formData.guardian_name || '',
+          guardian_email: formData.guardian_email || null,
+          special_needs: formData.special_needs || '',
+          allergies: formData.allergies || '',
+          medical_conditions: formData.medical_conditions || '',
+          teacher_notes: formData.teacher_notes || '',
+          avatar_type: formData.avatar_type || 'initial',
+          avatar_value: formData.avatar_value || ''
         };
         await api.put(`/students/${id}/`, studentData);
         toast.success('Estudiante actualizado correctamente');
@@ -223,11 +239,11 @@ export default function StudentFormPage() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/estudiantes')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary mb-4"
           >
             <span className="material-symbols-outlined">arrow_back</span>
-            <span>Volver a Estudiantes</span>
+            <span>Volver</span>
           </button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {isEditMode ? 'Editar Estudiante' : 'Nuevo Estudiante'}

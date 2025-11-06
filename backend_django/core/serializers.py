@@ -34,7 +34,25 @@ class StudentSerializer(serializers.ModelSerializer):
             'subgrupos', 'subgrupos_count', 'all_groups_info',
             'full_name', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'full_name', 'grupo_principal_name', 'grupo_principal_course', 
+                           'subgrupos_count', 'all_groups_info', 'created_at', 'updated_at']
+    
+    def update(self, instance, validated_data):
+        """Override update to ensure all extended fields are saved properly"""
+        import sys
+        from datetime import datetime
+        
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] STUDENT_UPDATE: Updating student {instance.id}", file=sys.stderr, flush=True)
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] STUDENT_UPDATE: Validated data keys: {list(validated_data.keys())}", file=sys.stderr, flush=True)
+        
+        # Update all fields explicitly
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        
+        instance.save()
+        
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] STUDENT_UPDATE: Student saved successfully", file=sys.stderr, flush=True)
+        return instance
     
     def get_subgrupos_count(self, obj):
         return obj.subgrupos.count()
@@ -144,6 +162,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.username', read_only=True)
     subject_count = serializers.SerializerMethodField()
     course = serializers.CharField(default='4t ESO', required=False)
+    teacher = serializers.PrimaryKeyRelatedField(read_only=True)  # Hacer teacher read-only
 
     class Meta:
         model = Group
@@ -151,7 +170,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
             'id', 'name', 'course', 'teacher', 'teacher_name',
             'subjects', 'subject_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'teacher_name']  # Teacher es writable
+        read_only_fields = ['id', 'teacher', 'created_at', 'updated_at', 'teacher_name']
 
     def get_subject_count(self, obj):
         try:
@@ -163,6 +182,11 @@ class GroupCreateSerializer(serializers.ModelSerializer):
         # Asegurar que course tenga un valor por defecto
         if 'course' not in validated_data or not validated_data['course']:
             validated_data['course'] = '4t ESO'
+        
+        # Asignar teacher automáticamente desde el contexto
+        if 'request' in self.context:
+            validated_data['teacher'] = self.context['request'].user
+        
         return super().create(validated_data)
 
 

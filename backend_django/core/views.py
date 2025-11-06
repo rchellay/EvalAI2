@@ -96,6 +96,37 @@ class StudentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
+    def update(self, request, *args, **kwargs):
+        """Update student with debug logging"""
+        try:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: Starting update()", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: Student ID {kwargs.get('pk')}", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: Request data: {request.data}", file=sys.stderr, flush=True)
+            
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: Update successful", file=sys.stderr, flush=True)
+            
+            return Response(serializer.data)
+            
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: ERROR - {str(e)}", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENT_UPDATE: TRACEBACK:", file=sys.stderr, flush=True)
+            traceback.print_exc(file=sys.stderr)
+            return Response(
+                {'error': f'Error updating student: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def partial_update(self, request, *args, **kwargs):
+        """Partial update student (PATCH)"""
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+    
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
