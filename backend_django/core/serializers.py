@@ -26,6 +26,10 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = [
             'id', 'name', 'apellidos', 'email', 'photo', 'attendance_percentage',
+            'birth_date', 'student_id', 'phone', 'address', 'city', 'postal_code',
+            'emergency_contact_name', 'emergency_contact_phone', 'guardian_name', 'guardian_email',
+            'special_needs', 'allergies', 'medical_conditions', 'teacher_notes',
+            'avatar_type', 'avatar_value',
             'grupo_principal', 'grupo_principal_name', 'grupo_principal_course',
             'subgrupos', 'subgrupos_count', 'all_groups_info',
             'full_name', 'created_at', 'updated_at'
@@ -83,6 +87,7 @@ class GroupSerializer(serializers.ModelSerializer):
     total_subgrupos = serializers.SerializerMethodField()
     subject_count = serializers.SerializerMethodField()
     course = serializers.CharField(default='4t ESO', required=False)
+    teacher = serializers.PrimaryKeyRelatedField(read_only=True)  # Make teacher explicitly read-only
 
     class Meta:
         model = Group

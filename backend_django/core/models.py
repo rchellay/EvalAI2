@@ -59,6 +59,30 @@ class Student(models.Model):
     photo = models.FileField(upload_to="students/", null=True, blank=True)
     attendance_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
     
+    # Información personal
+    birth_date = models.DateField(blank=True, null=True, help_text="Fecha de nacimiento")
+    student_id = models.CharField(max_length=50, blank=True, default='', help_text="ID único del estudiante")
+    phone = models.CharField(max_length=20, blank=True, default='', help_text="Teléfono del estudiante")
+    address = models.CharField(max_length=500, blank=True, default='', help_text="Dirección")
+    city = models.CharField(max_length=100, blank=True, default='', help_text="Ciudad")
+    postal_code = models.CharField(max_length=10, blank=True, default='', help_text="Código postal")
+    
+    # Contacto de emergencia
+    emergency_contact_name = models.CharField(max_length=200, blank=True, default='', help_text="Nombre del contacto de emergencia")
+    emergency_contact_phone = models.CharField(max_length=20, blank=True, default='', help_text="Teléfono de emergencia")
+    guardian_name = models.CharField(max_length=200, blank=True, default='', help_text="Nombre del tutor/padre")
+    guardian_email = models.EmailField(blank=True, null=True, default=None, help_text="Email del tutor")
+    
+    # Información académica y médica
+    special_needs = models.TextField(blank=True, default='', help_text="Necesidades educativas especiales")
+    allergies = models.TextField(blank=True, default='', help_text="Alergias")
+    medical_conditions = models.TextField(blank=True, default='', help_text="Condiciones médicas")
+    teacher_notes = models.TextField(blank=True, default='', help_text="Notas del profesor")
+    
+    # Avatar personalizado
+    avatar_type = models.CharField(max_length=20, default='initial', help_text="Tipo de avatar: initial, emoji, image")
+    avatar_value = models.TextField(blank=True, default='', help_text="Valor del avatar (inicial, emoji JSON, o base64)")
+    
     # Relación principal obligatoria
     grupo_principal = models.ForeignKey(
         Group, 
