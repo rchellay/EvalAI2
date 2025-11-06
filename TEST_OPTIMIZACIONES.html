@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvalAI - Test de Optimizaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .test-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-list {
+            list-style: none;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+        .test-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        .status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .status.checked {
+            background: #28a745;
+            border-color: #28a745;
+            position: relative;
+        }
+        .status.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .test-description {
+            flex: 1;
+        }
+        .test-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .test-detail {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .priority {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .priority.high {
+            background: #ff6b6b;
+            color: white;
+        }
+        .priority.medium {
+            background: #ffd93d;
+            color: #333;
+        }
+        .priority.low {
+            background: #6bcf7f;
+            color: white;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #495057;
+            font-weight: 600;
+        }
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .link-btn {
+            display: block;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+        .link-btn:hover {
+            transform: translateY(-3px);
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 EvalAI - Testing Optimizaciones</h1>
+            <p>Verifica que todas las mejoras funcionan correctamente</p>
+        </div>
+
+        <div class="test-card">
+            <h2>🎯 1. Backend - Endpoints & Performance</h2>
+            <ul class="test-list" id="backend-tests">
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Endpoint unificado de estudiantes</div>
+                        <div class="test-detail">GET /api/estudiantes/?exclude_from_group={id} retorna estudiantes disponibles</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Migraciones aplicadas</div>
+                        <div class="test-detail">Índices 0004_add_student_indexes creados en PostgreSQL</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Queries optimizadas</div>
+                        <div class="test-detail">Logs de Render muestran queries rápidas (< 50ms)</div>
+                    </div>
+                    <span class="priority medium">MEDIA</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="test-card">
+            <h2>⚡ 2. Frontend - Zustand & React Performance</h2>
+            <ul class="test-list" id="frontend-tests">
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Crear grupo con selector de curso</div>
+                        <div class="test-detail">Modal muestra dropdown con opciones (1r Primària - 2n BAT)</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Estudiantes aparecen inmediatamente</div>
+                        <div class="test-detail">Crear estudiante → aparece en lista sin recargar página</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Ver detalles de grupo</div>
+                        <div class="test-detail">Estudiantes cargan correctamente, no más "undefined"</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Network tab - 3 requests paralelos</div>
+                        <div class="test-detail">Al abrir grupo: /grupos/{id}, /alumnos/, /estudiantes/?exclude... en paralelo</div>
+                    </div>
+                    <span class="priority medium">MEDIA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Sin re-renders innecesarios</div>
+                        <div class="test-detail">React DevTools Profiler muestra < 5 renders en operaciones normales</div>
+                    </div>
+                    <span class="priority low">BAJA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Console sin errores</div>
+                        <div class="test-detail">No hay warnings ni race condition errors</div>
+                    </div>
+                    <span class="priority medium">MEDIA</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="test-card">
+            <h2>🔧 3. Flujo Completo</h2>
+            <ul class="test-list" id="flow-tests">
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Crear grupo → Seleccionar 3r ESO</div>
+                        <div class="test-detail">Grupo se crea con curso correcto (no hardcoded 4t ESO)</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Añadir 3 estudiantes nuevos</div>
+                        <div class="test-detail">Todos aparecen en lista inmediatamente</div>
+                    </div>
+                    <span class="priority high">ALTA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Añadir estudiante existente</div>
+                        <div class="test-detail">Modal muestra solo estudiantes no asociados al grupo</div>
+                    </div>
+                    <span class="priority medium">MEDIA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Editar grupo → Cambiar curso</div>
+                        <div class="test-detail">Cambios se guardan y reflejan en UI</div>
+                    </div>
+                    <span class="priority medium">MEDIA</span>
+                </li>
+                <li class="test-item">
+                    <div class="status" onclick="toggleTest(this)"></div>
+                    <div class="test-description">
+                        <div class="test-title">Remover estudiante</div>
+                        <div class="test-detail">Se quita de lista sin errores</div>
+                    </div>
+                    <span class="priority low">BAJA</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="test-card">
+            <h2>📊 Progreso Total</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 de 17 tests completados (0%)</div>
+        </div>
+
+        <div class="test-card">
+            <h2>🔗 Links Útiles</h2>
+            <div class="links">
+                <a href="https://eval-ai-2.vercel.app/" class="link-btn" target="_blank">🌐 Frontend (Vercel)</a>
+                <a href="https://evalai2.onrender.com/admin/" class="link-btn" target="_blank">⚙️ Admin Django</a>
+                <a href="https://dashboard.render.com/" class="link-btn" target="_blank">🚀 Render Dashboard</a>
+                <a href="https://vercel.com/rchellay/eval-ai-2" class="link-btn" target="_blank">📦 Vercel Dashboard</a>
+            </div>
+        </div>
+
+        <div class="test-card">
+            <h2>📝 Comandos Útiles</h2>
+            <div class="code-block">
+# Ejecutar migraciones en Render Shell:<br>
+python manage.py migrate<br>
+<br>
+# Ver migraciones aplicadas:<br>
+python manage.py showmigrations core<br>
+<br>
+# Verificar índices en PostgreSQL:<br>
+python manage.py dbshell<br>
+\d core_student  # Ver estructura de tabla con índices
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTest(element) {
+            element.classList.toggle('checked');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const allTests = document.querySelectorAll('.status');
+            const checkedTests = document.querySelectorAll('.status.checked');
+            const total = allTests.length;
+            const completed = checkedTests.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('progress').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = 
+                `${completed} de ${total} tests completados (${percentage}%)`;
+        }
+
+        // Auto-save to localStorage
+        document.querySelectorAll('.status').forEach((element, index) => {
+            const savedState = localStorage.getItem('test-' + index);
+            if (savedState === 'checked') {
+                element.classList.add('checked');
+            }
+            
+            element.addEventListener('click', function() {
+                if (this.classList.contains('checked')) {
+                    localStorage.setItem('test-' + index, 'checked');
+                } else {
+                    localStorage.removeItem('test-' + index);
+                }
+            });
+        });
+
+        updateProgress();
+    </script>
+</body>
+</html>

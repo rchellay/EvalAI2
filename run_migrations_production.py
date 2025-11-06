@@ -21,7 +21,7 @@ def main():
     # Login para obtener token
     try:
         login_response = requests.post(
-            f"{RENDER_URL}/api/auth/login",
+            f"{RENDER_URL}/api/auth/login/",
             json={"username": username, "password": password},
             timeout=10
         )
@@ -31,9 +31,11 @@ def main():
             print(login_response.text)
             return
         
-        token = login_response.json().get('access')
+        data = login_response.json()
+        token = data.get('access_token') or data.get('access')
         if not token:
             print("❌ No se obtuvo token de autenticación")
+            print(f"Response: {data}")
             return
         
         print("✅ Autenticación exitosa")
