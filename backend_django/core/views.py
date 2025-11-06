@@ -33,6 +33,8 @@ from .serializers import (
     UserSettingsSerializer, CustomEventSerializer
 )
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
+from .services.huggingface_whisper_service import huggingface_whisper_client, HuggingFaceWhisperError
+from .services.openrouter_service import openrouter_client, OpenRouterServiceError
 
 
 class StudentViewSet(viewsets.ModelViewSet):
@@ -604,9 +606,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return Comment.objects.all()
-        # Usuarios normales solo ven sus comentarios
-        return Comment.objects.filter(author=self.request.user)
+            queryset = Comment.objects.all()
+        else:
+            # Usuarios normales solo ven sus comentarios
+            queryset = Comment.objects.filter(author=self.request.user)
+        
+        # Filtrar por estudiante si se proporciona el parámetro
+        student_id = self.request.query_params.get('student')
+        if student_id:
+            queryset = queryset.filter(student_id=student_id)
+        
+        # Filtrar por asignatura si se proporciona el parámetro
+        subject_id = self.request.query_params.get('subject')
+        if subject_id:
+            queryset = queryset.filter(subject_id=subject_id)
+        
+        return queryset.order_by('-created_at')
     
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -1361,6 +1376,42 @@ class EvidenceViewSet(viewsets.ModelViewSet):
         # Usuarios normales solo ven sus evidencias
         return Evidence.objects.filter(uploaded_by=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling and logging"""
+        print(f"[EVIDENCE] POST /api/evidences/ - User: {request.user.username}")
+        print(f"[EVIDENCE] Data: {request.data}")
+        print(f"[EVIDENCE] Files: {request.FILES}")
+        
+        # Validar campos requeridos
+        if 'student' not in request.data:
+            return Response({
+                'error': 'El campo "student" es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'title' not in request.data or not request.data['title'].strip():
+            return Response({
+                'error': 'El campo "title" es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'file' not in request.FILES:
+            return Response({
+                'error': 'Debes adjuntar un archivo'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            print(f"[EVIDENCE] Evidence created successfully: {serializer.data['id']}")
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            print(f"[EVIDENCE] Error creating evidence: {str(e)}")
+            return Response({
+                'error': str(e),
+                'detail': 'Error al crear la evidencia'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 
@@ -1607,8 +1658,12 @@ def audio_evaluation(request):
 
         try:
             # Transcribir audio con Hugging Face Whisper
+            print(f"[AUDIO] Iniciando transcripción de audio para estudiante {student_id}")
             whisper_client = huggingface_whisper_client
+            if not whisper_client:
+                raise Exception("Servicio de transcripción no disponible. Verifica la configuración de HUGGINGFACE_API_KEY.")
             transcription = whisper_client.transcribe_audio(temp_file_path, language='es')
+            print(f"[AUDIO] Transcripción completada: {len(transcription)} caracteres")
 
             # Generar resumen/comentario con OpenRouter si hay transcripción
             comentario_final = f"Audio transcrito: {transcription}"
