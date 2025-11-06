@@ -1,22 +1,17 @@
 """
 Endpoint para ejecutar migraciones remotamente (solo superuser)
 """
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from django.core.management import call_command
-from django.contrib.auth.decorators import user_passes_test
 import io
 import sys
 
 
-def is_superuser(user):
-    return user.is_authenticated and user.is_superuser
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-@user_passes_test(is_superuser)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def run_migrations_view(request):
     """
     Ejecuta migraciones pendientes en producción
@@ -24,6 +19,13 @@ def run_migrations_view(request):
     
     Requiere: Usuario autenticado como superuser
     """
+    # Verificar que sea superuser
+    if not request.user.is_superuser:
+        return Response(
+            {'error': 'Solo superusers pueden ejecutar migraciones'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
     try:
         # Capturar output
         output = io.StringIO()
@@ -39,7 +41,7 @@ def run_migrations_view(request):
         
         result = output.getvalue()
         
-        return JsonResponse({
+        return Response({
             'status': 'success',
             'message': 'Migraciones ejecutadas exitosamente',
             'output': result
@@ -49,20 +51,26 @@ def run_migrations_view(request):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': f'Error ejecutando migraciones: {str(e)}'
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-@user_passes_test(is_superuser)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def check_migrations_view(request):
     """
     Verifica si hay migraciones pendientes
     GET /api/admin/check-migrations/
     """
+    # Verificar que sea superuser
+    if not request.user.is_superuser:
+        return Response(
+            {'error': 'Solo superusers pueden verificar migraciones'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
     try:
         output = io.StringIO()
         sys.stdout = output
@@ -75,7 +83,7 @@ def check_migrations_view(request):
         # Detectar migraciones pendientes
         pending = '[ ]' in result
         
-        return JsonResponse({
+        return Response({
             'status': 'success',
             'pending_migrations': pending,
             'output': result
@@ -84,7 +92,7 @@ def check_migrations_view(request):
     except Exception as e:
         sys.stdout = sys.__stdout__
         
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': f'Error verificando migraciones: {str(e)}'
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
