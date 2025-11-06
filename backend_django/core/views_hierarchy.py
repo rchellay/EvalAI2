@@ -360,55 +360,50 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         DELETE /api/grupos/{id}/remove_student/{student_id}/
         """
         try:
-            logger.error(f"REMOVE_STUDENT: Starting - student_id={student_id}, group_pk={pk}")
-            
             group = self.get_object()
-            logger.error(f"REMOVE_STUDENT: Got group {group.name} (ID: {group.id})")
             
             try:
                 student = Student.objects.get(id=student_id)
-                logger.error(f"REMOVE_STUDENT: Got student {student.full_name} (ID: {student.id})")
             except Student.DoesNotExist:
-                logger.error(f"REMOVE_STUDENT: Student not found")
                 return Response(
                     {'error': 'Estudiante no encontrado'}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
             
             # Verificar que este grupo sea el grupo principal del estudiante
-            logger.error(f"REMOVE_STUDENT: Checking - student.grupo_principal={student.grupo_principal}, group={group}")
-            
             if student.grupo_principal != group:
-                logger.error(f"REMOVE_STUDENT: Student not in this group as principal")
                 return Response(
-                    {'error': 'Este estudiante no pertenece a este grupo como grupo principal'}, 
+                    {
+                        'error': 'Este estudiante no pertenece a este grupo como grupo principal',
+                        'debug': {
+                            'student_grupo_principal_id': student.grupo_principal.id if student.grupo_principal else None,
+                            'current_group_id': group.id
+                        }
+                    }, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             # Quitar del grupo principal (lo deja sin grupo)
-            logger.error(f"REMOVE_STUDENT: Setting grupo_principal to None")
             student.grupo_principal = None
             student.save()
-            
-            logger.error(f"REMOVE_STUDENT: SUCCESS - Student {student.full_name} removed from group {group.name}")
             
             return Response({
                 'status': 'success',
                 'message': f'Estudiante {student.full_name} removido del grupo {group.name}'
             }, status=status.HTTP_200_OK)
             
-        except Group.DoesNotExist as e:
-            logger.error(f"REMOVE_STUDENT: Group.DoesNotExist - {str(e)}")
-            logger.error("REMOVE_STUDENT: Traceback:", exc_info=True)
+        except Group.DoesNotExist:
             return Response(
                 {'error': 'Grupo no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            logger.error(f"REMOVE_STUDENT: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}")
-            logger.error("REMOVE_STUDENT: Traceback:", exc_info=True)
+            logger.error(f"REMOVE_STUDENT ERROR: {str(e)}", exc_info=True)
             return Response(
-                {'error': f'Error al remover estudiante: {str(e)}'}, 
+                {
+                    'error': f'Error al remover estudiante: {str(e)}',
+                    'type': type(e).__name__
+                }, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

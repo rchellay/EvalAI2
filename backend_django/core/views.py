@@ -342,32 +342,23 @@ class GroupViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         try:
-            logger.error(f"GROUP_CREATE: Starting create")
-            logger.error(f"GROUP_CREATE: Request data: {request.data}")
-            logger.error(f"GROUP_CREATE: Request user: {request.user}")
-            
             serializer = self.get_serializer(data=request.data)
-            logger.error(f"GROUP_CREATE: Serializer created")
-            
-            is_valid = serializer.is_valid(raise_exception=False)
-            logger.error(f"GROUP_CREATE: Serializer is_valid: {is_valid}")
-            
-            if not is_valid:
-                logger.error(f"GROUP_CREATE: Validation errors: {serializer.errors}")
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+            serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
-            logger.error(f"GROUP_CREATE: perform_create done")
-            
             headers = self.get_success_headers(serializer.data)
-            
-            logger.error(f"GROUP_CREATE: Success - returning data")
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
-            logger.error(f"GROUP_CREATE: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}")
-            logger.error(f"GROUP_CREATE: Traceback:", exc_info=True)
+            logger.error(f"GROUP_CREATE ERROR: {str(e)}", exc_info=True)
+            # Incluir detalles del error en la respuesta para debugging
+            error_detail = str(e)
+            if hasattr(e, 'detail'):
+                error_detail = str(e.detail)
             return Response(
-                {'error': f'Error creating group: {str(e)}'},
+                {
+                    'error': error_detail,
+                    'request_data': request.data,
+                    'user': str(request.user)
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
     

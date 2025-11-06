@@ -57,7 +57,9 @@ const GroupModal = ({ group, onClose }) => {
       onClose(true);
     } catch (error) {
       console.error('Error saving group:', error);
-      toast.error(error.response?.data?.detail || 'Error al guardar grupo');
+      console.error('Error response data:', error.response?.data);
+      const errorMsg = error.response?.data?.error || error.response?.data?.detail || 'Error al guardar grupo';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

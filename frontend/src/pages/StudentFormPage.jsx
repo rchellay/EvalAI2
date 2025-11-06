@@ -80,8 +80,9 @@ export default function StudentFormPage() {
     try {
       const response = await api.get(`/students/${id}/`);
       const student = response.data;
+      console.log('Loaded student data:', student);
       setFormData({
-        username: student.username || '',
+        username: student.name || '',  // Backend usa 'name', frontend 'username'
         apellidos: student.apellidos || '',
         email: student.email || '',
         birth_date: student.birth_date || '',
