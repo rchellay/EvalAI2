@@ -7,8 +7,11 @@ from django.db.models import Q
 import sys
 import datetime
 import traceback
+import logging
 from .models import Student, Group, Subject
 from .serializers import StudentSerializer, GroupCreateSerializer, GroupSerializer, GroupSimpleSerializer
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -357,46 +360,37 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
         DELETE /api/grupos/{id}/remove_student/{student_id}/
         """
         try:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Starting removal - student_id={student_id}, group_pk={pk}", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: Starting - student_id={student_id}, group_pk={pk}")
             
             group = self.get_object()
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Got group {group.name} (ID: {group.id})", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: Got group {group.name} (ID: {group.id})")
             
             try:
                 student = Student.objects.get(id=student_id)
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Got student {student.full_name} (ID: {student.id})", file=sys.stderr, flush=True)
-                sys.stderr.flush()
+                logger.error(f"REMOVE_STUDENT: Got student {student.full_name} (ID: {student.id})")
             except Student.DoesNotExist:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Student not found", file=sys.stderr, flush=True)
-                sys.stderr.flush()
+                logger.error(f"REMOVE_STUDENT: Student not found")
                 return Response(
                     {'error': 'Estudiante no encontrado'}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
             
             # Verificar que este grupo sea el grupo principal del estudiante
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Checking if student.grupo_principal ({student.grupo_principal}) == group ({group})", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: Checking - student.grupo_principal={student.grupo_principal}, group={group}")
             
             if student.grupo_principal != group:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Student not in this group as principal", file=sys.stderr, flush=True)
-                sys.stderr.flush()
+                logger.error(f"REMOVE_STUDENT: Student not in this group as principal")
                 return Response(
                     {'error': 'Este estudiante no pertenece a este grupo como grupo principal'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             # Quitar del grupo principal (lo deja sin grupo)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Setting grupo_principal to None", file=sys.stderr, flush=True)
-            sys.stderr.flush()
-            
+            logger.error(f"REMOVE_STUDENT: Setting grupo_principal to None")
             student.grupo_principal = None
             student.save()
             
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: SUCCESS - Student {student.full_name} removed from group {group.name}", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: SUCCESS - Student {student.full_name} removed from group {group.name}")
             
             return Response({
                 'status': 'success',
@@ -404,17 +398,15 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
             
         except Group.DoesNotExist as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: Group.DoesNotExist - {str(e)}", file=sys.stderr, flush=True)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: Group.DoesNotExist - {str(e)}")
+            logger.error("REMOVE_STUDENT: Traceback:", exc_info=True)
             return Response(
                 {'error': 'Grupo no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_REMOVE_STUDENT: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}", file=sys.stderr, flush=True)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logger.error(f"REMOVE_STUDENT: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}")
+            logger.error("REMOVE_STUDENT: Traceback:", exc_info=True)
             return Response(
                 {'error': f'Error al remover estudiante: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

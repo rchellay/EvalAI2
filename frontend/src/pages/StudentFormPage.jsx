@@ -179,9 +179,15 @@ export default function StudentFormPage() {
 
     try {
       if (isEditMode) {
-        await api.put(`/students/${id}`, formData);
+        // Mapear formData a los campos que el backend espera
+        const studentData = {
+          name: formData.username,
+          apellidos: formData.apellidos || '',
+          email: formData.email || ''
+        };
+        await api.put(`/students/${id}/`, studentData);
         toast.success('Estudiante actualizado correctamente');
-        navigate('/estudiantes');
+        navigate(-1); // Volver a la página anterior
       } else if (groupId) {
         // Crear estudiante en grupo específico
         const studentData = {

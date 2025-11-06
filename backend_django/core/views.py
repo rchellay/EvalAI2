@@ -13,6 +13,9 @@ import hashlib
 import json
 import sys
 import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .models import (
     Student, Subject, Group, CalendarEvent,
@@ -339,39 +342,30 @@ class GroupViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         try:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Starting create", file=sys.stderr, flush=True)
-            sys.stderr.flush()
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Request data: {request.data}", file=sys.stderr, flush=True)
-            sys.stderr.flush()
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Request user: {request.user}", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: Starting create")
+            logger.error(f"GROUP_CREATE: Request data: {request.data}")
+            logger.error(f"GROUP_CREATE: Request user: {request.user}")
             
             serializer = self.get_serializer(data=request.data)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Serializer created", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: Serializer created")
             
             is_valid = serializer.is_valid(raise_exception=False)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Serializer is_valid: {is_valid}", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: Serializer is_valid: {is_valid}")
             
             if not is_valid:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Validation errors: {serializer.errors}", file=sys.stderr, flush=True)
-                sys.stderr.flush()
+                logger.error(f"GROUP_CREATE: Validation errors: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
             self.perform_create(serializer)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: perform_create done", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: perform_create done")
             
             headers = self.get_success_headers(serializer.data)
             
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: Success - returning data", file=sys.stderr, flush=True)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: Success - returning data")
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GROUP_CREATE: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}", file=sys.stderr, flush=True)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logger.error(f"GROUP_CREATE: EXCEPTION - Type: {type(e).__name__}, Message: {str(e)}")
+            logger.error(f"GROUP_CREATE: Traceback:", exc_info=True)
             return Response(
                 {'error': f'Error creating group: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST
