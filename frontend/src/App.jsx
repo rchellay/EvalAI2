@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate, Outlet } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
-import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentEvaluationPanel from "./pages/StudentEvaluationPanel";
 import StudentFormPage from "./pages/StudentFormPage";
 import SubjectsPage from "./pages/SubjectsPage";
@@ -102,16 +100,20 @@ function App() {
           <Route path="/auth/callback" element={<GoogleCallback />} />
           <Route element={<LayoutWithSidebar />}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            {/* Rutas de lista de estudiantes comentadas - gestión desde grupos */}
-            {/* <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} /> */}
-            {/* <Route path="/estudiantes" element={<ProtectedRoute><Students /></ProtectedRoute>} /> */}
+            
+            {/* Estudiantes - Gestionados desde grupos */}
             <Route path="/estudiantes/nuevo" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
             <Route path="/estudiantes/:id/editar" element={<ProtectedRoute><StudentFormPage /></ProtectedRoute>} />
             <Route path="/estudiantes/:id" element={<ProtectedRoute><StudentEvaluationPanel /></ProtectedRoute>} />
+            
+            {/* Asignaturas */}
             <Route path="/asignaturas" element={<ProtectedRoute><SubjectsPage /></ProtectedRoute>} />
             <Route path="/asignaturas/:id" element={<ProtectedRoute><SubjectDetailPage /></ProtectedRoute>} />
+            
+            {/* Grupos */}
             <Route path="/grupos" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
             <Route path="/grupos/:id" element={<ProtectedRoute><GroupDetailPage /></ProtectedRoute>} />
+            
             <Route path="/transcripciones" element={<ProtectedRoute><PlaceholderPage title="Transcripciones" /></ProtectedRoute>} />
             <Route path="/rubricas" element={<ProtectedRoute><RubricsPage /></ProtectedRoute>} />
             <Route path="/rubricas/nueva" element={<ProtectedRoute><RubricEditorPage /></ProtectedRoute>} />
