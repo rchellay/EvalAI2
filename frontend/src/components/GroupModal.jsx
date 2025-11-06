@@ -6,10 +6,17 @@ import api from '../lib/axios';
 const GroupModal = ({ group, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
+    course: '4t ESO',
     student_ids: [],
     subject_ids: []
   });
   const [loading, setLoading] = useState(false);
+
+  const cursoOptions = [
+    '1r ESO', '2n ESO', '3r ESO', '4t ESO',
+    '1r BAT', '2n BAT',
+    '1r Primària', '2n Primària', '3r Primària', '4t Primària', '5è Primària', '6è Primària'
+  ];
 
   useEffect(() => {
     if (group) {
@@ -24,6 +31,7 @@ const GroupModal = ({ group, onClose }) => {
 
       setFormData({
         name: data.name,
+        course: data.course || '4t ESO',
         student_ids: data.students ? data.students.map(s => s.id) : [],
         subject_ids: data.subjects ? data.subjects.map(s => s.id) : []
       });
@@ -41,7 +49,7 @@ const GroupModal = ({ group, onClose }) => {
     try {
       const payload = {
         name: formData.name,
-        course: '4t ESO'  // Añadir course por defecto
+        course: formData.course
       };
 
       if (group) {
@@ -101,6 +109,28 @@ const GroupModal = ({ group, onClose }) => {
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Ej: 6A, Grupo de Refuerzo"
             />
+          </div>
+
+          {/* Course */}
+          <div>
+            <label
+              htmlFor="group-course"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Curso *
+            </label>
+            <select
+              id="group-course"
+              name="course"
+              required
+              value={formData.course}
+              onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              {cursoOptions.map(curso => (
+                <option key={curso} value={curso}>{curso}</option>
+              ))}
+            </select>
           </div>
 
           {/* Actions */}

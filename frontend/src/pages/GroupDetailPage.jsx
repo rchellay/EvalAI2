@@ -19,19 +19,39 @@ const GroupDetailPage = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
 
   useEffect(() => {
-    loadGroupDetails();
-    loadGroupStudents();
-    loadAvailableStudents();
-  }, [id, location.search]); // También recargar cuando cambien los search params
+    loadAllGroupData();
+  }, [id, location.search]);
 
-  const loadGroupDetails = async () => {
+  const loadAllGroupData = async () => {
     try {
-      console.log(`[GroupDetail] Cargando detalles del grupo ${id}`);
-      const response = await api.get(`/grupos/${id}`);
-      console.log('[GroupDetail] Detalles del grupo:', response.data);
-      setGroup(response.data);
+      setLoading(true);
+      console.log(`[GroupDetail] Cargando todos los datos del grupo ${id}`);
+      
+      // Cargar todo en paralelo
+      const [groupResponse, studentsResponse, availableResponse] = await Promise.all([
+        api.get(`/grupos/${id}`),
+        api.get(`/grupos/${id}/alumnos/`),
+        api.get(`/estudiantes/available_for_group/${id}/`)
+      ]);
+      
+      const students = studentsResponse.data.students || [];
+      const counts = studentsResponse.data.counts || { total: students.length };
+      
+      console.log('[GroupDetail] Datos del grupo:', groupResponse.data);
+      console.log('[GroupDetail] Estudiantes encontrados:', students.length);
+      
+      // Combinar todo en un solo objeto
+      setGroup({
+        ...groupResponse.data,
+        students: students,
+        counts: counts,
+        total_students: students.length
+      });
+      
+      setAvailableStudents(availableResponse.data.available_students || []);
+      
     } catch (error) {
-      console.error('Error loading group:', error);
+      console.error('[GroupDetail] Error loading group data:', error);
       toast.error('Error al cargar el grupo');
       navigate('/grupos');
     } finally {
@@ -39,18 +59,27 @@ const GroupDetailPage = () => {
     }
   };
 
+  const loadGroupDetails = async () => {
+    try {
+      const response = await api.get(`/grupos/${id}`);
+      setGroup(prev => ({
+        ...prev,
+        ...response.data
+      }));
+    } catch (error) {
+      console.error('Error loading group:', error);
+    }
+  };
+
   const loadGroupStudents = async () => {
-    console.log(`[GroupDetail] Cargando estudiantes del grupo ${id}`);
+    console.log(`[GroupDetail] Recargando solo estudiantes del grupo ${id}`);
     try {
       const response = await api.get(`/grupos/${id}/alumnos/`);
-      console.log('[GroupDetail] Respuesta de estudiantes:', response.data);
-      
       const students = response.data.students || [];
       const counts = response.data.counts || { total: students.length };
       
       console.log(`[GroupDetail] ${students.length} estudiantes encontrados`);
       
-      // Actualizar el grupo con los estudiantes
       setGroup(prevGroup => ({
         ...prevGroup,
         students: students,
@@ -70,6 +99,10 @@ const GroupDetailPage = () => {
     } catch (error) {
       console.error('Error loading available students:', error);
     }
+  };
+
+  const reloadAllData = () => {
+    loadAllGroupData();
   };
 
   const handleAddStudents = async () => {
