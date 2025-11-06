@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
 import CreateStudentModal from '../components/CreateStudentModal';
+import GroupModal from '../components/GroupModal';
 
 const GroupDetailPage = () => {
   const { id } = useParams();
@@ -13,6 +14,7 @@ const GroupDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
+  const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
 
@@ -24,12 +26,10 @@ const GroupDetailPage = () => {
 
   const loadGroupDetails = async () => {
     try {
+      console.log(`[GroupDetail] Cargando detalles del grupo ${id}`);
       const response = await api.get(`/grupos/${id}`);
-      setGroup(prev => ({
-        ...response.data,
-        students: prev?.students || [], // Preservar students existentes
-        counts: prev?.counts || {}      // Preservar counts existentes
-      }));
+      console.log('[GroupDetail] Detalles del grupo:', response.data);
+      setGroup(response.data);
     } catch (error) {
       console.error('Error loading group:', error);
       toast.error('Error al cargar el grupo');
@@ -40,21 +40,25 @@ const GroupDetailPage = () => {
   };
 
   const loadGroupStudents = async () => {
-    console.log(`FRONTEND DEBUG: Loading students for group ${id}`);
+    console.log(`[GroupDetail] Cargando estudiantes del grupo ${id}`);
     try {
       const response = await api.get(`/grupos/${id}/alumnos/`);
-      console.log('FRONTEND DEBUG: Students response:', response.data);
-      const updatedGroup = {
-        ...group,
-        students: response.data.students || [],
-        counts: response.data.counts || {}
-      };
-      setGroup(updatedGroup);
-      console.log(`FRONTEND DEBUG: Set ${response.data.students?.length || 0} students in state`);
-      console.log('FRONTEND DEBUG: Updated group object:', updatedGroup);
-      console.log('FRONTEND DEBUG: Students array:', updatedGroup.students);
+      console.log('[GroupDetail] Respuesta de estudiantes:', response.data);
+      
+      const students = response.data.students || [];
+      const counts = response.data.counts || { total: students.length };
+      
+      console.log(`[GroupDetail] ${students.length} estudiantes encontrados`);
+      
+      // Actualizar el grupo con los estudiantes
+      setGroup(prevGroup => ({
+        ...prevGroup,
+        students: students,
+        counts: counts,
+        total_students: students.length
+      }));
     } catch (error) {
-      console.error('Error loading group students:', error);
+      console.error('[GroupDetail] Error loading group students:', error);
       toast.error('Error al cargar estudiantes del grupo');
     }
   };
@@ -166,7 +170,7 @@ const GroupDetailPage = () => {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => navigate(`/grupos/${id}/editar`)}
+              onClick={() => setShowEditGroupModal(true)}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             >
               Editar grupo
@@ -422,6 +426,20 @@ const GroupDetailPage = () => {
           onClose={() => setShowCreateStudentModal(false)}
           onSuccess={() => {
             loadGroupStudents(); // Recargar la lista de estudiantes
+          }}
+        />
+      )}
+
+      {/* Edit Group Modal */}
+      {showEditGroupModal && (
+        <GroupModal
+          group={group}
+          onClose={(refresh) => {
+            setShowEditGroupModal(false);
+            if (refresh) {
+              loadGroupDetails();
+              loadGroupStudents();
+            }
           }}
         />
       )}
