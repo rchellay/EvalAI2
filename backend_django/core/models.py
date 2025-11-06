@@ -104,6 +104,10 @@ class Student(models.Model):
         ordering = ["grupo_principal__course", "grupo_principal__name", "apellidos", "name"]
         verbose_name = "Estudiante"
         verbose_name_plural = "Estudiantes"
+        indexes = [
+            models.Index(fields=['grupo_principal'], name='student_grupo_idx'),
+            models.Index(fields=['apellidos', 'name'], name='student_name_idx'),
+        ]
 
     def __str__(self):
         return f"{self.name} {self.apellidos} ({self.grupo_principal})"

@@ -1,111 +1,47 @@
 // frontend/src/pages/GroupDetailPage.jsx
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
+import useGroupStore, { 
+  selectCurrentGroup, 
+  selectAvailableStudents, 
+  selectLoading, 
+  selectGroupStudents,
+  selectGroupCounts
+} from '../stores/groupStore';
 import CreateStudentModal from '../components/CreateStudentModal';
 import GroupModal from '../components/GroupModal';
 
 const GroupDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [group, setGroup] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Zustand store con selectores optimizados
+  const group = useGroupStore(selectCurrentGroup);
+  const availableStudents = useGroupStore(selectAvailableStudents);
+  const loading = useGroupStore(selectLoading);
+  const students = useGroupStore(selectGroupStudents);
+  const counts = useGroupStore(selectGroupCounts);
+  
+  const { fetchGroupDetails, addStudentToGroup, createStudentInGroup, removeStudentFromGroup } = useGroupStore();
+  
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
-  const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
 
+  // Cargar datos solo una vez cuando cambia el ID
   useEffect(() => {
-    loadAllGroupData();
-  }, [id, location.search]);
-
-  const loadAllGroupData = async () => {
-    try {
-      setLoading(true);
-      console.log(`[GroupDetail] Cargando todos los datos del grupo ${id}`);
-      
-      // Cargar todo en paralelo
-      const [groupResponse, studentsResponse, availableResponse] = await Promise.all([
-        api.get(`/grupos/${id}`),
-        api.get(`/grupos/${id}/alumnos/`),
-        api.get(`/estudiantes/available_for_group/${id}/`)
-      ]);
-      
-      const students = studentsResponse.data.students || [];
-      const counts = studentsResponse.data.counts || { total: students.length };
-      
-      console.log('[GroupDetail] Datos del grupo:', groupResponse.data);
-      console.log('[GroupDetail] Estudiantes encontrados:', students.length);
-      
-      // Combinar todo en un solo objeto
-      setGroup({
-        ...groupResponse.data,
-        students: students,
-        counts: counts,
-        total_students: students.length
-      });
-      
-      setAvailableStudents(availableResponse.data.available_students || []);
-      
-    } catch (error) {
-      console.error('[GroupDetail] Error loading group data:', error);
+    fetchGroupDetails(id).catch((error) => {
+      console.error('[GroupDetail] Error loading group:', error);
       toast.error('Error al cargar el grupo');
       navigate('/grupos');
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+  }, [id, fetchGroupDetails, navigate]);
 
-  const loadGroupDetails = async () => {
-    try {
-      const response = await api.get(`/grupos/${id}`);
-      setGroup(prev => ({
-        ...prev,
-        ...response.data
-      }));
-    } catch (error) {
-      console.error('Error loading group:', error);
-    }
-  };
-
-  const loadGroupStudents = async () => {
-    console.log(`[GroupDetail] Recargando solo estudiantes del grupo ${id}`);
-    try {
-      const response = await api.get(`/grupos/${id}/alumnos/`);
-      const students = response.data.students || [];
-      const counts = response.data.counts || { total: students.length };
-      
-      console.log(`[GroupDetail] ${students.length} estudiantes encontrados`);
-      
-      setGroup(prevGroup => ({
-        ...prevGroup,
-        students: students,
-        counts: counts,
-        total_students: students.length
-      }));
-    } catch (error) {
-      console.error('[GroupDetail] Error loading group students:', error);
-      toast.error('Error al cargar estudiantes del grupo');
-    }
-  };
-
-  const loadAvailableStudents = async () => {
-    try {
-      const response = await api.get(`/estudiantes/available_for_group/${id}/`);
-      setAvailableStudents(response.data.available_students || []);
-    } catch (error) {
-      console.error('Error loading available students:', error);
-    }
-  };
-
-  const reloadAllData = () => {
-    loadAllGroupData();
-  };
-
-  const handleAddStudents = async () => {
+  // Handlers optimizados con useCallback
+  const handleAddStudents = useCallback(async () => {
     if (selectedStudents.length === 0) {
       toast.error('Selecciona al menos un estudiante');
       return;
@@ -113,46 +49,41 @@ const GroupDetailPage = () => {
 
     try {
       for (const studentId of selectedStudents) {
-        await api.post(`/grupos/${id}/add_existing_alumno/`, {
-          alumno_id: studentId
-        });
+        await addStudentToGroup(id, studentId);
       }
       
-      toast.success(`${selectedStudents.length} estudiante(s) añadido(s) como subgrupo`);
+      toast.success(`${selectedStudents.length} estudiante(s) añadido(s)`);
       setSelectedStudents([]);
       setShowAddStudentModal(false);
-      loadGroupStudents(); // Recargar estudiantes del grupo
     } catch (error) {
       console.error('Error adding students:', error);
       toast.error('Error al añadir estudiantes');
     }
-  };
+  }, [selectedStudents, id, addStudentToGroup]);
 
-  const handleCreateStudentSuccess = (newStudent) => {
-    loadGroupStudents(); // Recargar la lista de estudiantes
-    toast.success(`Estudiante ${newStudent.full_name} creado exitosamente`);
-  };
+  const handleCreateStudentSuccess = useCallback(async (studentData) => {
+    try {
+      const newStudent = await createStudentInGroup(id, studentData);
+      toast.success(`Estudiante ${newStudent.name} creado exitosamente`);
+      setShowCreateStudentModal(false);
+    } catch (error) {
+      console.error('Error creating student:', error);
+      toast.error('Error al crear estudiante');
+    }
+  }, [id, createStudentInGroup]);
 
-  const handleRemoveStudent = async (studentId, isSubgrupo = false) => {
-    if (!window.confirm(`¿${isSubgrupo ? 'Quitar este estudiante del subgrupo?' : 'Quitar este estudiante del grupo? (El estudiante no se eliminará, solo se quitará de este grupo)'}`)) return;
+  const handleRemoveStudent = useCallback(async (studentId, isSubgrupo = false) => {
+    if (!window.confirm(`¿${isSubgrupo ? 'Quitar este estudiante del subgrupo?' : 'Quitar este estudiante del grupo?'}`)) return;
 
     try {
-      if (isSubgrupo) {
-        await api.delete(`/grupos/${id}/remove_subgrupo/${studentId}/`);
-        toast.success('Estudiante removido del subgrupo');
-      } else {
-        // Remover del grupo principal
-        await api.delete(`/grupos/${id}/remove_student/${studentId}/`);
-        toast.success('Estudiante removido del grupo');
-      }
-      
-      loadGroupStudents();
+      await removeStudentFromGroup(id, studentId);
+      toast.success('Estudiante removido');
     } catch (error) {
       console.error('Error removing student:', error);
       const errorMsg = error.response?.data?.error || 'Error al remover estudiante';
       toast.error(errorMsg);
     }
-  };
+  }, [id, removeStudentFromGroup]);
 
   if (loading) {
     return (
@@ -170,10 +101,13 @@ const GroupDetailPage = () => {
     );
   }
 
-  // Estudiantes que no están en el grupo
-  const studentsNotInGroup = availableStudents.filter(
-    (student) => !group.students || !Array.isArray(group.students) || !group.students.some((gs) => gs.id === student.id)
-  );
+  // Memoizar estudiantes disponibles (evita recalcular en cada render)
+  const studentsNotInGroup = useMemo(() => {
+    if (!students || !availableStudents) return [];
+    
+    const studentIds = new Set(students.map(s => s.id));
+    return availableStudents.filter(student => !studentIds.has(student.id));
+  }, [students, availableStudents]);
 
   return (
     <div className="flex-1 p-8 overflow-y-auto bg-background-light dark:bg-background-dark">

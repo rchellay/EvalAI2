@@ -42,17 +42,31 @@ class StudentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        # Superusers ven todo
+        from django.db.models import Q
+        
+        # Base queryset según permisos
         if self.request.user.is_superuser:
-            return Student.objects.all()
-        # Filtrar estudiantes que pertenecen a grupos del profesor actual
-        return Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
+            queryset = Student.objects.all()
+        else:
+            # Filtrar estudiantes que pertenecen a grupos del profesor actual
+            queryset = Student.objects.filter(grupo_principal__teacher=self.request.user).distinct()
+        
+        # Aplicar filtro exclude_from_group si se proporciona
+        exclude_group_id = self.request.query_params.get('exclude_from_group')
+        if exclude_group_id:
+            queryset = queryset.exclude(
+                Q(grupo_principal_id=exclude_group_id) | Q(subgrupos__id=exclude_group_id)
+            ).distinct()
+        
+        # Optimización: select_related para reducir queries
+        return queryset.select_related('grupo_principal')
     
     def list(self, request, *args, **kwargs):
-        """List all students with complete debug logging"""
+        """List all students with complete debug logging and filters"""
         try:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Starting list()", file=sys.stderr, flush=True)
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: User {request.user}", file=sys.stderr, flush=True)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Query params {request.query_params}", file=sys.stderr, flush=True)
             
             queryset = self.filter_queryset(self.get_queryset())
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] EVALAI_STUDENTS_LIST: Found {queryset.count()} students", file=sys.stderr, flush=True)
