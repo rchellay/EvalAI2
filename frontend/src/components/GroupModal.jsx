@@ -1,9 +1,11 @@
 // frontend/src/components/GroupModal.jsx
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import api from '../lib/axios';
+import useGroupStore from '../stores/groupStore';
 
 const GroupModal = ({ group, onClose }) => {
+  const { createGroup, updateGroup } = useGroupStore();
+  
   const [formData, setFormData] = useState({
     name: '',
     course: '4t ESO',
@@ -20,30 +22,17 @@ const GroupModal = ({ group, onClose }) => {
 
   useEffect(() => {
     if (group) {
-      loadGroupDetails();
+      setFormData({
+        name: group.name || '',
+        course: group.course || '4t ESO',
+        student_ids: group.students ? group.students.map(s => s.id) : [],
+        subject_ids: group.subjects ? group.subjects.map(s => s.id) : []
+      });
     }
   }, [group]);
 
-  const loadGroupDetails = async () => {
-    try {
-      const response = await api.get(`/grupos/${group.id}`);
-      const data = response.data;
-
-      setFormData({
-        name: data.name,
-        course: data.course || '4t ESO',
-        student_ids: data.students ? data.students.map(s => s.id) : [],
-        subject_ids: data.subjects ? data.subjects.map(s => s.id) : []
-      });
-    } catch (error) {
-      console.error('Error loading group details:', error);
-      toast.error('Error al cargar detalles del grupo');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('handleSubmit called');
     setLoading(true);
 
     try {
@@ -53,19 +42,16 @@ const GroupModal = ({ group, onClose }) => {
       };
 
       if (group) {
-        await api.put(`/grupos/${group.id}/`, payload);
+        await updateGroup(group.id, payload);
         toast.success('Grupo actualizado');
       } else {
-        console.log('POST payload:', payload);
-        const response = await api.post('/grupos/', payload);
-        console.log('POST response:', response);
+        await createGroup(payload);
         toast.success('Grupo creado');
       }
 
       onClose(true);
     } catch (error) {
       console.error('Error saving group:', error);
-      console.error('Error response data:', error.response?.data);
       const errorMsg = error.response?.data?.error || error.response?.data?.detail || 'Error al guardar grupo';
       toast.error(errorMsg);
     } finally {

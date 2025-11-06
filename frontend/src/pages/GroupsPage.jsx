@@ -1,19 +1,18 @@
 // frontend/src/pages/GroupsPage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import api from '../lib/axios';
+import useGroupStore, { selectGroups, selectLoading } from '../stores/groupStore';
 import GroupModal from '../components/GroupModal';
 
 const GroupsPage = () => {
   const navigate = useNavigate();
-  const [groups, setGroups] = useState([]);
-  const [stats, setStats] = useState({
-    total_groups: 0,
-    total_students: 0,
-    total_subgrupos: 0
-  });
-  const [loading, setLoading] = useState(true);
+  
+  // Zustand store
+  const groups = useGroupStore(selectGroups);
+  const loading = useGroupStore(selectLoading);
+  const { fetchGroups, deleteGroup } = useGroupStore();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [filters, setFilters] = useState({
@@ -22,67 +21,56 @@ const GroupsPage = () => {
     filter: 'all' // 'all', 'with_students', 'empty'
   });
 
+  // Cargar grupos al montar
   useEffect(() => {
-    loadGroups();
-    loadStats();
-  }, [filters]);
-
-  const loadGroups = async () => {
-    console.log('[GroupsPage] Cargando grupos...');
-    try {
-      const params = {};
-      if (filters.search) params.search = filters.search;
-      if (filters.course) params.course = filters.course;
-      if (filters.filter === 'active') params.is_active = true;
-      if (filters.filter === 'inactive') params.is_active = false;
-
-      console.log('[GroupsPage] Petición a /grupos con params:', params);
-      const response = await api.get('/grupos', { params });
-      console.log('[GroupsPage] Respuesta recibida:', response.data);
-      // Django REST Framework returns paginated data with "results" array
-      const groupsData = response.data.results || response.data;
-      console.log('[GroupsPage] Total grupos:', Array.isArray(groupsData) ? groupsData.length : 0);
-      
-      let filteredGroups = Array.isArray(groupsData) ? groupsData : [];
-      
-      // Aplicar filtros adicionales
-      if (filters.filter === 'with_students') {
-        filteredGroups = filteredGroups.filter(group => group.total_students > 0);
-      } else if (filters.filter === 'empty') {
-        filteredGroups = filteredGroups.filter(group => group.total_students === 0);
-      }
-      
-      setGroups(filteredGroups);
-    } catch (error) {
-      console.error('[GroupsPage] ❌ Error loading groups:', error);
-      console.error('[GroupsPage] Error response:', error.response?.data);
-      console.error('[GroupsPage] Error status:', error.response?.status);
+    fetchGroups().catch(error => {
+      console.error('[GroupsPage] Error loading groups:', error);
       toast.error('Error al cargar grupos');
-      setGroups([]); // Ensure it's always an array
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+  }, [fetchGroups]);
 
-  const loadStats = async () => {
-    try {
-      const response = await api.get('/grupos');
-      const groupsData = response.data.results || response.data;
-      const allGroups = Array.isArray(groupsData) ? groupsData : [];
-      
-      const totalGroups = allGroups.length;
-      const totalStudents = allGroups.reduce((sum, group) => sum + (group.total_students || 0), 0);
-      const totalSubgrupos = allGroups.reduce((sum, group) => sum + (group.total_subgrupos || 0), 0);
-      
-      setStats({
-        total_groups: totalGroups,
-        total_students: totalStudents,
-        total_subgrupos: totalSubgrupos
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
+  // Filtrar grupos con useMemo para evitar recalcular en cada render
+  const filteredGroups = useMemo(() => {
+    if (!Array.isArray(groups)) return [];
+    
+    let result = [...groups];
+    
+    // Filtro por búsqueda
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(group => 
+        group.name?.toLowerCase().includes(searchLower) ||
+        group.course?.toLowerCase().includes(searchLower)
+      );
     }
-  };
+    
+    // Filtro por curso
+    if (filters.course) {
+      result = result.filter(group => group.course === filters.course);
+    }
+    
+    // Filtros adicionales
+    if (filters.filter === 'with_students') {
+      result = result.filter(group => (group.total_students || 0) > 0);
+    } else if (filters.filter === 'empty') {
+      result = result.filter(group => (group.total_students || 0) === 0);
+    }
+    
+    return result;
+  }, [groups, filters]);
+
+  // Stats calculadas con useMemo
+  const stats = useMemo(() => {
+    if (!Array.isArray(groups)) {
+      return { total_groups: 0, total_students: 0, total_subgrupos: 0 };
+    }
+    
+    return {
+      total_groups: groups.length,
+      total_students: groups.reduce((sum, g) => sum + (g.total_students || 0), 0),
+      total_subgrupos: groups.reduce((sum, g) => sum + (g.total_subgrupos || 0), 0)
+    };
+  }, [groups]);
 
   const handleCreate = () => {
     setSelectedGroup(null);
@@ -98,10 +86,8 @@ const GroupsPage = () => {
     if (!window.confirm('¿Estás seguro de eliminar este grupo?')) return;
 
     try {
-      await api.delete(`/grupos/${groupId}`);
+      await deleteGroup(groupId);
       toast.success('Grupo eliminado');
-      loadGroups();
-      loadStats();
     } catch (error) {
       console.error('Error deleting group:', error);
       toast.error('Error al eliminar grupo');
@@ -112,12 +98,11 @@ const GroupsPage = () => {
     navigate(`/grupos/${groupId}`);
   };
 
-  const handleModalClose = (refresh) => {
+  const handleModalClose = async (refresh) => {
     setIsModalOpen(false);
     setSelectedGroup(null);
     if (refresh) {
-      loadGroups();
-      loadStats();
+      await fetchGroups();
     }
   };
 
@@ -206,14 +191,14 @@ const GroupsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {groups.length === 0 ? (
+                {filteredGroups.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="p-8 text-center text-gray-500 dark:text-gray-400">
-                      No hay grupos. Crea tu primer grupo.
+                      {groups.length === 0 ? 'No hay grupos. Crea tu primer grupo.' : 'No se encontraron grupos con los filtros aplicados.'}
                     </td>
                   </tr>
                 ) : (
-                  groups.map((group) => (
+                  filteredGroups.map((group) => (
                     <tr
                       key={group.id}
                       className="border-b border-gray-200 dark:border-gray-800 hover:bg-primary/5 dark:hover:bg-primary/10 transition"
