@@ -175,7 +175,7 @@ const useGroupStore = create(
       // Añadir estudiante a grupo
       addStudentToGroup: async (groupId, studentId) => {
         try {
-          await api.post(`/grupos/${groupId}/add_student/`, { student_id: studentId });
+          await api.post(`/grupos/${groupId}/add_existing_alumno/`, { alumno_id: studentId });
           
           // Refrescar datos del grupo
           await get().fetchGroupDetails(groupId);

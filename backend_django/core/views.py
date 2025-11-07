@@ -292,14 +292,21 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
-    serializer_class = SubjectSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Usar SubjectCreateSerializer para crear/actualizar, SubjectSerializer para listar/leer"""
+        if self.action in ['create', 'update', 'partial_update']:
+            from .serializers import SubjectCreateSerializer
+            return SubjectCreateSerializer
+        from .serializers import SubjectSerializer
+        return SubjectSerializer
 
     def get_queryset(self):
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return Subject.objects.all()
-        return Subject.objects.filter(teacher=self.request.user)
+            return Subject.objects.all().prefetch_related('groups')
+        return Subject.objects.filter(teacher=self.request.user).prefetch_related('groups')
 
     def perform_create(self, serializer):
         serializer.save(teacher=self.request.user)
@@ -1642,26 +1649,39 @@ def improve_comment_with_ai(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def audio_evaluation(request):
     """
     Registra una evaluación con audio (transcripción real con Whisper API).
     """
+    import sys
+    import traceback
+    
     try:
         import tempfile
         import os
         from core.services.pdf_service import PDFReportService, PDFServiceError
 
-        student_id = request.data.get('alumnoId')
-        subject_id = request.data.get('asignaturaId')
+        print("[AUDIO] Iniciando audio_evaluation endpoint", file=sys.stderr, flush=True)
+        print(f"[AUDIO] request.POST: {request.POST}", file=sys.stderr, flush=True)
+        print(f"[AUDIO] request.FILES: {request.FILES}", file=sys.stderr, flush=True)
+        
+        # Usar request.POST para multipart/form-data
+        student_id = request.POST.get('alumnoId')
+        subject_id = request.POST.get('asignaturaId')
         audio_file = request.FILES.get('audio')
+
+        print(f"[AUDIO] student_id: {student_id}, subject_id: {subject_id}, audio_file: {audio_file}", file=sys.stderr, flush=True)
 
         # Validar datos requeridos
         if not all([student_id, audio_file]):
+            print("[AUDIO] ERROR: Faltan datos requeridos", file=sys.stderr, flush=True)
             return Response({'error': 'Faltan datos requeridos: alumnoId y archivo de audio'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validar tipo de archivo
         allowed_types = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/webm', 'audio/ogg']
         if audio_file.content_type not in allowed_types:
+            print(f"[AUDIO] ERROR: Tipo de archivo no soportado: {audio_file.content_type}", file=sys.stderr, flush=True)
             return Response({
                 'error': f'Tipo de archivo no soportado. Tipos permitidos: {", ".join(allowed_types)}'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -1669,41 +1689,60 @@ def audio_evaluation(request):
         # Validar tamaño del archivo (máximo 25MB)
         max_size = 25 * 1024 * 1024  # 25MB
         if audio_file.size > max_size:
+            print(f"[AUDIO] ERROR: Archivo demasiado grande: {audio_file.size} bytes", file=sys.stderr, flush=True)
             return Response({'error': 'Archivo demasiado grande. Máximo 25MB'}, status=status.HTTP_400_BAD_REQUEST)
 
+        print(f"[AUDIO] Buscando estudiante ID: {student_id}", file=sys.stderr, flush=True)
         student = Student.objects.get(id=student_id)
+        print(f"[AUDIO] Estudiante encontrado: {student.name}", file=sys.stderr, flush=True)
+        
         subject = None
         if subject_id:
+            print(f"[AUDIO] Buscando asignatura ID: {subject_id}", file=sys.stderr, flush=True)
             subject = Subject.objects.get(id=subject_id)
+            print(f"[AUDIO] Asignatura encontrada: {subject.name}", file=sys.stderr, flush=True)
 
         # Guardar archivo temporalmente para transcripción
+        print("[AUDIO] Guardando archivo temporal", file=sys.stderr, flush=True)
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio_file.name)[1]) as temp_file:
             for chunk in audio_file.chunks():
                 temp_file.write(chunk)
             temp_file_path = temp_file.name
+        
+        print(f"[AUDIO] Archivo temporal guardado en: {temp_file_path}", file=sys.stderr, flush=True)
 
         try:
             # Transcribir audio con Hugging Face Whisper
-            print(f"[AUDIO] Iniciando transcripción de audio para estudiante {student_id}")
+            print(f"[AUDIO] Iniciando transcripción para estudiante {student_id}", file=sys.stderr, flush=True)
             whisper_client = huggingface_whisper_client
+            print(f"[AUDIO] whisper_client disponible: {whisper_client is not None}", file=sys.stderr, flush=True)
+            
             if not whisper_client:
                 raise Exception("Servicio de transcripción no disponible. Verifica la configuración de HUGGINGFACE_API_KEY.")
+            
             transcription = whisper_client.transcribe_audio(temp_file_path, language='es')
-            print(f"[AUDIO] Transcripción completada: {len(transcription)} caracteres")
+            print(f"[AUDIO] Transcripción completada: {len(transcription)} caracteres", file=sys.stderr, flush=True)
 
             # Generar resumen/comentario con OpenRouter si hay transcripción
             comentario_final = f"Audio transcrito: {transcription}"
             if transcription.strip():
                 try:
+                    print("[AUDIO] Intentando generar resumen con IA", file=sys.stderr, flush=True)
                     deepseek_client = openrouter_client
                     prompt = f"Resume esta transcripción de audio de un estudiante y genera un comentario constructivo: '{transcription}'"
                     resumen_ia = deepseek_client.generate_analysis(prompt)
                     comentario_final = f"Audio: {transcription}\n\nResumen IA: {resumen_ia}"
-                except OpenRouterServiceError:
+                    print("[AUDIO] Resumen IA generado", file=sys.stderr, flush=True)
+                except OpenRouterServiceError as e:
+                    print(f"[AUDIO] OpenRouter falló, usando solo transcripción: {e}", file=sys.stderr, flush=True)
                     # Si falla OpenRouter, usar solo la transcripción
+                    pass
+                except Exception as e:
+                    print(f"[AUDIO] Error generando resumen: {e}", file=sys.stderr, flush=True)
                     pass
 
             # Crear evaluación con audio transcrito
+            print("[AUDIO] Creando evaluación", file=sys.stderr, flush=True)
             evaluation = Evaluation.objects.create(
                 student=student,
                 subject=subject,
@@ -1711,8 +1750,7 @@ def audio_evaluation(request):
                 comment=comentario_final,
                 evaluator=request.user
             )
-
-            # Aquí se podría guardar la URL del audio en un campo adicional si se añade al modelo
+            print(f"[AUDIO] Evaluación creada con ID: {evaluation.id}", file=sys.stderr, flush=True)
 
             return Response({
                 'evaluation': EvaluationSerializer(evaluation).data,
@@ -1724,15 +1762,26 @@ def audio_evaluation(request):
             # Limpiar archivo temporal
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
+                print(f"[AUDIO] Archivo temporal eliminado: {temp_file_path}", file=sys.stderr, flush=True)
 
     except Student.DoesNotExist:
+        print(f"[AUDIO] ERROR: Estudiante no encontrado: {student_id}", file=sys.stderr, flush=True)
         return Response({'error': 'Estudiante no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     except Subject.DoesNotExist:
+        print(f"[AUDIO] ERROR: Asignatura no encontrada: {subject_id}", file=sys.stderr, flush=True)
         return Response({'error': 'Asignatura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
     except HuggingFaceWhisperError as e:
+        print(f"[AUDIO] ERROR HuggingFaceWhisperError: {str(e)}", file=sys.stderr, flush=True)
+        print(f"[AUDIO] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
         return Response({'error': f'Error en transcripción: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        print(f"[AUDIO] ERROR Exception: {str(e)}", file=sys.stderr, flush=True)
+        print(f"[AUDIO] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
+        return Response({
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -2141,34 +2190,88 @@ def dashboard_resumen(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def proximas_clases(request):
-    """Próximas clases del día"""
+    """Próximas clases del día - incluye clases recurrentes de asignaturas"""
     try:
         today = timezone.now().date()
+        today_weekday = today.strftime('%A').lower()  # 'monday', 'tuesday', etc.
         
-        # Obtener eventos de calendario para hoy
-        eventos_hoy = CalendarEvent.objects.filter(
-            date=today
-        ).select_related('subject').order_by('start_time')
+        # Mapeo español -> inglés de días (por si acaso)
+        day_map_es_to_en = {
+            'lunes': 'monday',
+            'martes': 'tuesday',
+            'miércoles': 'wednesday',
+            'miercoles': 'wednesday',
+            'jueves': 'thursday',
+            'viernes': 'friday',
+            'sábado': 'saturday',
+            'sabado': 'saturday',
+            'domingo': 'sunday'
+        }
         
         clases_data = []
+        
+        # 1. Obtener clases recurrentes de asignaturas del usuario
+        user_subjects = Subject.objects.filter(teacher=request.user)
+        
+        for subject in user_subjects:
+            # Verificar si la asignatura tiene clase hoy
+            subject_days = subject.days or []
+            
+            # Normalizar días a minúsculas
+            subject_days_normalized = [day.lower() for day in subject_days]
+            
+            if today_weekday in subject_days_normalized:
+                # Obtener los grupos asociados a esta asignatura
+                groups = subject.groups.all()
+                group_names = ', '.join([g.name for g in groups]) if groups.exists() else 'Sin grupo'
+                
+                clases_data.append({
+                    'id': f'subject-{subject.id}',
+                    'title': subject.name,
+                    'subject_name': subject.name,
+                    'group_name': group_names,
+                    'start_time': subject.start_time.strftime('%H:%M') if subject.start_time else '--:--',
+                    'end_time': subject.end_time.strftime('%H:%M') if subject.end_time else '--:--',
+                    'event_type': 'class',
+                    'description': f'Clase recurrente - {group_names}',
+                    'color': subject.color
+                })
+        
+        # 2. Obtener eventos personalizados del calendario para hoy
+        eventos_hoy = CalendarEvent.objects.filter(
+            date=today,
+            created_by=request.user
+        ).select_related('subject').order_by('start_time')
+        
         for evento in eventos_hoy:
             clases_data.append({
-                'id': evento.id,
+                'id': f'event-{evento.id}',
                 'title': evento.title,
-                'subject_name': evento.subject.name if evento.subject else 'Sin asignatura',
+                'subject_name': evento.subject.name if evento.subject else evento.title,
+                'group_name': evento.event_type,
                 'start_time': evento.start_time.strftime('%H:%M') if evento.start_time else '--:--',
                 'end_time': evento.end_time.strftime('%H:%M') if evento.end_time else '--:--',
                 'event_type': evento.event_type,
-                'description': evento.description or ''
+                'description': evento.description or '',
+                'color': evento.color
             })
+        
+        # Ordenar por hora de inicio
+        clases_data.sort(key=lambda x: x['start_time'])
         
         return Response({
             'clases': clases_data,
-            'total_clases': len(clases_data)
+            'total_clases': len(clases_data),
+            'today': today.strftime('%Y-%m-%d'),
+            'weekday': today_weekday
         })
         
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        import traceback
+        return Response({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

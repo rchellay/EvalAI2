@@ -12,6 +12,7 @@ import useGroupStore, {
 } from '../stores/groupStore';
 import CreateStudentModal from '../components/CreateStudentModal';
 import GroupModal from '../components/GroupModal';
+import StudentAvatar from '../components/StudentAvatar';
 
 const GroupDetailPage = () => {
   const { id } = useParams();
@@ -230,9 +231,11 @@ const GroupDetailPage = () => {
                       className="flex items-start justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold groupData-hover:bg-primary groupData-hover:text-white transition">
-                          {(student.name || student.username || '?').charAt(0).toUpperCase()}
-                        </div>
+                        <StudentAvatar 
+                          student={student} 
+                          size="md"
+                          className="flex-shrink-0 hover:opacity-80 transition"
+                        />
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white groupData-hover:text-primary transition">
                             {student.name || student.username || 'Sin nombre'}

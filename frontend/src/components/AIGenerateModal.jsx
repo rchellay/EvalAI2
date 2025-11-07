@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../lib/axios';
 
 const AIGenerateModal = ({ isOpen, onClose, onGenerated }) => {
   const [prompt, setPrompt] = useState('');

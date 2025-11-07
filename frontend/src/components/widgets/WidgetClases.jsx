@@ -16,6 +16,7 @@ const WidgetClases = () => {
     try {
       setLoading(true);
       const response = await api.get('/dashboard/proximas_clases/');
+      console.log('[WidgetClases] Response:', response.data);
       setClases(response.data.clases || []);
     } catch (err) {
       setError('Error al cargar clases');
@@ -89,20 +90,28 @@ const WidgetClases = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-slate-50 rounded-lg p-3 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="bg-slate-50 rounded-lg p-3 hover:bg-slate-100 transition-colors cursor-pointer border-l-4"
+              style={{ borderLeftColor: clase.color || '#3B82F6' }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="font-medium text-slate-800">{clase.subject_name}</div>
                   <div className="text-sm text-slate-600">{clase.group_name}</div>
-                  {clase.classroom && (
-                    <div className="text-xs text-slate-500">📍 {clase.classroom}</div>
+                  {clase.description && (
+                    <div className="text-xs text-slate-500 mt-1">{clase.description}</div>
                   )}
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-blue-600">
                     {formatTime(clase.start_time)} - {formatTime(clase.end_time)}
                   </div>
+                  {clase.event_type && clase.event_type !== 'class' && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      {clase.event_type === 'exam' ? '📝 Examen' : 
+                       clase.event_type === 'meeting' ? '👥 Reunión' : 
+                       clase.event_type === 'holiday' ? '🎉 Festivo' : '📅 Evento'}
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

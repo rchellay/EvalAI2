@@ -91,11 +91,16 @@ class StudentSerializer(serializers.ModelSerializer):
 
 class SubjectSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.username', read_only=True)
+    groups = serializers.SerializerMethodField()
 
     class Meta:
         model = Subject
-        fields = ['id', 'name', 'teacher', 'teacher_name', 'days', 'start_time', 'end_time', 'color', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'teacher', 'teacher_name', 'days', 'start_time', 'end_time', 'color', 'groups', 'created_at', 'updated_at']
         read_only_fields = ['id', 'teacher', 'teacher_name', 'created_at', 'updated_at']
+
+    def get_groups(self, obj):
+        """Retornar grupos asociados con información básica"""
+        return [{'id': g.id, 'name': g.name, 'course': g.course} for g in obj.groups.all()]
 
 
 
