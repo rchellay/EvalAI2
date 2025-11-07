@@ -20,13 +20,16 @@ class HuggingFaceWhisperClient:
     """Cliente para transcripción de audio usando Hugging Face Whisper"""
     
     def __init__(self):
-        self.api_url = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
+        # IMPORTANTE: Usando modelo alternativo porque openai/whisper-large-v3 retorna 410 Gone
+        # El modelo openai/whisper-base es más pequeño pero funcional
+        # Documentación: https://huggingface.co/openai/whisper-base
+        self.api_url = "https://api-inference.huggingface.co/models/openai/whisper-base"
         self.api_key = getattr(settings, 'HUGGINGFACE_API_KEY', None)
         self.timeout = getattr(settings, 'HUGGINGFACE_TIMEOUT', 60)
         self.max_file_size = getattr(settings, 'HUGGINGFACE_MAX_FILE_SIZE', 25 * 1024 * 1024)  # 25MB
         
         if not self.api_key:
-            logger.warning("HUGGINGFACE_API_KEY no configurada - usando modo gratuito limitado")
+            logger.warning("HUGGINGFACE_API_KEY no configurada - la API gratuita puede tener límites")
     
     def transcribe_audio(
         self, 

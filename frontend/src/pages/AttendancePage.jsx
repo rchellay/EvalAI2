@@ -72,17 +72,40 @@ const AttendancePage = () => {
 
   const loadGroupsBySubject = async (subjectId) => {
     try {
+      console.log('[AttendancePage] loadGroupsBySubject - subjectId:', subjectId);
       // Obtener grupos que tienen esta asignatura
       const response = await api.get('/groups/');
       const groupsData = response.data.results || response.data;
-      const filteredGroups = groupsData.filter(group =>
-        group.subjects && Array.isArray(group.subjects) && group.subjects.some(s => s.id === parseInt(subjectId))
-      );
+      console.log('[AttendancePage] Groups loaded:', groupsData);
+      
+      const filteredGroups = groupsData.filter(group => {
+        if (!group.subjects) return false;
+        
+        // Manejar diferentes formatos de subjects (array de IDs o array de objetos)
+        if (Array.isArray(group.subjects)) {
+          return group.subjects.some(s => {
+            // Si es un objeto con id
+            if (typeof s === 'object' && s !== null) {
+              return s.id === parseInt(subjectId);
+            }
+            // Si es un ID directo
+            return parseInt(s) === parseInt(subjectId);
+          });
+        }
+        return false;
+      });
+      
+      console.log('[AttendancePage] Filtered groups for subject:', filteredGroups);
       setGroups(filteredGroups);
       
       // Auto-seleccionar primer grupo si solo hay uno
       if (filteredGroups.length === 1) {
         setSelectedGroup(filteredGroups[0].id.toString());
+      } else if (filteredGroups.length === 0) {
+        toast('No hay grupos con esta asignatura', {
+          icon: 'ℹ️',
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.error('Error loading groups:', error);

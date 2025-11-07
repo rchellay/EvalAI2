@@ -279,7 +279,9 @@ const GroupDetailPage = () => {
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                {groupData.subjects.map((subject) => (
+                {groupData.subjects
+                  .filter(subject => subject.id) // Solo asignaturas con ID válido
+                  .map((subject) => (
                   <Link
                     key={subject.id}
                     to={`/asignaturas/${subject.id}/alumnos?grupoId=${groupData.id}`}
