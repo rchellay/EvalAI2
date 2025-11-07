@@ -212,17 +212,15 @@ const GroupDetailPage = () => {
               console.log('[GroupDetailPage] Rendering students section');
               console.log('[GroupDetailPage] groupData:', groupData);
               console.log('[GroupDetailPage] groupData?.students:', groupData?.students);
-              console.log('[GroupDetailPage] students (selector):', students);
-              console.log('[GroupDetailPage] students.length:', students?.length);
               return null;
             })()}
-            {!students || students.length === 0 ? (
+            {!groupData?.students || groupData.students.length === 0 ? (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 No hay estudiantes en este grupo. Añade estudiantes para empezar.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {students.map((student) => (
+                {groupData.students.map((student) => (
                   <div
                     key={student.id}
                     className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md hover:border-primary transition cursor-pointer groupData relative"
