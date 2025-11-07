@@ -24,13 +24,22 @@ const useGroupStore = create(
       // Fetch todos los grupos
       fetchGroups: async () => {
         set({ loading: true, error: null });
+        console.log('[groupStore] fetchGroups - iniciando petición a /grupos/');
         try {
           const response = await api.get('/grupos/');
+          console.log('[groupStore] fetchGroups - response completa:', response);
+          console.log('[groupStore] fetchGroups - response.data:', response.data);
+          console.log('[groupStore] fetchGroups - response.data es array?', Array.isArray(response.data));
+          
           const groupsData = Array.isArray(response.data) ? response.data : [];
+          console.log('[groupStore] fetchGroups - groupsData procesado:', groupsData);
+          console.log('[groupStore] fetchGroups - cantidad de grupos:', groupsData.length);
+          
           set({ groups: groupsData, loading: false });
           return groupsData;
         } catch (error) {
           console.error('[groupStore] fetchGroups error:', error);
+          console.error('[groupStore] fetchGroups error.response:', error.response);
           set({ error: error.message, loading: false, groups: [] }); // Asegurar que groups sea array
           throw error;
         }
