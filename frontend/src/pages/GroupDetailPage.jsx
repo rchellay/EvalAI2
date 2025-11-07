@@ -17,20 +17,18 @@ const GroupDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Zustand store con selectores optimizados
-  const group = useGroupStore(selectCurrentGroup);
-  const availableStudents = useGroupStore(selectAvailableStudents);
-  const loading = useGroupStore(selectLoading);
-  const students = useGroupStore(selectGroupStudents);
-  const counts = useGroupStore(selectGroupCounts);
+  // ESTADO LOCAL - Sin suscripciones a Zustand
+  const [groupData, setGroupData] = useState(null);
+  const [availableStudentsData, setAvailableStudentsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
+  // Solo obtener funciones del store (no suscripciones)
   const { fetchGroupDetails, addStudentToGroup, createStudentInGroup, removeStudentFromGroup } = useGroupStore();
   
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Handlers optimizados con useCallback (ANTES de early returns)
   const handleAddStudents = useCallback(async () => {
@@ -80,22 +78,28 @@ const GroupDetailPage = () => {
   // Memoizar estudiantes disponibles con validación defensiva (ANTES de early returns)
   const studentsNotInGroup = useMemo(() => {
     // DEFENSIVE: Asegurar que sean arrays antes de operar
-    const safeStudents = Array.isArray(students) ? students : [];
-    const safeAvailable = Array.isArray(availableStudents) ? availableStudents : [];
+    const safeStudents = Array.isArray(groupData?.students) ? groupData.students : [];
+    const safeAvailable = Array.isArray(availableStudentsData) ? availableStudentsData : [];
     
     if (safeStudents.length === 0) return safeAvailable;
     
     const studentIds = new Set(safeStudents.map(s => s?.id).filter(Boolean));
     return safeAvailable.filter(student => student?.id && !studentIds.has(student.id));
-  }, [students, availableStudents]);
+  }, [groupData?.students, availableStudentsData]);
 
   // Cargar datos solo una vez cuando cambia el ID
   useEffect(() => {
     setIsLoading(true);
     fetchGroupDetails(id)
-      .then(() => setIsLoading(false))
+      .then((data) => {
+        // Obtener datos del store después de la carga
+        const store = useGroupStore.getState();
+        setGroupData(store.currentGroup);
+        setAvailableStudentsData(store.availableStudents || []);
+        setIsLoading(false);
+      })
       .catch((error) => {
-        console.error('[GroupDetail] Error loading group:', error);
+        console.error('[GroupDetail] Error loading groupData:', error);
         toast.error('Error al cargar el grupo');
         setIsLoading(false);
         navigate('/grupos');
@@ -103,7 +107,7 @@ const GroupDetailPage = () => {
   }, [id, fetchGroupDetails, navigate]);
 
   // UN SOLO early return con TODAS las condiciones
-  if (isLoading || !group || !group.name || !group.course) {
+  if (isLoading || !groupData || !groupData.name || !groupData.course) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -120,7 +124,7 @@ const GroupDetailPage = () => {
             Grupos
           </Link>
           <span className="mx-2 text-gray-500">/</span>
-          <span className="text-gray-900 dark:text-white font-medium">{group.name}</span>
+          <span className="text-gray-900 dark:text-white font-medium">{groupData.name}</span>
         </nav>
 
         {/* Header */}
@@ -128,13 +132,13 @@ const GroupDetailPage = () => {
           <div className="flex items-center gap-4">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-              style={{ backgroundColor: group.color }}
+              style={{ backgroundColor: groupData.color }}
             >
-              {group.name.charAt(0).toUpperCase()}
+              {groupData.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{group.name}</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">{group.course}</p>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{groupData.name}</h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">{groupData.course}</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -158,23 +162,23 @@ const GroupDetailPage = () => {
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Estudiantes</p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {group.students?.length || 0}
+              {groupData.students?.length || 0}
             </p>
           </div>
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Asignaturas</p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-              {group.subjects?.length || 0}
+              {groupData.subjects?.length || 0}
             </p>
           </div>
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 p-6 rounded-xl">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Estado</p>
             <p
               className={`text-3xl font-bold mt-2 ${
-                group.is_active ? 'text-green-500' : 'text-orange-500'
+                groupData.is_active ? 'text-green-500' : 'text-orange-500'
               }`}
             >
-              {group.is_active ? 'Activo' : 'Inactivo'}
+              {groupData.is_active ? 'Activo' : 'Inactivo'}
             </p>
           </div>
         </div>
@@ -183,7 +187,7 @@ const GroupDetailPage = () => {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Estudiantes ({group.students?.length || 0})
+              Estudiantes ({groupData.students?.length || 0})
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -206,8 +210,8 @@ const GroupDetailPage = () => {
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
             {(() => {
               console.log('[GroupDetailPage] Rendering students section');
-              console.log('[GroupDetailPage] group:', group);
-              console.log('[GroupDetailPage] group?.students:', group?.students);
+              console.log('[GroupDetailPage] groupData:', groupData);
+              console.log('[GroupDetailPage] groupData?.students:', groupData?.students);
               console.log('[GroupDetailPage] students (selector):', students);
               console.log('[GroupDetailPage] students.length:', students?.length);
               return null;
@@ -221,18 +225,18 @@ const GroupDetailPage = () => {
                 {students.map((student) => (
                   <div
                     key={student.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md hover:border-primary transition cursor-pointer group relative"
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md hover:border-primary transition cursor-pointer groupData relative"
                   >
                     <div 
                       onClick={() => navigate(`/estudiantes/${student.id}`)}
                       className="flex items-start justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold group-hover:bg-primary group-hover:text-white transition">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold groupData-hover:bg-primary groupData-hover:text-white transition">
                           {(student.name || student.username || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white group-hover:text-primary transition">
+                          <p className="font-medium text-gray-900 dark:text-white groupData-hover:text-primary transition">
                             {student.name || student.username || 'Sin nombre'}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -262,19 +266,19 @@ const GroupDetailPage = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Asignaturas ({group.subjects?.length || 0})
+              Asignaturas ({groupData.subjects?.length || 0})
             </h2>
           </div>
 
           <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-            {!group.subjects || group.subjects.length === 0 ? (
+            {!groupData.subjects || groupData.subjects.length === 0 ? (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 Este grupo no está asociado a ninguna asignatura. Asigna este grupo desde la página de
                 Asignaturas.
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                {group.subjects.map((subject) => (
+                {groupData.subjects.map((subject) => (
                   <Link
                     key={subject.id}
                     to={`/asignaturas/${subject.id}`}
@@ -401,10 +405,10 @@ const GroupDetailPage = () => {
         />
       )}
 
-      {/* Edit Group Modal */}
+      {/* Edit groupData Modal */}
       {showEditGroupModal && (
         <GroupModal
-          group={group}
+          groupData={groupData}
           onClose={(refresh) => {
             setShowEditGroupModal(false);
             if (refresh) {
