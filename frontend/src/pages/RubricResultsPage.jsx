@@ -280,7 +280,10 @@ const RubricResultsPage = () => {
       if (format === 'csv') {
         exportToCSV();
       } else if (format === 'pdf') {
-        toast.info('Exportación a PDF en desarrollo');
+        toast('Exportación a PDF en desarrollo', {
+          icon: 'ℹ️',
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.error('Error exporting:', error);

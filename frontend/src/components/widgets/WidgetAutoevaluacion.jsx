@@ -24,9 +24,13 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
       if (subjectId) params.subject = subjectId;
 
       const response = await api.get('/self-evaluations/', { params });
-      setSelfEvaluations(response.data);
+      // Asegurar que siempre sea un array
+      const data = response.data;
+      const evaluations = Array.isArray(data) ? data : (data.results ? data.results : []);
+      setSelfEvaluations(evaluations);
     } catch (error) {
       console.error('Error cargando autoevaluaciones:', error);
+      setSelfEvaluations([]); // Asegurar array vacío en caso de error
     } finally {
       setLoading(false);
     }

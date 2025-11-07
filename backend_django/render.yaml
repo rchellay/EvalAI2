@@ -20,6 +20,8 @@ services:
           property: connectionString
       - key: ALLOWED_HOSTS
         value: evalai-backend.onrender.com
+      - key: CORS_ALLOW_ALL_ORIGINS_TEMP
+        value: True
     healthCheckPath: /api/
 
 databases:

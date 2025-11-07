@@ -221,7 +221,7 @@ const SubjectModal = ({ subject, onClose }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Grupos asociados
             </label>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
               {!Array.isArray(groups) || groups.length === 0 ? (
                 <p className="col-span-2 text-sm text-gray-500 dark:text-gray-400 text-center py-2">
                   No hay grupos disponibles
@@ -230,9 +230,13 @@ const SubjectModal = ({ subject, onClose }) => {
                 groups.map((group) => (
                   <label
                     key={group.id}
-                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                      formData.group_ids.includes(group.id)
+                        ? 'bg-primary/10 border-primary shadow-sm'
+                        : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
                   >
-                    <div className="relative flex items-center">
+                    <div className="relative flex items-center flex-shrink-0">
                       <input
                         type="checkbox"
                         checked={formData.group_ids.includes(group.id)}
@@ -249,17 +253,35 @@ const SubjectModal = ({ subject, onClose }) => {
                             });
                           }
                         }}
-                        className="appearance-none w-5 h-5 border-2 border-gray-400 dark:border-gray-500 rounded checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer transition-all"
+                        className="appearance-none w-6 h-6 border-2 rounded-md cursor-pointer transition-all"
+                        style={{
+                          borderColor: formData.group_ids.includes(group.id) ? '#3b82f6' : '#9ca3af',
+                          backgroundColor: formData.group_ids.includes(group.id) ? '#3b82f6' : 'white'
+                        }}
                       />
                       {formData.group_ids.includes(group.id) && (
-                        <span className="material-symbols-outlined absolute text-white text-sm pointer-events-none" style={{ left: '2px', top: '2px', fontSize: '16px' }}>
+                        <span className="material-symbols-outlined absolute text-white pointer-events-none" style={{ left: '3px', top: '3px', fontSize: '18px', fontWeight: 'bold' }}>
                           check
                         </span>
                       )}
                     </div>
-                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                      {group.name} - {group.course}
-                    </span>
+                    <div className="flex-1">
+                      <span className={`text-sm font-semibold block ${
+                        formData.group_ids.includes(group.id)
+                          ? 'text-primary'
+                          : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {group.name}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {group.course}
+                      </span>
+                    </div>
+                    {formData.group_ids.includes(group.id) && (
+                      <span className="material-symbols-outlined text-primary text-xl">
+                        check_circle
+                      </span>
+                    )}
                   </label>
                 ))
               )}

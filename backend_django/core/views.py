@@ -1411,22 +1411,33 @@ class EvidenceViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """Override create to add better error handling and logging"""
-        print(f"[EVIDENCE] POST /api/evidences/ - User: {request.user.username}")
-        print(f"[EVIDENCE] Data: {request.data}")
-        print(f"[EVIDENCE] Files: {request.FILES}")
+        import sys
+        print(f"[EVIDENCE] POST /api/evidences/ - User: {request.user.username}", file=sys.stderr, flush=True)
+        print(f"[EVIDENCE] request.POST: {dict(request.POST)}", file=sys.stderr, flush=True)
+        print(f"[EVIDENCE] request.FILES keys: {list(request.FILES.keys())}", file=sys.stderr, flush=True)
         
         # Validar campos requeridos
-        if 'student' not in request.data:
+        if 'student' not in request.data and 'student' not in request.POST:
+            print("[EVIDENCE] ERROR: Missing 'student' field", file=sys.stderr, flush=True)
             return Response({
                 'error': 'El campo "student" es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if 'title' not in request.data or not request.data['title'].strip():
+        if 'title' not in request.data and 'title' not in request.POST:
+            print("[EVIDENCE] ERROR: Missing 'title' field", file=sys.stderr, flush=True)
             return Response({
                 'error': 'El campo "title" es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        title = request.data.get('title') or request.POST.get('title', '')
+        if not title.strip():
+            print("[EVIDENCE] ERROR: Empty 'title' field", file=sys.stderr, flush=True)
+            return Response({
+                'error': 'El campo "title" no puede estar vacío'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         if 'file' not in request.FILES:
+            print("[EVIDENCE] ERROR: Missing 'file' in FILES", file=sys.stderr, flush=True)
             return Response({
                 'error': 'Debes adjuntar un archivo'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -1436,10 +1447,13 @@ class EvidenceViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
-            print(f"[EVIDENCE] Evidence created successfully: {serializer.data['id']}")
+            print(f"[EVIDENCE] Evidence created successfully: {serializer.data['id']}", file=sys.stderr, flush=True)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
-            print(f"[EVIDENCE] Error creating evidence: {str(e)}")
+            print(f"[EVIDENCE] Error creating evidence: {str(e)}", file=sys.stderr, flush=True)
+            print(f"[EVIDENCE] Error type: {type(e).__name__}", file=sys.stderr, flush=True)
+            import traceback
+            print(f"[EVIDENCE] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
             return Response({
                 'error': str(e),
                 'detail': 'Error al crear la evidencia'
@@ -1721,33 +1735,15 @@ def audio_evaluation(request):
                 raise Exception("Servicio de transcripción no disponible. Verifica la configuración de HUGGINGFACE_API_KEY.")
             
             transcription = whisper_client.transcribe_audio(temp_file_path, language='es')
-            print(f"[AUDIO] Transcripción completada: {len(transcription)} caracteres", file=sys.stderr, flush=True)
+            print(f"[AUDIO] Transcripción completada: {transcription[:100]}...", file=sys.stderr, flush=True)
 
-            # Generar resumen/comentario con OpenRouter si hay transcripción
-            comentario_final = f"Audio transcrito: {transcription}"
-            if transcription.strip():
-                try:
-                    print("[AUDIO] Intentando generar resumen con IA", file=sys.stderr, flush=True)
-                    deepseek_client = openrouter_client
-                    prompt = f"Resume esta transcripción de audio de un estudiante y genera un comentario constructivo: '{transcription}'"
-                    resumen_ia = deepseek_client.generate_analysis(prompt)
-                    comentario_final = f"Audio: {transcription}\n\nResumen IA: {resumen_ia}"
-                    print("[AUDIO] Resumen IA generado", file=sys.stderr, flush=True)
-                except OpenRouterServiceError as e:
-                    print(f"[AUDIO] OpenRouter falló, usando solo transcripción: {e}", file=sys.stderr, flush=True)
-                    # Si falla OpenRouter, usar solo la transcripción
-                    pass
-                except Exception as e:
-                    print(f"[AUDIO] Error generando resumen: {e}", file=sys.stderr, flush=True)
-                    pass
-
-            # Crear evaluación con audio transcrito
-            print("[AUDIO] Creando evaluación", file=sys.stderr, flush=True)
+            # Crear evaluación con la transcripción (sin IA de resumen)
+            print("[AUDIO] Creando evaluación con transcripción", file=sys.stderr, flush=True)
             evaluation = Evaluation.objects.create(
                 student=student,
                 subject=subject,
                 date=datetime.now().date(),
-                comment=comentario_final,
+                comment=transcription,  # Solo guardar la transcripción
                 evaluator=request.user
             )
             print(f"[AUDIO] Evaluación creada con ID: {evaluation.id}", file=sys.stderr, flush=True)

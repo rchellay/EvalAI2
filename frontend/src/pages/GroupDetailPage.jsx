@@ -282,17 +282,23 @@ const GroupDetailPage = () => {
                 {groupData.subjects.map((subject) => (
                   <Link
                     key={subject.id}
-                    to={`/asignaturas/${subject.id}`}
+                    to={`/asignaturas/${subject.id}/alumnos?grupoId=${groupData.id}`}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: subject.color }}
+                        style={{ backgroundColor: subject.color || '#3b82f6' }}
                       ></div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{subject.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{subject.course}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {subject.name || subject.nombre || 'Sin nombre'}
+                        </p>
+                        {(subject.course || subject.curso) && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {subject.course || subject.curso}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <span className="material-symbols-outlined text-gray-400">

@@ -295,7 +295,10 @@ const AttendancePage = () => {
       // Si la asignatura seleccionada ya no está en el día, resetearla
       if (selectedSubject && Array.isArray(filteredSubjects) && !filteredSubjects.some(s => s.id === parseInt(selectedSubject))) {
         setSelectedSubject(null);
-        toast.info('La asignatura seleccionada no tiene clase este día');
+        toast('La asignatura seleccionada no tiene clase este día', {
+          icon: 'ℹ️',
+          duration: 3000,
+        });
       }
     }
   }, [currentDate, allSubjects]);
