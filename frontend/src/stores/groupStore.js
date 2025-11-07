@@ -55,14 +55,10 @@ const useGroupStore = create(
 
       // Fetch grupo con detalles completos (estudiantes, subjects, etc)
       fetchGroupDetails: async (groupId) => {
-        // IMPORTANT: Marcar loading pero conservar currentGroup temporalmente
-        // para evitar renders transitorios que provoquen inconsistencias en componentes
-        console.log('[groupStore] fetchGroupDetails - preparing to fetch, groupId:', groupId);
-        set({ loading: true, error: null });
-        console.log('[groupStore] fetchGroupDetails - state after set loading:', get().currentGroup ? 'has currentGroup' : 'no currentGroup');
+        console.log('[groupStore] fetchGroupDetails - groupId:', groupId);
+        
+        // NO modificar loading aquí para evitar re-render durante fetch
         try {
-          // Usar Promise.all para cargar todo en paralelo
-          // Endpoint unificado: ?exclude_from_group en lugar de /available_for_group/
           console.log('[groupStore] fetchGroupDetails - iniciando peticiones paralelas');
           const [groupResponse, studentsResponse, availableResponse] = await Promise.all([
             api.get(`/grupos/${groupId}`),
@@ -92,17 +88,18 @@ const useGroupStore = create(
           console.log('[groupStore] fetchGroupDetails - groupData procesado:', groupData);
           console.log('[groupStore] fetchGroupDetails - availableStudents:', availableStudentsData.length);
 
-          // Actualizar estado al finalizar
+          // SOLO actualizar cuando TODO esté listo
           set({ 
             currentGroup: groupData,
             availableStudents: availableStudentsData,
-            loading: false 
+            loading: false,
+            error: null
           });
           console.log('[groupStore] fetchGroupDetails - state updated, currentGroup id:', get().currentGroup?.id);
           
           return groupData;
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: error.message, loading: false, currentGroup: null });
           throw error;
         }
       },

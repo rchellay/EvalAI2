@@ -30,6 +30,7 @@ const GroupDetailPage = () => {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handlers optimizados con useCallback (ANTES de early returns)
   const handleAddStudents = useCallback(async () => {
@@ -90,15 +91,19 @@ const GroupDetailPage = () => {
 
   // Cargar datos solo una vez cuando cambia el ID
   useEffect(() => {
-    fetchGroupDetails(id).catch((error) => {
-      console.error('[GroupDetail] Error loading group:', error);
-      toast.error('Error al cargar el grupo');
-      navigate('/grupos');
-    });
+    setIsLoading(true);
+    fetchGroupDetails(id)
+      .then(() => setIsLoading(false))
+      .catch((error) => {
+        console.error('[GroupDetail] Error loading group:', error);
+        toast.error('Error al cargar el grupo');
+        setIsLoading(false);
+        navigate('/grupos');
+      });
   }, [id, fetchGroupDetails, navigate]);
 
   // UN SOLO early return con TODAS las condiciones
-  if (loading || !group || !group.name || !group.course) {
+  if (isLoading || !group || !group.name || !group.course) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
