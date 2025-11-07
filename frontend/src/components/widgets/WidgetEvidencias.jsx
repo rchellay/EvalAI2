@@ -11,6 +11,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
   });
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedEvidence, setSelectedEvidence] = useState(null);
   const fileInputRef = useRef(null);
 
   // Cargar evidencias existentes
@@ -219,7 +220,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {safeEvidences.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">📎</div>
@@ -227,37 +228,184 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
             <p className="text-sm">Haz clic en "Subir" para añadir la primera evidencia</p>
           </div>
         ) : (
-          safeEvidences.map(evidence => (
-            <div key={evidence.id} className="p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <div className="text-2xl">
-                  {getFileIcon(evidence.file_type)}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-800">{evidence.title}</h4>
-                  {evidence.description && (
-                    <p className="text-sm text-gray-600 mt-1">{evidence.description}</p>
-                  )}
-                  <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                    <span>{getFileTypeText(evidence.file_type)}</span>
-                    <span>{new Date(evidence.created_at).toLocaleDateString()}</span>
+          <>
+            {/* Galería de imágenes */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {safeEvidences.map(evidence => (
+                <div 
+                  key={evidence.id} 
+                  className="group relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => setSelectedEvidence(evidence)}
+                >
+                  {/* Preview de imagen o icono de archivo */}
+                  <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                    {evidence.file_type?.startsWith('image/') ? (
+                      <>
+                        <img 
+                          src={evidence.file_url} 
+                          alt={evidence.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div className="hidden w-full h-full items-center justify-center">
+                          <span className="text-5xl">🖼️</span>
+                        </div>
+                        {/* Overlay al hover */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <span className="text-white text-sm font-medium">👁️ Ver</span>
+                        </div>
+                      </>
+                    ) : evidence.file_type === 'application/pdf' ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-5xl mb-2">📄</span>
+                        <span className="text-xs text-gray-600 font-medium">PDF</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-5xl mb-2">📎</span>
+                        <span className="text-xs text-gray-600 font-medium">Archivo</span>
+                      </div>
+                    )}
                   </div>
-                  {evidence.file_url && (
-                    <a
-                      href={evidence.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      👁️ Ver archivo
-                    </a>
-                  )}
+                  
+                  {/* Info del archivo */}
+                  <div className="p-2 bg-white">
+                    <h4 className="text-sm font-medium text-gray-800 truncate" title={evidence.title}>
+                      {evidence.title}
+                    </h4>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-gray-500">
+                        {new Date(evidence.created_at).toLocaleDateString('es-ES', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        })}
+                      </span>
+                      <span className="text-xs text-blue-600 font-medium">
+                        {getFileIcon(evidence.file_type)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))
+          </>
         )}
       </div>
+
+      {/* Modal de vista detallada */}
+      {selectedEvidence && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedEvidence(null)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-start p-4 border-b">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900">{selectedEvidence.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Subido el {new Date(selectedEvidence.created_at).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedEvidence(null)}
+                className="ml-4 text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-4">
+              {/* Preview del archivo */}
+              <div className="mb-4 bg-gray-50 rounded-lg flex items-center justify-center min-h-[300px]">
+                {selectedEvidence.file_type?.startsWith('image/') ? (
+                  <img 
+                    src={selectedEvidence.file_url} 
+                    alt={selectedEvidence.title}
+                    className="max-w-full max-h-[500px] object-contain rounded"
+                  />
+                ) : selectedEvidence.file_type === 'application/pdf' ? (
+                  <div className="text-center p-8">
+                    <span className="text-6xl mb-4 block">📄</span>
+                    <p className="text-gray-600 mb-4">Documento PDF</p>
+                    <a
+                      href={selectedEvidence.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      📥 Abrir PDF
+                    </a>
+                  </div>
+                ) : (
+                  <div className="text-center p-8">
+                    <span className="text-6xl mb-4 block">📎</span>
+                    <p className="text-gray-600 mb-4">Archivo adjunto</p>
+                    <a
+                      href={selectedEvidence.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      � Descargar
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Descripción */}
+              {selectedEvidence.description && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Descripción:</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-3 rounded">
+                    {selectedEvidence.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Información adicional */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-700">Tipo:</span>
+                  <span className="ml-2 text-gray-600">{getFileTypeText(selectedEvidence.file_type)}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Fecha:</span>
+                  <span className="ml-2 text-gray-600">
+                    {new Date(selectedEvidence.created_at).toLocaleDateString('es-ES')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón de descarga */}
+              <div className="mt-6 flex justify-center">
+                <a
+                  href={selectedEvidence.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium"
+                >
+                  <span className="mr-2">📥</span>
+                  Descargar archivo original
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

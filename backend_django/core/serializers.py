@@ -330,10 +330,11 @@ class RubricEvaluationSerializer(serializers.Serializer):
 class CommentSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.username', read_only=True)
     student_name = serializers.CharField(source='student.name', read_only=True)
+    subject_name = serializers.CharField(source='subject.name', read_only=True, allow_null=True)
     
     class Meta:
         model = Comment
-        fields = ['id', 'student', 'student_name', 'author', 'author_name', 'text', 'created_at']
+        fields = ['id', 'student', 'student_name', 'subject', 'subject_name', 'author', 'author_name', 'text', 'created_at']
         read_only_fields = ['id', 'author', 'created_at']
 
 

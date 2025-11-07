@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/axios';
 
-const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName }) => {
+const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, refreshTrigger }) => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, recent, subject
@@ -10,7 +10,7 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName }) =
     if (studentId) {
       fetchActivities();
     }
-  }, [studentId, subjectId, filter]);
+  }, [studentId, subjectId, filter, refreshTrigger]);
 
   const fetchActivities = async () => {
     try {
@@ -146,8 +146,12 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName }) =
                       </span>
                     )}
                     {activity.type === 'comment' && (
-                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                        💬 Comentario
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        activity.subject 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {activity.subject ? '📚' : '💬'} {activity.subject ? 'Comentario de asignatura' : 'Comentario general'}
                       </span>
                     )}
                     <span className="text-sm text-gray-500">
@@ -156,8 +160,8 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName }) =
                   </div>
 
                   {activity.subject && (
-                    <p className="text-sm text-blue-600 font-medium">
-                      📚 {activity.subject.name}
+                    <p className="text-sm font-medium" style={{ color: '#9333ea' }}>
+                      {activity.subject.name || activity.subject_name}
                     </p>
                   )}
                 </div>

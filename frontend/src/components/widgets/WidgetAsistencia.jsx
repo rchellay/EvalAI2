@@ -28,11 +28,11 @@ const WidgetAsistencia = ({ studentId, subjectId, onAttendanceRecorded, titleCla
     try {
       setSaving(true);
       const response = await api.post('/asistencias/', {
-        student: studentId,
-        subject: subjectId,
-        date: fechaClase,
-        present: selectedStatus === 'presente',
-        reason: selectedStatus === 'ausente' ? motivo : ''
+        alumnoId: studentId,
+        asignaturaId: subjectId,
+        fechaClase: fechaClase,
+        presente: selectedStatus === 'presente',
+        motivo: selectedStatus === 'ausente' ? motivo : ''
       });
 
       if (onAttendanceRecorded) {

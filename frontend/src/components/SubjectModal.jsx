@@ -230,28 +230,35 @@ const SubjectModal = ({ subject, onClose }) => {
                 groups.map((group) => (
                   <label
                     key={group.id}
-                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                   >
-                    <input
-                      type="checkbox"
-                      checked={formData.group_ids.includes(group.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            group_ids: [...formData.group_ids, group.id]
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            group_ids: formData.group_ids.filter((id) => id !== group.id)
-                          });
-                        }
-                      }}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {group.name}
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.group_ids.includes(group.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              group_ids: [...formData.group_ids, group.id]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              group_ids: formData.group_ids.filter((id) => id !== group.id)
+                            });
+                          }
+                        }}
+                        className="appearance-none w-5 h-5 border-2 border-gray-400 dark:border-gray-500 rounded checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer transition-all"
+                      />
+                      {formData.group_ids.includes(group.id) && (
+                        <span className="material-symbols-outlined absolute text-white text-sm pointer-events-none" style={{ left: '2px', top: '2px', fontSize: '16px' }}>
+                          check
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                      {group.name} - {group.course}
                     </span>
                   </label>
                 ))

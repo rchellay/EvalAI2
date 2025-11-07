@@ -38,10 +38,10 @@ const AddCommentModal = ({ isOpen, onClose, studentId, onSuccess }) => {
 
     setLoading(true);
     try {
-      await api.post(`/students/${studentId}/comments`, {
-        content: formData.content,
-        comment_type: formData.comment_type,
-        subject_id: formData.subject_id || null
+      await api.post('/comments/', {
+        student: studentId,
+        text: formData.content,
+        subject: formData.subject_id || null
       });
       
       toast.success('Comentario añadido correctamente');

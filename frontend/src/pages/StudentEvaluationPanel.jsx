@@ -16,7 +16,6 @@ import WidgetAutoevaluacion from '../components/widgets/WidgetAutoevaluacion';
 import WidgetHistorialEvaluaciones from '../components/widgets/WidgetHistorialEvaluaciones';
 import WidgetNotificaciones from '../components/widgets/WidgetNotificaciones';
 import WidgetExportarPDF from '../components/widgets/WidgetExportarPDF';
-import WidgetGraficosAnaliticos from '../components/widgets/WidgetGraficosAnaliticos';
 
 const StudentEvaluationPanel = () => {
   const { id } = useParams();
@@ -30,6 +29,7 @@ const StudentEvaluationPanel = () => {
   const [student, setStudent] = useState(null);
   const [subject, setSubject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshHistorial, setRefreshHistorial] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -58,14 +58,17 @@ const StudentEvaluationPanel = () => {
 
   const handleEvaluationCreated = (evaluation) => {
     toast.success('Evaluación registrada exitosamente');
+    setRefreshHistorial(prev => prev + 1);
   };
 
   const handleCommentCreated = (comment) => {
     toast.success('Comentario guardado exitosamente');
+    setRefreshHistorial(prev => prev + 1);
   };
 
   const handleAudioSaved = (audio) => {
     toast.success('Audio guardado exitosamente');
+    setRefreshHistorial(prev => prev + 1);
   };
 
   const handleAttendanceRecorded = (attendance) => {
@@ -225,17 +228,10 @@ const StudentEvaluationPanel = () => {
             />
 
             <div className="md:col-span-2 lg:col-span-3">
-              <WidgetGraficosAnaliticos
-                studentId={id}
-                className="bg-white text-black border border-gray-300 rounded-md shadow-md"
-                titleClassName="text-xl font-bold text-black mb-4"
-              />
-            </div>
-
-            <div className="md:col-span-2 lg:col-span-3">
               <WidgetHistorialEvaluaciones
                 studentId={id}
                 subjectId={asignaturaId}
+                refreshTrigger={refreshHistorial}
                 className="bg-white text-black border border-gray-300 rounded-md shadow-md"
                 titleClassName="text-xl font-bold text-black mb-4"
               />

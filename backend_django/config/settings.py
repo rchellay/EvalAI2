@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -164,7 +165,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Configuration
-if DEBUG:
+# Permitir temporalmente todos los orígenes para debugging de CORS
+CORS_ALLOW_ALL_ORIGINS_TEMP = config('CORS_ALLOW_ALL_ORIGINS_TEMP', default=False, cast=bool)
+
+if CORS_ALLOW_ALL_ORIGINS_TEMP:
+    # Modo debugging: permitir todos los orígenes
+    CORS_ALLOW_ALL_ORIGINS = True
+    print("⚠️ WARNING: CORS_ALLOW_ALL_ORIGINS está habilitado para debugging", file=sys.stderr)
+elif DEBUG:
     # Desarrollo: permitir todas las solicitudes locales
     CORS_ALLOW_ALL_ORIGINS = True
 else:
@@ -212,6 +220,8 @@ CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization', 'content-type',
     'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
 ]
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # OpenRouter AI Configuration (Multi-model AI service)
 OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
