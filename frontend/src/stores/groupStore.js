@@ -29,9 +29,17 @@ const useGroupStore = create(
           const response = await api.get('/grupos/');
           console.log('[groupStore] fetchGroups - response completa:', response);
           console.log('[groupStore] fetchGroups - response.data:', response.data);
-          console.log('[groupStore] fetchGroups - response.data es array?', Array.isArray(response.data));
           
-          const groupsData = Array.isArray(response.data) ? response.data : [];
+          // El backend devuelve objeto paginado: { count, next, previous, results }
+          let groupsData = [];
+          if (response.data.results && Array.isArray(response.data.results)) {
+            groupsData = response.data.results;
+            console.log('[groupStore] fetchGroups - usando response.data.results (paginado)');
+          } else if (Array.isArray(response.data)) {
+            groupsData = response.data;
+            console.log('[groupStore] fetchGroups - usando response.data (array directo)');
+          }
+          
           console.log('[groupStore] fetchGroups - groupsData procesado:', groupsData);
           console.log('[groupStore] fetchGroups - cantidad de grupos:', groupsData.length);
           
