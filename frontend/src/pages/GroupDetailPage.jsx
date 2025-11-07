@@ -284,7 +284,7 @@ const GroupDetailPage = () => {
                   .map((subject) => (
                   <Link
                     key={subject.id}
-                    to={`/asignaturas/${subject.id}/alumnos?grupoId=${groupData.id}`}
+                    to={`/asignaturas/${subject.id}`}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                   >
                     <div className="flex items-center gap-3">

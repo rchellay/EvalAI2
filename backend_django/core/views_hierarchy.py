@@ -163,6 +163,8 @@ class GroupHierarchyViewSet(viewsets.ModelViewSet):
                     'email': student.email or '',
                     'full_name': student.full_name or '',
                     'photo': str(student.photo) if student.photo else None,
+                    'avatar_type': getattr(student, 'avatar_type', 'initial'),
+                    'avatar_value': getattr(student, 'avatar_value', ''),
                     'attendance_percentage': getattr(student, 'attendance_percentage', 0),
                     'created_at': student.created_at.isoformat() if student.created_at else None,
                     'updated_at': student.updated_at.isoformat() if student.updated_at else None

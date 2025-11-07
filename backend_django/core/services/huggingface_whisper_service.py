@@ -80,6 +80,7 @@ class HuggingFaceWhisperClient:
                 
                 logger.info(f"Iniciando transcripción con Hugging Face Whisper: {audio_file_path}")
                 logger.info(f"Tamaño del archivo: {len(audio_data)} bytes")
+                logger.info(f"Headers: {headers}")
                 
                 # Realizar petición - enviar audio directamente en el body
                 response = requests.post(
@@ -89,8 +90,12 @@ class HuggingFaceWhisperClient:
                     timeout=self.timeout
                 )
                 
+                logger.info(f"Response status code: {response.status_code}")
+                logger.info(f"Response headers: {dict(response.headers)}")
+                
                 if response.status_code == 200:
                     result = response.json()
+                    logger.info(f"Transcription result: {result}")
                     
                     # Extraer texto transcrito
                     if isinstance(result, dict):
