@@ -382,10 +382,22 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        import sys
+        print(f"[GroupViewSet] get_queryset called", file=sys.stderr, flush=True)
+        print(f"[GroupViewSet] User: {self.request.user}", file=sys.stderr, flush=True)
+        print(f"[GroupViewSet] User ID: {self.request.user.id}", file=sys.stderr, flush=True)
+        print(f"[GroupViewSet] Is superuser: {self.request.user.is_superuser}", file=sys.stderr, flush=True)
+        
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return Group.objects.all()
-        return Group.objects.filter(teacher=self.request.user)
+            groups = Group.objects.all()
+            print(f"[GroupViewSet] Superuser - returning all groups: {groups.count()}", file=sys.stderr, flush=True)
+            return groups
+            
+        groups = Group.objects.filter(teacher=self.request.user)
+        print(f"[GroupViewSet] Normal user - filtered groups: {groups.count()}", file=sys.stderr, flush=True)
+        print(f"[GroupViewSet] Groups IDs: {list(groups.values_list('id', 'name', 'teacher_id'))}", file=sys.stderr, flush=True)
+        return groups
     
     def create(self, request, *args, **kwargs):
         try:
