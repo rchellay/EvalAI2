@@ -55,7 +55,13 @@ const useGroupStore = create(
 
       // Fetch grupo con detalles completos (estudiantes, subjects, etc)
       fetchGroupDetails: async (groupId) => {
-        set({ loading: true, error: null });
+        // CRITICAL: Limpiar estado anterior para evitar renders con datos inconsistentes
+        set({ 
+          loading: true, 
+          error: null,
+          currentGroup: null,  // ← Limpiar currentGroup
+          availableStudents: []  // ← Limpiar availableStudents
+        });
         console.log('[groupStore] fetchGroupDetails - groupId:', groupId);
         try {
           // Usar Promise.all para cargar todo en paralelo
@@ -230,21 +236,27 @@ const useGroupStore = create(
   )
 );
 
-// Selectores optimizados (evitan re-renders innecesarios)
-export const selectGroups = (state) => state.groups;
-export const selectCurrentGroup = (state) => state.currentGroup;
-export const selectAvailableStudents = (state) => state.availableStudents;
-export const selectLoading = (state) => state.loading;
-export const selectError = (state) => state.error;
+// Selectores optimizados con validación defensiva
+export const selectGroups = (state) => Array.isArray(state.groups) ? state.groups : [];
+export const selectCurrentGroup = (state) => state.currentGroup || null;
+export const selectAvailableStudents = (state) => Array.isArray(state.availableStudents) ? state.availableStudents : [];
+export const selectLoading = (state) => state.loading || false;
+export const selectError = (state) => state.error || null;
 
-// Selectores derivados con memoización
-export const selectGroupById = (groupId) => (state) => 
-  state.groups.find((g) => g.id === groupId);
+// Selectores derivados con memoización y validación
+export const selectGroupById = (groupId) => (state) => {
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  return groups.find((g) => g?.id === groupId) || null;
+};
 
-export const selectGroupStudents = (state) => 
-  state.currentGroup?.students || [];
+export const selectGroupStudents = (state) => {
+  const students = state.currentGroup?.students;
+  return Array.isArray(students) ? students : [];
+};
 
-export const selectGroupCounts = (state) => 
-  state.currentGroup?.counts || {};
+export const selectGroupCounts = (state) => {
+  const counts = state.currentGroup?.counts;
+  return counts && typeof counts === 'object' ? counts : {};
+};
 
 export default useGroupStore;

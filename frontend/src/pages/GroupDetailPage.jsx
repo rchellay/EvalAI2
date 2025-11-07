@@ -85,7 +85,8 @@ const GroupDetailPage = () => {
     }
   }, [id, removeStudentFromGroup]);
 
-  if (loading) {
+  // CRITICAL: Mostrar loading si datos no están listos
+  if (loading || !group) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -93,20 +94,26 @@ const GroupDetailPage = () => {
     );
   }
 
-  if (!group) {
+  // Validación adicional de integridad de datos
+  if (!group.name || !group.course) {
+    console.error('[GroupDetail] Datos incompletos:', group);
     return (
       <div className="p-8">
-        <p className="text-red-600">Grupo no encontrado</p>
+        <p className="text-red-600">Error: datos del grupo incompletos</p>
       </div>
     );
   }
 
-  // Memoizar estudiantes disponibles (evita recalcular en cada render)
+  // Memoizar estudiantes disponibles con validación defensiva
   const studentsNotInGroup = useMemo(() => {
-    if (!students || !availableStudents) return [];
+    // DEFENSIVE: Asegurar que sean arrays antes de operar
+    const safeStudents = Array.isArray(students) ? students : [];
+    const safeAvailable = Array.isArray(availableStudents) ? availableStudents : [];
     
-    const studentIds = new Set(students.map(s => s.id));
-    return availableStudents.filter(student => !studentIds.has(student.id));
+    if (safeStudents.length === 0) return safeAvailable;
+    
+    const studentIds = new Set(safeStudents.map(s => s?.id).filter(Boolean));
+    return safeAvailable.filter(student => student?.id && !studentIds.has(student.id));
   }, [students, availableStudents]);
 
   return (
