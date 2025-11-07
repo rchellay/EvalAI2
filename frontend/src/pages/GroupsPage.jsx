@@ -1,5 +1,5 @@
 // frontend/src/pages/GroupsPage.jsx
-// v2.0 - Con debugging completo
+// v2.0.2 - FORCE VERCEL REBUILD
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ import useGroupStore, { selectGroups, selectLoading } from '../stores/groupStore
 import GroupModal from '../components/GroupModal';
 
 const GroupsPage = () => {
-  console.log('[GroupsPage v2.0] Component mounted');
+  console.log('[GroupsPage v2.0.2] Component mounted - VERCEL SHOULD REBUILD');
   const navigate = useNavigate();
   
   // Zustand store

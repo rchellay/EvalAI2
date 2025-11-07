@@ -1,11 +1,11 @@
 // frontend/src/components/GroupModal.jsx
-// v2.0 - Curso obligatorio
+// v2.0.2 - FORCE VERCEL REBUILD - Curso obligatorio
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import useGroupStore from '../stores/groupStore';
 
 const GroupModal = ({ group, onClose }) => {
-  console.log('[GroupModal v2.0] Opened. Group:', group);
+  console.log('[GroupModal v2.0.2] VERCEL REBUILD - Opened. Group:', group);
   const { createGroup, updateGroup } = useGroupStore();
   
   const [formData, setFormData] = useState({
