@@ -30,17 +30,9 @@ const GroupDetailPage = () => {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Cargar datos solo una vez cuando cambia el ID
-  useEffect(() => {
-    fetchGroupDetails(id).catch((error) => {
-      console.error('[GroupDetail] Error loading group:', error);
-      toast.error('Error al cargar el grupo');
-      navigate('/grupos');
-    });
-  }, [id, fetchGroupDetails, navigate]);
-
-  // Handlers optimizados con useCallback
+  // Handlers optimizados con useCallback (ANTES de early returns)
   const handleAddStudents = useCallback(async () => {
     if (selectedStudents.length === 0) {
       toast.error('Selecciona al menos un estudiante');
@@ -85,8 +77,20 @@ const GroupDetailPage = () => {
     }
   }, [id, removeStudentFromGroup]);
 
-  // CRITICAL: Mostrar loading si datos no están listos
-  if (loading || !group) {
+  // Cargar datos solo una vez cuando cambia el ID
+  useEffect(() => {
+    setIsInitialized(false);
+    fetchGroupDetails(id)
+      .then(() => setIsInitialized(true))
+      .catch((error) => {
+        console.error('[GroupDetail] Error loading group:', error);
+        toast.error('Error al cargar el grupo');
+        navigate('/grupos');
+      });
+  }, [id, fetchGroupDetails, navigate]);
+
+  // CRITICAL: No renderizar hasta que los datos estén listos
+  if (!isInitialized || loading || !group) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
