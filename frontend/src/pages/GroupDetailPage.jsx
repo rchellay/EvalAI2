@@ -77,6 +77,18 @@ const GroupDetailPage = () => {
     }
   }, [id, removeStudentFromGroup]);
 
+  // Memoizar estudiantes disponibles con validación defensiva (ANTES de early returns)
+  const studentsNotInGroup = useMemo(() => {
+    // DEFENSIVE: Asegurar que sean arrays antes de operar
+    const safeStudents = Array.isArray(students) ? students : [];
+    const safeAvailable = Array.isArray(availableStudents) ? availableStudents : [];
+    
+    if (safeStudents.length === 0) return safeAvailable;
+    
+    const studentIds = new Set(safeStudents.map(s => s?.id).filter(Boolean));
+    return safeAvailable.filter(student => student?.id && !studentIds.has(student.id));
+  }, [students, availableStudents]);
+
   // Cargar datos solo una vez cuando cambia el ID
   useEffect(() => {
     setIsInitialized(false);
@@ -107,18 +119,6 @@ const GroupDetailPage = () => {
       </div>
     );
   }
-
-  // Memoizar estudiantes disponibles con validación defensiva
-  const studentsNotInGroup = useMemo(() => {
-    // DEFENSIVE: Asegurar que sean arrays antes de operar
-    const safeStudents = Array.isArray(students) ? students : [];
-    const safeAvailable = Array.isArray(availableStudents) ? availableStudents : [];
-    
-    if (safeStudents.length === 0) return safeAvailable;
-    
-    const studentIds = new Set(safeStudents.map(s => s?.id).filter(Boolean));
-    return safeAvailable.filter(student => student?.id && !studentIds.has(student.id));
-  }, [students, availableStudents]);
 
   return (
     <div className="flex-1 p-8 overflow-y-auto bg-background-light dark:bg-background-dark">
