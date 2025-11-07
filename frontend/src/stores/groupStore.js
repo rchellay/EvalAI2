@@ -55,14 +55,11 @@ const useGroupStore = create(
 
       // Fetch grupo con detalles completos (estudiantes, subjects, etc)
       fetchGroupDetails: async (groupId) => {
-        // CRITICAL: Limpiar estado anterior para evitar renders con datos inconsistentes
-        set({ 
-          loading: true, 
-          error: null,
-          currentGroup: null,  // ← Limpiar currentGroup
-          availableStudents: []  // ← Limpiar availableStudents
-        });
-        console.log('[groupStore] fetchGroupDetails - groupId:', groupId);
+        // IMPORTANT: Marcar loading pero conservar currentGroup temporalmente
+        // para evitar renders transitorios que provoquen inconsistencias en componentes
+        console.log('[groupStore] fetchGroupDetails - preparing to fetch, groupId:', groupId);
+        set({ loading: true, error: null });
+        console.log('[groupStore] fetchGroupDetails - state after set loading:', get().currentGroup ? 'has currentGroup' : 'no currentGroup');
         try {
           // Usar Promise.all para cargar todo en paralelo
           // Endpoint unificado: ?exclude_from_group en lugar de /available_for_group/
@@ -95,11 +92,13 @@ const useGroupStore = create(
           console.log('[groupStore] fetchGroupDetails - groupData procesado:', groupData);
           console.log('[groupStore] fetchGroupDetails - availableStudents:', availableStudentsData.length);
 
+          // Actualizar estado al finalizar
           set({ 
             currentGroup: groupData,
             availableStudents: availableStudentsData,
             loading: false 
           });
+          console.log('[groupStore] fetchGroupDetails - state updated, currentGroup id:', get().currentGroup?.id);
           
           return groupData;
         } catch (error) {
