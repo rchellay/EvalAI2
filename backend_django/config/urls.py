@@ -34,7 +34,8 @@ urlpatterns = [
     
     # Django Allauth & Social Authentication
     path('api/auth/', include('dj_rest_auth.urls')),
-    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+    # DESHABILITADO: Registro público - Solo teachers deben tener cuentas
+    # path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')),
     
     # Google OAuth callback with JWT

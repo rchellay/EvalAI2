@@ -225,18 +225,12 @@ export default function StudentFormPage() {
         navigate(`/grupos/${groupId}?refresh=${Date.now()}`, { replace: true });
       } else {
         // Crear estudiante sin grupo específico - solo requiere name
-        console.log('[StudentFormPage] Path: Crear SIN grupo (fallback)');
-        const studentData = {
-          name: formData.username,
-          apellidos: formData.apellidos || '',
-          email: formData.email || ''
-        };
-        await api.post('/students/', studentData);
-        toast.success('Estudiante creado correctamente');
-        
-        // NUNCA navegar a /estudiantes - volver al dashboard
-        console.log('[StudentFormPage] Navegando a dashboard (sin groupId)');
-        navigate('/dashboard');
+        // CRÍTICO: NUNCA crear estudiante sin grupo
+        console.log('[StudentFormPage] ERROR: Intentando crear estudiante sin grupo');
+        toast.error('Error: No se puede crear un estudiante sin grupo. Vuelve al grupo y crea el estudiante desde allí.');
+        setLoading(false);
+        navigate('/grupos');
+        return;
       }
     } catch (error) {
       console.error('Error saving student:', error);
