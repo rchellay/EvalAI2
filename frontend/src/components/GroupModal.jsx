@@ -37,28 +37,46 @@ const GroupModal = ({ group, onClose }) => {
     e.preventDefault();
     setLoading(true);
 
-    console.log('[GroupModal] handleSubmit - formData:', formData);
+    console.log('[GroupModal] handleSubmit INICIADO');
+    console.log('[GroupModal] formData:', formData);
+    console.log('[GroupModal] formData.name:', formData.name);
+    console.log('[GroupModal] formData.course:', formData.course);
 
     try {
+      // Validación explícita
+      if (!formData.name || !formData.name.trim()) {
+        console.error('[GroupModal] ERROR: Nombre vacío');
+        toast.error('El nombre del grupo es obligatorio');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.course || !formData.course.trim()) {
+        console.error('[GroupModal] ERROR: Curso vacío');
+        toast.error('Debes seleccionar un curso');
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         name: formData.name,
         course: formData.course
       };
 
-      console.log('[GroupModal] Payload:', payload);
+      console.log('[GroupModal] Payload válido:', payload);
 
       if (group) {
         console.log('[GroupModal] Updating group:', group.id);
         await updateGroup(group.id, payload);
         toast.success('Grupo actualizado');
       } else {
-        console.log('[GroupModal] Creating new group');
+        console.log('[GroupModal] Creating new group...');
         const newGroup = await createGroup(payload);
-        console.log('[GroupModal] Group created:', newGroup);
+        console.log('[GroupModal] Group created successfully:', newGroup);
         toast.success('Grupo creado');
       }
 
-      console.log('[GroupModal] Calling onClose(true)');
+      console.log('[GroupModal] Calling onClose(true) to refresh');
       onClose(true);
     } catch (error) {
       console.error('Error saving group:', error);
