@@ -56,14 +56,28 @@ const useGroupStore = create(
       // Fetch grupo con detalles completos (estudiantes, subjects, etc)
       fetchGroupDetails: async (groupId) => {
         set({ loading: true, error: null });
+        console.log('[groupStore] fetchGroupDetails - groupId:', groupId);
         try {
           // Usar Promise.all para cargar todo en paralelo
           // Endpoint unificado: ?exclude_from_group en lugar de /available_for_group/
+          console.log('[groupStore] fetchGroupDetails - iniciando peticiones paralelas');
           const [groupResponse, studentsResponse, availableResponse] = await Promise.all([
             api.get(`/grupos/${groupId}`),
             api.get(`/grupos/${groupId}/alumnos/`),
             api.get(`/estudiantes/?exclude_from_group=${groupId}`)
           ]);
+
+          console.log('[groupStore] fetchGroupDetails - groupResponse.data:', groupResponse.data);
+          console.log('[groupStore] fetchGroupDetails - studentsResponse.data:', studentsResponse.data);
+          console.log('[groupStore] fetchGroupDetails - availableResponse.data:', availableResponse.data);
+
+          // Manejar paginación en estudiantes disponibles
+          let availableStudentsData = [];
+          if (availableResponse.data?.results && Array.isArray(availableResponse.data.results)) {
+            availableStudentsData = availableResponse.data.results;
+          } else if (Array.isArray(availableResponse.data)) {
+            availableStudentsData = availableResponse.data;
+          }
 
           const groupData = {
             ...groupResponse.data,
@@ -72,9 +86,12 @@ const useGroupStore = create(
             total_students: (studentsResponse.data.students || []).length
           };
 
+          console.log('[groupStore] fetchGroupDetails - groupData procesado:', groupData);
+          console.log('[groupStore] fetchGroupDetails - availableStudents:', availableStudentsData.length);
+
           set({ 
             currentGroup: groupData,
-            availableStudents: availableResponse.data || [],
+            availableStudents: availableStudentsData,
             loading: false 
           });
           
