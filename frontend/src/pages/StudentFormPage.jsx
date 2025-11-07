@@ -224,8 +224,7 @@ export default function StudentFormPage() {
         // Usar replace y forzar recarga con timestamp
         navigate(`/grupos/${groupId}?refresh=${Date.now()}`, { replace: true });
       } else {
-        // Crear estudiante sin grupo específico - solo requiere name
-        // CRÍTICO: NUNCA crear estudiante sin grupo
+        // CRÍTICO: NUNCA crear estudiante sin grupo - Estudiantes deben pertenecer a un grupo
         console.log('[StudentFormPage] ERROR: Intentando crear estudiante sin grupo');
         toast.error('Error: No se puede crear un estudiante sin grupo. Vuelve al grupo y crea el estudiante desde allí.');
         setLoading(false);
