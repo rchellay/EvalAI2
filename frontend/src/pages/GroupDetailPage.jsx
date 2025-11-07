@@ -30,7 +30,8 @@ const GroupDetailPage = () => {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // CRITICAL: true inicialmente para permitir que hooks se ejecuten en primer render
+  const [isInitialized, setIsInitialized] = useState(true);
 
   // Handlers optimizados con useCallback (ANTES de early returns)
   const handleAddStudents = useCallback(async () => {
