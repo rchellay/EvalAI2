@@ -74,18 +74,18 @@ class HuggingFaceWhisperClient:
             if language:
                 params['language'] = language
             
-            # Leer archivo de audio
+            # Leer archivo de audio y enviarlo directamente en el body
             with open(audio_file_path, 'rb') as audio_file:
-                files = {'audio': audio_file}
+                audio_data = audio_file.read()
                 
                 logger.info(f"Iniciando transcripción con Hugging Face Whisper: {audio_file_path}")
+                logger.info(f"Tamaño del archivo: {len(audio_data)} bytes")
                 
-                # Realizar petición
+                # Realizar petición - enviar audio directamente en el body
                 response = requests.post(
                     self.api_url,
                     headers=headers,
-                    files=files,
-                    params=params,
+                    data=audio_data,  # Enviar audio directamente, no como multipart
                     timeout=self.timeout
                 )
                 

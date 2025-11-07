@@ -283,7 +283,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         if group_id:
             try:
                 group = Group.objects.get(id=group_id)
-                students = group.students.all()
+                students = group.alumnos.all()  # Usar 'alumnos' en lugar de 'students'
             except Group.DoesNotExist:
                 return Response({
                     'success': False,

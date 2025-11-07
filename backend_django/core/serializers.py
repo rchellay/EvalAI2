@@ -110,6 +110,7 @@ class GroupSerializer(serializers.ModelSerializer):
     total_subgrupos = serializers.SerializerMethodField()
     subject_count = serializers.SerializerMethodField()
     students = serializers.SerializerMethodField()
+    subjects = serializers.SerializerMethodField()  # Serializar subjects con datos completos
     course = serializers.CharField(default='4t ESO', required=False)
     teacher = serializers.PrimaryKeyRelatedField(read_only=True)  # Make teacher explicitly read-only
 
@@ -121,6 +122,23 @@ class GroupSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'teacher', 'teacher_name', 'created_at', 'updated_at']
+    
+    def get_subjects(self, obj):
+        """Devuelve lista completa de asignaturas con sus datos"""
+        try:
+            subjects = obj.subjects.all()
+            return [{
+                'id': s.id,
+                'name': s.name,
+                'nombre': s.name,  # Alias para compatibilidad
+                'color': s.color if hasattr(s, 'color') else '#3b82f6',
+                'course': s.course if hasattr(s, 'course') else '',
+                'curso': s.course if hasattr(s, 'course') else ''  # Alias para compatibilidad
+            } for s in subjects]
+        except Exception as e:
+            import sys
+            print(f"ERROR en get_subjects: {str(e)}", file=sys.stderr, flush=True)
+            return []
 
     def get_students(self, obj):
         """Devuelve lista completa de estudiantes del grupo"""
