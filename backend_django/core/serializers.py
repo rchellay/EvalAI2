@@ -475,6 +475,38 @@ class EvidenceSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+    
+    def validate_file(self, value):
+        """Validar archivo incluyendo soporte para formatos de iPhone (HEIC/HEIF)"""
+        # Permitir formatos comunes + formatos de iPhone
+        allowed_extensions = [
+            '.pdf', '.doc', '.docx', '.txt',
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
+            '.heic', '.heif',  # Formatos de iPhone
+            '.mp3', '.wav', '.m4a', '.ogg',
+            '.mp4', '.mov', '.avi',
+            '.zip', '.rar'
+        ]
+        
+        # Obtener extensión del archivo
+        import os
+        file_ext = os.path.splitext(value.name)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            raise serializers.ValidationError(
+                f'Formato de archivo no permitido: {file_ext}. '
+                f'Formatos permitidos: {", ".join(allowed_extensions)}'
+            )
+        
+        # Validar tamaño máximo (50MB)
+        max_size = 50 * 1024 * 1024  # 50MB
+        if value.size > max_size:
+            raise serializers.ValidationError(
+                f'El archivo es demasiado grande ({value.size / (1024*1024):.1f}MB). '
+                f'Tamaño máximo: 50MB'
+            )
+        
+        return value
 
 
 class SelfEvaluationSerializer(serializers.ModelSerializer):

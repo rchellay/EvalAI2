@@ -14,6 +14,29 @@ from pathlib import Path
 from decouple import config
 import sys
 
+# Debug logging para variables de entorno críticas
+print("\n" + "="*60, file=sys.stderr)
+print("🔍 DIAGNOSTIC: Checking environment variables at startup", file=sys.stderr)
+print("="*60, file=sys.stderr)
+
+# Check HUGGINGFACE_API_KEY
+huggingface_key = config('HUGGINGFACE_API_KEY', default=None)
+if huggingface_key:
+    print(f"✅ HUGGINGFACE_API_KEY found (ends with: ...{huggingface_key[-8:]})", file=sys.stderr)
+else:
+    print("❌ HUGGINGFACE_API_KEY NOT FOUND in environment variables", file=sys.stderr)
+
+# Check Cloudinary keys
+cloudinary_name = config('CLOUDINARY_CLOUD_NAME', default=None)
+cloudinary_api = config('CLOUDINARY_API_KEY', default=None)
+cloudinary_secret = config('CLOUDINARY_API_SECRET', default=None)
+if all([cloudinary_name, cloudinary_api, cloudinary_secret]):
+    print(f"✅ Cloudinary credentials found (cloud: {cloudinary_name})", file=sys.stderr)
+else:
+    print("⚠️ Cloudinary credentials incomplete or missing", file=sys.stderr)
+
+print("="*60 + "\n", file=sys.stderr)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -67,6 +90,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    
+    # Cloudinary for media files in production
+    'cloudinary_storage',
+    'cloudinary',
     
     # Local
     'core',
@@ -160,9 +187,41 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files configuration
+# En producción usa Cloudinary, en desarrollo usa sistema de archivos local
+USE_CLOUDINARY = config('USE_CLOUDINARY', default=not DEBUG, cast=bool)
+
+if USE_CLOUDINARY:
+    # Cloudinary configuration para producción
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+    
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+        'API_KEY': config('CLOUDINARY_API_KEY', default=''),
+        'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+    }
+    
+    # Solo configurar Cloudinary si tenemos las credenciales
+    if all([CLOUDINARY_STORAGE['CLOUD_NAME'], CLOUDINARY_STORAGE['API_KEY'], CLOUDINARY_STORAGE['API_SECRET']]):
+        cloudinary.config(
+            cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+            api_key=CLOUDINARY_STORAGE['API_KEY'],
+            api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+            secure=True
+        )
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        MEDIA_URL = '/media/'
+        print("✅ Cloudinary configurado para archivos media", file=sys.stderr)
+    else:
+        print("⚠️ Cloudinary no configurado - falta alguna credencial", file=sys.stderr)
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    # Desarrollo: usar sistema de archivos local
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Configuration
 # Permitir temporalmente todos los orígenes para debugging de CORS
