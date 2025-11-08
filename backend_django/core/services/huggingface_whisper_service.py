@@ -20,9 +20,9 @@ class HuggingFaceWhisperClient:
     """Cliente para transcripción de audio usando Hugging Face Whisper"""
     
     def __init__(self):
-        # ACTUALIZADO: Usar modelo de whisper que funciona con la API actual
-        # El modelo openai/whisper-base y whisper-large-v3 retornan 410 Gone
-        # Usar distil-whisper que es más rápido y funciona
+        # ACTUALIZADO 2025-11-08: Usar distil-whisper (más rápido, funciona con API actual)
+        # Los modelos openai/whisper-* retornan 410 Gone (deprecated)
+        # distil-whisper/distil-large-v3 es 6x más rápido y está activamente mantenido
         self.api_url = "https://api-inference.huggingface.co/models/distil-whisper/distil-large-v3"
         self.api_key = getattr(settings, 'HUGGINGFACE_API_KEY', None)
         self.timeout = getattr(settings, 'HUGGINGFACE_TIMEOUT', 120)  # Aumentar timeout para Whisper

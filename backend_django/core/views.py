@@ -1409,6 +1409,33 @@ class EvidenceViewSet(viewsets.ModelViewSet):
         # Usuarios normales solo ven sus evidencias
         return Evidence.objects.filter(uploaded_by=self.request.user)
     
+    def destroy(self, request, *args, **kwargs):
+        """Allow deletion of evidences (including broken ones from before Cloudinary)"""
+        import sys
+        instance = self.get_object()
+        print(f"[EVIDENCE] DELETE /api/evidences/{instance.id}/ - User: {request.user.username}", file=sys.stderr, flush=True)
+        
+        try:
+            # Try to delete file from storage (Cloudinary or local)
+            if instance.file:
+                try:
+                    instance.file.delete(save=False)
+                    print(f"[EVIDENCE] File deleted from storage: {instance.file.name}", file=sys.stderr, flush=True)
+                except Exception as e:
+                    # File might not exist (broken URLs), continue anyway
+                    print(f"[EVIDENCE] Warning: Could not delete file from storage: {str(e)}", file=sys.stderr, flush=True)
+            
+            # Delete database record
+            instance.delete()
+            print(f"[EVIDENCE] Evidence deleted successfully: {instance.id}", file=sys.stderr, flush=True)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            print(f"[EVIDENCE] Error deleting evidence: {str(e)}", file=sys.stderr, flush=True)
+            return Response({
+                'error': str(e),
+                'detail': 'Error al eliminar la evidencia'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     def create(self, request, *args, **kwargs):
         """Override create to add better error handling and logging"""
         import sys
