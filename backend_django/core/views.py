@@ -1403,11 +1403,24 @@ class EvidenceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        # Superusers ven todo
-        if self.request.user.is_superuser:
-            return Evidence.objects.all()
-        # Usuarios normales solo ven sus evidencias
-        return Evidence.objects.filter(uploaded_by=self.request.user)
+        """Filter evidences by student query parameter"""
+        queryset = Evidence.objects.all()
+        
+        # Filter by student if provided in query params
+        student_id = self.request.query_params.get('student', None)
+        if student_id:
+            queryset = queryset.filter(student_id=student_id)
+        
+        # Filter by subject if provided
+        subject_id = self.request.query_params.get('subject', None)
+        if subject_id:
+            queryset = queryset.filter(subject_id=subject_id)
+        
+        # Only allow users to see their own uploaded evidences or evidences of their students
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(uploaded_by=self.request.user)
+        
+        return queryset.order_by('-created_at')
     
     def destroy(self, request, *args, **kwargs):
         """Allow deletion of evidences (including broken ones from before Cloudinary)"""

@@ -39,6 +39,22 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
     }
   };
 
+  const handleDelete = async (evidenceId) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta evidencia?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/evidences/${evidenceId}/`);
+      setEvidences(prev => prev.filter(e => e.id !== evidenceId));
+      setSelectedEvidence(null); // Cerrar modal
+      alert('Evidencia eliminada correctamente');
+    } catch (error) {
+      console.error('Error eliminando evidencia:', error);
+      alert('Error al eliminar la evidencia. Inténtalo de nuevo.');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -395,8 +411,8 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                 </div>
               </div>
 
-              {/* Botón de descarga */}
-              <div className="mt-6 flex justify-center">
+              {/* Botón de descarga y eliminar */}
+              <div className="mt-6 flex justify-center gap-4">
                 <a
                   href={selectedEvidence.file_url}
                   target="_blank"
@@ -406,6 +422,13 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                   <span className="mr-2">📥</span>
                   Descargar archivo original
                 </a>
+                <button
+                  onClick={() => handleDelete(selectedEvidence.id)}
+                  className="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 font-medium"
+                >
+                  <span className="mr-2">🗑️</span>
+                  Eliminar
+                </button>
               </div>
             </div>
           </div>
