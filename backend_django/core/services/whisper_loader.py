@@ -110,14 +110,39 @@ class GoogleSpeechService:
             # Configurar audio
             audio = speech.RecognitionAudio(content=content)
             
+            # Detectar formato del archivo
+            file_extension = audio_path.lower().split('.')[-1]
+            
+            # Configurar encoding según extensión
+            if file_extension == 'webm':
+                encoding = speech.RecognitionConfig.AudioEncoding.WEBM_OPUS
+                sample_rate = None  # Dejar que Google lo detecte automáticamente
+                print("[SPEECH] Formato detectado: WEBM OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
+            elif file_extension == 'ogg':
+                encoding = speech.RecognitionConfig.AudioEncoding.OGG_OPUS
+                sample_rate = None
+                print("[SPEECH] Formato detectado: OGG OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
+            elif file_extension in ['mp3', 'mpeg']:
+                encoding = speech.RecognitionConfig.AudioEncoding.MP3
+                sample_rate = None
+                print("[SPEECH] Formato detectado: MP3 (autodetectar sample rate)", file=sys.stderr, flush=True)
+            else:
+                # Por defecto LINEAR16 a 16000 Hz para WAV
+                encoding = speech.RecognitionConfig.AudioEncoding.LINEAR16
+                sample_rate = 16000
+                print("[SPEECH] Formato detectado: WAV LINEAR16 a 16000 Hz", file=sys.stderr, flush=True)
+            
             # Configurar reconocimiento
             config = speech.RecognitionConfig(
-                encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-                sample_rate_hertz=16000,
+                encoding=encoding,
                 language_code=language,
                 enable_automatic_punctuation=True,
                 model="default"
             )
+            
+            # Solo añadir sample_rate si está definido
+            if sample_rate:
+                config.sample_rate_hertz = sample_rate
             
             # Realizar transcripción
             print("[SPEECH] Enviando audio a Google Speech API...", file=sys.stderr, flush=True)
