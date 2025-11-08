@@ -40,7 +40,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
   };
 
   const handleDelete = async (evidenceId) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta evidencia?')) {
+    if (!confirm('Â¿EstÃ¡s seguro de que deseas eliminar esta evidencia?')) {
       return;
     }
 
@@ -51,7 +51,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
       alert('Evidencia eliminada correctamente');
     } catch (error) {
       console.error('Error eliminando evidencia:', error);
-      alert('Error al eliminar la evidencia. Inténtalo de nuevo.');
+      alert('Error al eliminar la evidencia. IntÃ©ntalo de nuevo.');
     }
   };
 
@@ -75,7 +75,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
 
   const uploadEvidence = async () => {
     if (!formData.title.trim() || !formData.file) {
-      alert('El título y archivo son obligatorios');
+      alert('El tÃ­tulo y archivo son obligatorios');
       return;
     }
 
@@ -86,7 +86,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
       return;
     }
 
-    // Validar tamaño (máximo 10MB)
+    // Validar tamaÃ±o (mÃ¡ximo 10MB)
     if (formData.file.size > 10 * 1024 * 1024) {
       alert('El archivo no puede superar los 10MB');
       return;
@@ -133,9 +133,9 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
   };
 
   const getFileIcon = (fileType) => {
-    if (fileType?.startsWith('image/')) return '🖼️';
-    if (fileType === 'application/pdf') return '📄';
-    return '📎';
+    if (fileType?.startsWith('image/')) return 'ðŸ–¼ï¸';
+    if (fileType === 'application/pdf') return 'ðŸ“„';
+    return 'ðŸ“Ž';
   };
 
   const getFileTypeText = (fileType) => {
@@ -158,14 +158,14 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
     <div className="bg-white p-6 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-4">
         <h3 className={titleClassName ? `${titleClassName} flex items-center` : "text-lg font-semibold mb-4 flex items-center"}>
-          <span className="mr-2">🧾</span>
+          <span className="mr-2">ðŸ§¾</span>
           Evidencias / Archivos
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
           className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
         >
-          {showForm ? 'Cancelar' : '📎 Subir'}
+          {showForm ? 'Cancelar' : 'ðŸ“Ž Subir'}
         </button>
       </div>
 
@@ -176,21 +176,21 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Título *
+                TÃ­tulo *
               </label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Ej: Trabajo del cuaderno de matemáticas"
+                placeholder="Ej: Trabajo del cuaderno de matemÃ¡ticas"
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
+                DescripciÃ³n
               </label>
               <textarea
                 name="description"
@@ -214,7 +214,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                 className="w-full p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black bg-white placeholder-gray-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Formatos permitidos: JPG, PNG, GIF, PDF (máx. 10MB)
+                Formatos permitidos: JPG, PNG, GIF, PDF (mÃ¡x. 10MB)
               </p>
               {formData.file && (
                 <p className="text-sm text-green-600 mt-1">
@@ -234,7 +234,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                   Subiendo...
                 </>
               ) : (
-                '📤 Subir Evidencia'
+                'ðŸ“¤ Subir Evidencia'
               )}
             </button>
           </div>
@@ -244,13 +244,13 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
       <div className="space-y-4">
         {safeEvidences.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-2">📎</div>
-            <p>No hay evidencias subidas aún</p>
-            <p className="text-sm">Haz clic en "Subir" para añadir la primera evidencia</p>
+            <div className="text-4xl mb-2">ðŸ“Ž</div>
+            <p>No hay evidencias subidas aÃºn</p>
+            <p className="text-sm">Haz clic en "Subir" para aÃ±adir la primera evidencia</p>
           </div>
         ) : (
           <>
-            {/* Galería de imágenes */}
+            {/* GalerÃ­a de imÃ¡genes */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {safeEvidences.map(evidence => (
                 <div 
@@ -272,21 +272,21 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                           }}
                         />
                         <div className="hidden w-full h-full items-center justify-center">
-                          <span className="text-5xl">🖼️</span>
+                          <span className="text-5xl">ðŸ–¼ï¸</span>
                         </div>
                         {/* Overlay al hover */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <span className="text-white text-sm font-medium">👁️ Ver</span>
+                          <span className="text-white text-sm font-medium">ðŸ‘ï¸ Ver</span>
                         </div>
                       </>
                     ) : evidence.file_type === 'application/pdf' ? (
                       <div className="flex flex-col items-center justify-center">
-                        <span className="text-5xl mb-2">📄</span>
+                        <span className="text-5xl mb-2">ðŸ“„</span>
                         <span className="text-xs text-gray-600 font-medium">PDF</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <span className="text-5xl mb-2">📎</span>
+                        <span className="text-5xl mb-2">ðŸ“Ž</span>
                         <span className="text-xs text-gray-600 font-medium">Archivo</span>
                       </div>
                     )}
@@ -344,7 +344,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                 onClick={() => setSelectedEvidence(null)}
                 className="ml-4 text-gray-400 hover:text-gray-600 text-2xl leading-none"
               >
-                ×
+                Ã—
               </button>
             </div>
 
@@ -370,7 +370,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                   </div>
                 ) : (
                   <div className="text-center p-8">
-                    <span className="text-6xl mb-4 block">📎</span>
+                    <span className="text-6xl mb-4 block">ðŸ“Ž</span>
                     <p className="text-gray-600 mb-4">Archivo adjunto</p>
                     <a
                       href={selectedEvidence.file_url}
@@ -378,23 +378,23 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                       rel="noopener noreferrer"
                       className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                     >
-                      � Descargar
+                      ï¿½ Descargar
                     </a>
                   </div>
                 )}
               </div>
 
-              {/* Descripción */}
+              {/* DescripciÃ³n */}
               {selectedEvidence.description && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Descripción:</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">DescripciÃ³n:</h4>
                   <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-3 rounded">
                     {selectedEvidence.description}
                   </p>
                 </div>
               )}
 
-              {/* Información adicional */}
+              {/* InformaciÃ³n adicional */}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium text-gray-700">Tipo:</span>
@@ -408,7 +408,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                 </div>
               </div>
 
-              {/* Botón de descarga y eliminar */}
+              {/* BotÃ³n de descarga y eliminar */}
               <div className="mt-6 flex justify-center gap-4">
                 <a
                   href={selectedEvidence.file_url}
@@ -416,14 +416,14 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                   rel="noopener noreferrer"
                   className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium"
                 >
-                  <span className="mr-2">📥</span>
+                  <span className="mr-2">ðŸ“¥</span>
                   Descargar archivo original
                 </a>
                 <button
                   onClick={() => handleDelete(selectedEvidence.id)}
                   className="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 font-medium"
                 >
-                  <span className="mr-2">🗑️</span>
+                  <span className="mr-2">ðŸ—‘ï¸</span>
                   Eliminar
                 </button>
               </div>
