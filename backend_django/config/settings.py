@@ -291,9 +291,9 @@ GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-educ
 GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
 GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
-# Whisper.cpp Configuration (Local Audio Transcription)
-WHISPER_CPP_PATH = config('WHISPER_CPP_PATH', default='/opt/whisper.cpp')
-WHISPER_MODEL_PATH = config('WHISPER_MODEL_PATH', default='/opt/whisper.cpp/models/ggml-medium.bin')
+# OpenAI Whisper Configuration (Cloud Audio Transcription)
+# Faster Whisper Configuration (100% gratis, sin API keys)
+WHISPER_MODEL_SIZE = config('WHISPER_MODEL_SIZE', default='small')  # tiny, base, small, medium, large
 WHISPER_TIMEOUT = config('WHISPER_TIMEOUT', default=120, cast=int)  # 120s timeout for audio processing
 WHISPER_MAX_FILE_SIZE = config('WHISPER_MAX_FILE_SIZE', default=25 * 1024 * 1024, cast=int)  # 25MB
 

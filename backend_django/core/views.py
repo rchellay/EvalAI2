@@ -33,7 +33,7 @@ from .serializers import (
     UserSettingsSerializer, CustomEventSerializer
 )
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
-from .services.whisper_cpp_service import get_whisper_client, WhisperCppError
+from .services.whisper_loader import get_whisper_service
 from .services.openrouter_service import openrouter_client, OpenRouterServiceError
 
 
@@ -1766,15 +1766,19 @@ def audio_evaluation(request):
         print(f"[AUDIO] Archivo temporal guardado en: {temp_file_path}", file=sys.stderr, flush=True)
 
         try:
-            # Transcribir audio con Whisper.cpp local
+            # Transcribir audio con faster-whisper (100% gratuito)
             print(f"[AUDIO] Iniciando transcripción para estudiante {student_id}", file=sys.stderr, flush=True)
-            whisper_client = get_whisper_client()
-            print(f"[AUDIO] Whisper.cpp disponible: {whisper_client.is_available()}", file=sys.stderr, flush=True)
+            whisper_service = get_whisper_service()
+            print(f"[AUDIO] Faster-Whisper disponible: {whisper_service.is_available()}", file=sys.stderr, flush=True)
             
-            if not whisper_client.is_available():
-                raise Exception("Servicio de transcripción no disponible. Verifica la instalación de Whisper.cpp.")
+            if not whisper_service.is_available():
+                raise Exception("Servicio de transcripción no disponible. Instala: pip install faster-whisper")
             
-            transcription = whisper_client.transcribe_audio(temp_file_path, language='es')
+            transcription = whisper_service.transcribe_audio(temp_file_path, language='es')
+            
+            if not transcription:
+                raise Exception("No se pudo obtener transcripción del audio")
+                
             print(f"[AUDIO] Transcripción completada: {transcription[:100]}...", file=sys.stderr, flush=True)
 
             # Crear evaluación con la transcripción (sin IA de resumen)
@@ -1806,10 +1810,6 @@ def audio_evaluation(request):
     except Subject.DoesNotExist:
         print(f"[AUDIO] ERROR: Asignatura no encontrada: {subject_id}", file=sys.stderr, flush=True)
         return Response({'error': 'Asignatura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-    except WhisperCppError as e:
-        print(f"[AUDIO] ERROR WhisperCppError: {str(e)}", file=sys.stderr, flush=True)
-        print(f"[AUDIO] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
-        return Response({'error': f'Error en transcripción: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         print(f"[AUDIO] ERROR Exception: {str(e)}", file=sys.stderr, flush=True)
         print(f"[AUDIO] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
