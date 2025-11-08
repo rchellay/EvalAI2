@@ -29,7 +29,10 @@ class HuggingFaceWhisperClient:
         self.max_file_size = getattr(settings, 'HUGGINGFACE_MAX_FILE_SIZE', 25 * 1024 * 1024)  # 25MB
         
         if not self.api_key:
-            logger.warning("HUGGINGFACE_API_KEY no configurada - la API gratuita puede tener límites")
+            logger.warning("⚠️ HUGGINGFACE_API_KEY no configurada")
+            logger.warning("⚠️ La API gratuita de HuggingFace tiene límites muy estrictos")
+            logger.warning("⚠️ Obtén una API key gratuita en: https://huggingface.co/settings/tokens")
+            print("⚠️ HUGGINGFACE_API_KEY no configurada - la API gratuita puede tener límites", flush=True)
     
     def transcribe_audio(
         self, 
@@ -121,13 +124,28 @@ class HuggingFaceWhisperClient:
                 elif response.status_code == 401:
                     raise HuggingFaceWhisperError("Error de autenticación. Verifica tu API key de Hugging Face.")
                     
+                elif response.status_code == 403:
+                    if not self.api_key:
+                        raise HuggingFaceWhisperError(
+                            "Acceso denegado. La API gratuita sin API key tiene límites muy estrictos. "
+                            "Por favor configura HUGGINGFACE_API_KEY en las variables de entorno de Render. "
+                            "Obtén una API key gratuita en: https://huggingface.co/settings/tokens"
+                        )
+                    raise HuggingFaceWhisperError("Acceso denegado. Verifica tu API key de Hugging Face.")
+                    
                 else:
                     error_msg = f"Error en Hugging Face API: {response.status_code}"
                     try:
                         error_detail = response.json()
-                        error_msg += f" - {error_detail}"
+                        error_msg += f" - {json.dumps(error_detail)}"
+                        logger.error(f"Error detail: {error_detail}")
                     except:
-                        error_msg += f" - {response.text}"
+                        error_text = response.text[:500]  # Limitar a 500 caracteres
+                        error_msg += f" - {error_text}"
+                        logger.error(f"Error text: {error_text}")
+                    
+                    if not self.api_key:
+                        error_msg += " | NOTA: No hay API key configurada. Configura HUGGINGFACE_API_KEY en Render."
                     
                     raise HuggingFaceWhisperError(error_msg)
                     
