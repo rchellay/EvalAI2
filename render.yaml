@@ -4,8 +4,6 @@ services:
     env: python
     buildCommand: |
       cd backend_django
-      chmod +x install_whisper.sh
-      bash install_whisper.sh
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
     startCommand: |
@@ -28,10 +26,8 @@ services:
           property: connectionString
       - key: OPENROUTER_API_KEY
         sync: false
-      - key: WHISPER_CPP_PATH
-        value: /opt/whisper.cpp
-      - key: WHISPER_MODEL_PATH
-        value: /opt/whisper.cpp/models/ggml-medium.bin
+      - key: GOOGLE_SPEECH_CREDENTIALS_JSON
+        sync: false
       - key: GOOGLE_CLOUD_PROJECT_ID
         sync: false
       - key: GOOGLE_CLOUD_API_KEY

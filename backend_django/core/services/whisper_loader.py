@@ -1,203 +1,178 @@
 """
-Faster Whisper Service
-======================
-100% gratuito, compatible con Render Free Tier.
-No requiere API keys, ni compilación, ni apt-get.
+Google Speech-to-Text Service
+================================
+60 minutos/mes GRATIS - Compatible con Render Free Tier
+No requiere instalación de dependencias del sistema.
 
-Modelo: small (mejor balance velocidad/precisión)
-Device: CPU (compatible con Render)
-Compute Type: int8 (bajo consumo de RAM)
-Auto-descarga: Los modelos se descargan automáticamente en runtime
+API gratuita de Google Cloud con límite generoso.
 """
 
 import os
 import sys
-from pathlib import Path
 from typing import Optional
 from django.conf import settings
 
 try:
-    from faster_whisper import WhisperModel
-    FASTER_WHISPER_AVAILABLE = True
+    from google.cloud import speech_v1 as speech
+    from google.oauth2 import service_account
+    GOOGLE_SPEECH_AVAILABLE = True
 except ImportError:
-    FASTER_WHISPER_AVAILABLE = False
-    print("[WHISPER] WARNING: faster-whisper no está instalado", file=sys.stderr, flush=True)
+    GOOGLE_SPEECH_AVAILABLE = False
+    print("[SPEECH] WARNING: google-cloud-speech no está instalado", file=sys.stderr, flush=True)
 
 
-class FasterWhisperService:
+class GoogleSpeechService:
     """
-    Servicio de transcripción de audio usando faster-whisper.
+    Servicio de transcripción de audio usando Google Speech-to-Text.
     
     Ventajas:
-    - 100% gratuito (sin API keys)
-    - 4x más rápido que whisper original
-    - Bajo consumo de memoria (int8 quantization)
-    - Auto-descarga de modelos
-    - Compatible con Render Free Tier (solo CPU)
+    - 60 minutos/mes GRATIS
+    - Pure Python (no requiere FFmpeg/compilación)
+    - Compatible con Render Free Tier
+    - Soporta 125+ idiomas
+    - Alta precisión
+    
+    Límites gratuitos:
+    - 60 minutos/mes de audio estándar
+    - Archivos hasta 10MB (REST API)
     """
     
-    def __init__(self, model_size: str = "small"):
+    def __init__(self):
         """
-        Inicializa el servicio de Whisper.
-        
-        Args:
-            model_size: Tamaño del modelo ("tiny", "base", "small", "medium", "large")
-                       - tiny: ~75MB, rápido pero menos preciso
-                       - base: ~145MB, buen balance
-                       - small: ~488MB, RECOMENDADO (mejor balance)
-                       - medium: ~1.5GB, más preciso pero lento
-                       - large: ~3GB, máxima precisión (no recomendado para Render Free)
+        Inicializa el servicio de Google Speech-to-Text.
         """
-        self.model_size = model_size
-        self.model = None
-        self.models_dir = self._get_models_dir()
+        self.client = None
+        self.credentials_json = getattr(settings, 'GOOGLE_SPEECH_CREDENTIALS_JSON', None)
         
-        print(f"[WHISPER] Inicializando FasterWhisperService", file=sys.stderr, flush=True)
-        print(f"[WHISPER] Modelo: {model_size}", file=sys.stderr, flush=True)
-        print(f"[WHISPER] Directorio de modelos: {self.models_dir}", file=sys.stderr, flush=True)
-        
-    def _get_models_dir(self) -> Path:
-        """
-        Obtiene el directorio donde se guardarán los modelos.
-        En Render, usa /tmp/whisper_models
-        En desarrollo local, usa ./whisper_models
-        """
-        if os.environ.get('RENDER'):
-            # En Render, usar /tmp porque tiene espacio writable
-            models_dir = Path("/tmp/whisper_models")
-        else:
-            # En local, usar directorio del proyecto
-            models_dir = Path(settings.BASE_DIR) / "whisper_models"
-        
-        # Crear directorio si no existe
-        models_dir.mkdir(parents=True, exist_ok=True)
-        return models_dir
+        print(f"[SPEECH] Inicializando GoogleSpeechService", file=sys.stderr, flush=True)
     
     def is_available(self) -> bool:
         """
-        Verifica si faster-whisper está disponible.
+        Verifica si el servicio está disponible.
         """
-        return FASTER_WHISPER_AVAILABLE
-    
-    def load_model(self) -> bool:
-        """
-        Carga el modelo de Whisper.
-        El modelo se descarga automáticamente si no existe.
-        
-        Returns:
-            True si el modelo se cargó exitosamente, False si falló.
-        """
-        if not FASTER_WHISPER_AVAILABLE:
-            print("[WHISPER] ERROR: faster-whisper no está instalado", file=sys.stderr, flush=True)
+        if not GOOGLE_SPEECH_AVAILABLE:
             return False
         
-        if self.model is not None:
-            print("[WHISPER] Modelo ya cargado, reutilizando", file=sys.stderr, flush=True)
-            return True
+        if not self.credentials_json:
+            print("[SPEECH] ERROR: GOOGLE_SPEECH_CREDENTIALS_JSON no configurado", file=sys.stderr, flush=True)
+            return False
+        
+        return True
+    
+    def _get_client(self):
+        """
+        Obtiene o crea el cliente de Google Speech.
+        """
+        if self.client is not None:
+            return self.client
         
         try:
-            print(f"[WHISPER] Cargando modelo '{self.model_size}'...", file=sys.stderr, flush=True)
+            # Cargar credenciales desde JSON string
+            import json
+            credentials_dict = json.loads(self.credentials_json)
+            credentials = service_account.Credentials.from_service_account_info(credentials_dict)
             
-            # Configuración optimizada para Render Free Tier (CPU)
-            self.model = WhisperModel(
-                model_size_or_path=self.model_size,
-                device="cpu",  # Render Free Tier no tiene GPU
-                compute_type="int8",  # Quantización para reducir uso de RAM
-                download_root=str(self.models_dir),  # Directorio de descarga
-                num_workers=1,  # Evitar sobrecarga en CPU limitado
-            )
-            
-            print(f"[WHISPER] ✅ Modelo '{self.model_size}' cargado exitosamente", file=sys.stderr, flush=True)
-            return True
+            self.client = speech.SpeechClient(credentials=credentials)
+            print("[SPEECH] ✅ Cliente de Google Speech inicializado", file=sys.stderr, flush=True)
+            return self.client
             
         except Exception as e:
-            print(f"[WHISPER] ❌ ERROR al cargar modelo: {str(e)}", file=sys.stderr, flush=True)
-            traceback.print_exc()
-            self.model = None
-            return False
+            print(f"[SPEECH] ❌ ERROR al inicializar cliente: {str(e)}", file=sys.stderr, flush=True)
+            return None
     
-    def transcribe_audio(self, audio_path: str, language: str = "es") -> Optional[str]:
+    def transcribe_audio(self, audio_path: str, language: str = "es-ES") -> Optional[str]:
         """
         Transcribe un archivo de audio a texto.
         
         Args:
-            audio_path: Ruta al archivo de audio (wav, mp3, m4a, etc.)
-            language: Código de idioma (es, en, ca, etc.)
+            audio_path: Ruta al archivo de audio
+            language: Código de idioma (es-ES, en-US, ca-ES, etc.)
         
         Returns:
             Texto transcrito o None si falla
         """
         if not self.is_available():
-            print("[WHISPER] ERROR: faster-whisper no disponible", file=sys.stderr, flush=True)
+            print("[SPEECH] ERROR: Servicio no disponible", file=sys.stderr, flush=True)
             return None
         
-        # Cargar modelo si no está cargado
-        if self.model is None:
-            if not self.load_model():
-                print("[WHISPER] ERROR: No se pudo cargar el modelo", file=sys.stderr, flush=True)
-                return None
+        client = self._get_client()
+        if not client:
+            return None
         
         try:
-            print(f"[WHISPER] Transcribiendo audio: {audio_path}", file=sys.stderr, flush=True)
-            print(f"[WHISPER] Idioma: {language}", file=sys.stderr, flush=True)
+            print(f"[SPEECH] Transcribiendo audio: {audio_path}", file=sys.stderr, flush=True)
+            print(f"[SPEECH] Idioma: {language}", file=sys.stderr, flush=True)
             
-            # Transcribir con configuración optimizada
-            segments, info = self.model.transcribe(
-                audio_path,
-                language=language,
-                beam_size=5,  # Balance entre velocidad y precisión
-                vad_filter=True,  # Filtrar silencio (Voice Activity Detection)
-                vad_parameters=dict(
-                    threshold=0.5,
-                    min_speech_duration_ms=250,
-                    min_silence_duration_ms=100
-                )
+            # Leer archivo de audio
+            with open(audio_path, 'rb') as audio_file:
+                content = audio_file.read()
+            
+            # Configurar audio
+            audio = speech.RecognitionAudio(content=content)
+            
+            # Configurar reconocimiento
+            config = speech.RecognitionConfig(
+                encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+                sample_rate_hertz=16000,
+                language_code=language,
+                enable_automatic_punctuation=True,
+                model="default"
             )
             
-            # Unir todos los segmentos en un solo texto
-            transcription = " ".join([segment.text.strip() for segment in segments])
+            # Realizar transcripción
+            print("[SPEECH] Enviando audio a Google Speech API...", file=sys.stderr, flush=True)
+            response = client.recognize(config=config, audio=audio)
             
-            print(f"[WHISPER] ✅ Transcripción completada", file=sys.stderr, flush=True)
-            print(f"[WHISPER] Texto ({len(transcription)} caracteres): {transcription[:100]}...", file=sys.stderr, flush=True)
+            # Extraer texto
+            transcription = ""
+            for result in response.results:
+                transcription += result.alternatives[0].transcript + " "
             
-            return transcription.strip()
+            transcription = transcription.strip()
+            
+            if not transcription:
+                print("[SPEECH] ⚠️ No se detectó voz en el audio", file=sys.stderr, flush=True)
+                return None
+            
+            print(f"[SPEECH] ✅ Transcripción completada", file=sys.stderr, flush=True)
+            print(f"[SPEECH] Texto ({len(transcription)} caracteres): {transcription[:100]}...", file=sys.stderr, flush=True)
+            
+            return transcription
             
         except Exception as e:
-            print(f"[WHISPER] ❌ ERROR al transcribir: {str(e)}", file=sys.stderr, flush=True)
+            print(f"[SPEECH] ❌ ERROR al transcribir: {str(e)}", file=sys.stderr, flush=True)
             import traceback
             traceback.print_exc()
             return None
 
 
 # Singleton global
-_whisper_service: Optional[FasterWhisperService] = None
+_speech_service: Optional[GoogleSpeechService] = None
 
 
-def get_whisper_service(model_size: str = "small") -> FasterWhisperService:
+def get_whisper_service() -> GoogleSpeechService:
     """
-    Obtiene la instancia global del servicio de Whisper (singleton).
-    
-    Args:
-        model_size: Tamaño del modelo (por defecto "small")
+    Obtiene la instancia global del servicio (singleton).
+    NOTA: Mantiene el nombre 'get_whisper_service' por compatibilidad.
     
     Returns:
-        Instancia de FasterWhisperService
+        Instancia de GoogleSpeechService
     """
-    global _whisper_service
+    global _speech_service
     
-    if _whisper_service is None:
-        _whisper_service = FasterWhisperService(model_size=model_size)
+    if _speech_service is None:
+        _speech_service = GoogleSpeechService()
     
-    return _whisper_service
+    return _speech_service
 
 
-def transcribe_audio(audio_path: str, language: str = "es") -> Optional[str]:
+def transcribe_audio(audio_path: str, language: str = "es-ES") -> Optional[str]:
     """
     Función helper para transcribir audio directamente.
     
     Args:
         audio_path: Ruta al archivo de audio
-        language: Código de idioma (por defecto "es")
+        language: Código de idioma (por defecto "es-ES")
     
     Returns:
         Texto transcrito o None si falla

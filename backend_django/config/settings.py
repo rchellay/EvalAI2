@@ -292,8 +292,8 @@ GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=
 GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
 # OpenAI Whisper Configuration (Cloud Audio Transcription)
-# Faster Whisper Configuration (100% gratis, sin API keys)
-WHISPER_MODEL_SIZE = config('WHISPER_MODEL_SIZE', default='small')  # tiny, base, small, medium, large
+# Google Speech-to-Text Configuration (60 min/mes GRATIS)
+GOOGLE_SPEECH_CREDENTIALS_JSON = config('GOOGLE_SPEECH_CREDENTIALS_JSON', default='')
 WHISPER_TIMEOUT = config('WHISPER_TIMEOUT', default=120, cast=int)  # 120s timeout for audio processing
 WHISPER_MAX_FILE_SIZE = config('WHISPER_MAX_FILE_SIZE', default=25 * 1024 * 1024, cast=int)  # 25MB
 

@@ -1766,15 +1766,15 @@ def audio_evaluation(request):
         print(f"[AUDIO] Archivo temporal guardado en: {temp_file_path}", file=sys.stderr, flush=True)
 
         try:
-            # Transcribir audio con faster-whisper (100% gratuito)
+            # Transcribir audio con Google Speech-to-Text (60 min/mes gratis)
             print(f"[AUDIO] Iniciando transcripción para estudiante {student_id}", file=sys.stderr, flush=True)
-            whisper_service = get_whisper_service()
-            print(f"[AUDIO] Faster-Whisper disponible: {whisper_service.is_available()}", file=sys.stderr, flush=True)
+            speech_service = get_whisper_service()
+            print(f"[AUDIO] Google Speech disponible: {speech_service.is_available()}", file=sys.stderr, flush=True)
             
-            if not whisper_service.is_available():
-                raise Exception("Servicio de transcripción no disponible. Instala: pip install faster-whisper")
+            if not speech_service.is_available():
+                raise Exception("Servicio de transcripción no disponible. Verifica GOOGLE_SPEECH_CREDENTIALS_JSON.")
             
-            transcription = whisper_service.transcribe_audio(temp_file_path, language='es')
+            transcription = speech_service.transcribe_audio(temp_file_path, language='es-ES')
             
             if not transcription:
                 raise Exception("No se pudo obtener transcripción del audio")
