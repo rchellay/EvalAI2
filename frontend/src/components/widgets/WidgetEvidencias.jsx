@@ -349,25 +349,27 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
             </div>
 
             {/* Contenido */}
-            <div className="p-4">
               {/* Preview del archivo */}
               <div className="mb-4 bg-gray-50 rounded-lg flex items-center justify-center min-h-[400px] max-h-[600px] overflow-hidden">
-                {selectedEvidence.file_type?.startsWith('image/') ? (
-                  <img 
-                    src={selectedEvidence.file_url} 
-                    alt={selectedEvidence.title}
-                    className="w-full h-full object-contain rounded"
-                    style={{ maxHeight: '600px' }}
-                  />
-                ) : selectedEvidence.file_type === 'application/pdf' ? (
-                  <div className="w-full h-full">
-                    <iframe
-                      src={selectedEvidence.file_url}
-                      className="w-full h-full rounded"
-                      style={{ minHeight: '500px' }}
-                      title={selectedEvidence.title}
-                    />
-                  </div>
+                {(() => {
+                  const fileUrl = selectedEvidence.file_url || '';
+                  const fileType = selectedEvidence.file_type || '';
+                  const fileName = fileUrl.split('/').pop()?.toLowerCase() || '';
+                  
+                  const isImage = fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp|svg|heic|heif)$/i.test(fileName);
+                  const isPDF = fileType === 'application/pdf' || fileName.endsWith('.pdf');
+                  
+                  console.log('[EVIDENCE]', { fileUrl, fileType, fileName, isImage, isPDF });
+                  
+                  if (isImage) {
+                    return <img src={fileUrl} alt={selectedEvidence.title} className="w-full h-full object-contain rounded" style={{ maxHeight: '600px' }} />;
+                  }
+                  if (isPDF) {
+                    return <div className="w-full h-full"><iframe src={fileUrl} className="w-full h-full rounded" style={{ minHeight: '500px' }} title={selectedEvidence.title} /></div>;
+                  }
+                  return <div className="text-center p-8"><span className="text-6xl mb-4 block">📎</span><p className="text-gray-600 mb-4">Archivo adjunto</p><a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">📥 Descargar</a></div>;
+                })()}
+              </div>
                 ) : (
                   <div className="text-center p-8">
                     <span className="text-6xl mb-4 block">📎</span>
