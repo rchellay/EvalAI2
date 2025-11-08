@@ -110,27 +110,39 @@ class GoogleSpeechService:
             # Configurar audio
             audio = speech.RecognitionAudio(content=content)
             
-            # Detectar formato del archivo
+            # Detectar formato por magic bytes (contenido real del archivo)
             file_extension = audio_path.lower().split('.')[-1]
             
-            # Configurar encoding según extensión
-            if file_extension == 'webm':
+            # Verificar magic bytes para detectar formato real
+            is_webm = content[:4] == b'\x1a\x45\xdf\xa3'  # EBML header (WebM)
+            is_ogg = content[:4] == b'OggS'  # Ogg container
+            is_mp3 = content[:3] == b'ID3' or content[:2] == b'\xff\xfb'  # MP3 header
+            is_wav_riff = content[:4] == b'RIFF'  # WAV RIFF header
+            
+            # Configurar encoding según contenido real (no solo extensión)
+            if is_webm:
                 encoding = speech.RecognitionConfig.AudioEncoding.WEBM_OPUS
-                sample_rate = None  # Dejar que Google lo detecte automáticamente
-                print("[SPEECH] Formato detectado: WEBM OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
-            elif file_extension == 'ogg':
+                sample_rate = None  # Autodetectar
+                print("[SPEECH] Formato detectado por contenido: WEBM OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
+            elif is_ogg:
                 encoding = speech.RecognitionConfig.AudioEncoding.OGG_OPUS
                 sample_rate = None
-                print("[SPEECH] Formato detectado: OGG OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
-            elif file_extension in ['mp3', 'mpeg']:
+                print("[SPEECH] Formato detectado por contenido: OGG OPUS (autodetectar sample rate)", file=sys.stderr, flush=True)
+            elif is_mp3:
                 encoding = speech.RecognitionConfig.AudioEncoding.MP3
                 sample_rate = None
-                print("[SPEECH] Formato detectado: MP3 (autodetectar sample rate)", file=sys.stderr, flush=True)
+                print("[SPEECH] Formato detectado por contenido: MP3 (autodetectar sample rate)", file=sys.stderr, flush=True)
+            elif is_wav_riff:
+                # Para WAV, intentar autodetectar también
+                encoding = speech.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED
+                sample_rate = None
+                print("[SPEECH] Formato detectado por contenido: WAV (autodetectar encoding y sample rate)", file=sys.stderr, flush=True)
             else:
-                # Por defecto LINEAR16 a 16000 Hz para WAV
-                encoding = speech.RecognitionConfig.AudioEncoding.LINEAR16
-                sample_rate = 16000
-                print("[SPEECH] Formato detectado: WAV LINEAR16 a 16000 Hz", file=sys.stderr, flush=True)
+                # Fallback: intentar autodetectar todo
+                encoding = speech.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED
+                sample_rate = None
+                print(f"[SPEECH] ⚠️ Formato desconocido (extensión: {file_extension}, primeros bytes: {content[:4].hex()})", file=sys.stderr, flush=True)
+                print("[SPEECH] Intentando autodetección completa...", file=sys.stderr, flush=True)
             
             # Configurar reconocimiento
             config = speech.RecognitionConfig(
