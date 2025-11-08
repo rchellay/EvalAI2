@@ -349,6 +349,7 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
             </div>
 
             {/* Contenido */}
+            <div className="p-4">
               {/* Preview del archivo */}
               <div className="mb-4 bg-gray-50 rounded-lg flex items-center justify-center min-h-[400px] max-h-[600px] overflow-hidden">
                 {(() => {
@@ -369,21 +370,6 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                   }
                   return <div className="text-center p-8"><span className="text-6xl mb-4 block">📎</span><p className="text-gray-600 mb-4">Archivo adjunto</p><a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">📥 Descargar</a></div>;
                 })()}
-              </div>
-                ) : (
-                  <div className="text-center p-8">
-                    <span className="text-6xl mb-4 block">📎</span>
-                    <p className="text-gray-600 mb-4">Archivo adjunto</p>
-                    <a
-                      href={selectedEvidence.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-                    >
-                      � Descargar
-                    </a>
-                  </div>
-                )}
               </div>
 
               {/* Descripción */}
