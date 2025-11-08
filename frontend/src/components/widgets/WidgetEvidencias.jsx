@@ -26,9 +26,14 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
       if (subjectId) params.subject = subjectId;
 
       const response = await api.get('/evidences/', { params });
-      setEvidences(response.data);
+      // Manejar tanto formato de array directo como objeto paginado
+      const evidencesData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data.results || []);
+      setEvidences(evidencesData);
     } catch (error) {
       console.error('Error cargando evidencias:', error);
+      setEvidences([]); // Asegurar que siempre sea un array
     } finally {
       setLoading(false);
     }
