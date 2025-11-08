@@ -20,10 +20,11 @@ class HuggingFaceWhisperClient:
     """Cliente para transcripción de audio usando Hugging Face Whisper"""
     
     def __init__(self):
-        # ACTUALIZADO 2025-11-08: Usar distil-whisper (más rápido, funciona con API actual)
-        # Los modelos openai/whisper-* retornan 410 Gone (deprecated)
-        # distil-whisper/distil-large-v3 es 6x más rápido y está activamente mantenido
-        self.api_url = "https://api-inference.huggingface.co/models/distil-whisper/distil-large-v3"
+        # ACTUALIZADO 2025-11-08: Usar el NUEVO endpoint router.huggingface.co
+        # El viejo api-inference.huggingface.co retorna 410 Gone desde Nov 2025
+        # Nuevo: https://router.huggingface.co/hf-inference
+        # Modelo: distil-whisper/distil-large-v3 (6x más rápido, activamente mantenido)
+        self.api_url = "https://router.huggingface.co/hf-inference/models/distil-whisper/distil-large-v3"
         self.api_key = getattr(settings, 'HUGGINGFACE_API_KEY', None)
         self.timeout = getattr(settings, 'HUGGINGFACE_TIMEOUT', 120)  # Aumentar timeout para Whisper
         self.max_file_size = getattr(settings, 'HUGGINGFACE_MAX_FILE_SIZE', 25 * 1024 * 1024)  # 25MB
