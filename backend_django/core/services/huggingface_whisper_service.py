@@ -84,6 +84,12 @@ class HuggingFaceWhisperClient:
             with open(audio_file_path, 'rb') as audio_file:
                 audio_data = audio_file.read()
                 
+                print(f"[WHISPER] Iniciando transcripción", flush=True)
+                print(f"[WHISPER] API URL: {self.api_url}", flush=True)
+                print(f"[WHISPER] Archivo: {audio_file_path}", flush=True)
+                print(f"[WHISPER] Tamaño: {len(audio_data)} bytes", flush=True)
+                print(f"[WHISPER] API Key presente: {bool(self.api_key)}", flush=True)
+                
                 logger.info(f"Iniciando transcripción con Hugging Face Whisper: {audio_file_path}")
                 logger.info(f"Tamaño del archivo: {len(audio_data)} bytes")
                 logger.info(f"Headers: {headers}")
@@ -95,6 +101,9 @@ class HuggingFaceWhisperClient:
                     data=audio_data,  # Enviar audio directamente, no como multipart
                     timeout=self.timeout
                 )
+                
+                print(f"[WHISPER] Response status: {response.status_code}", flush=True)
+                print(f"[WHISPER] Response headers: {dict(response.headers)}", flush=True)
                 
                 logger.info(f"Response status code: {response.status_code}")
                 logger.info(f"Response headers: {dict(response.headers)}")

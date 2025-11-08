@@ -351,25 +351,22 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
             {/* Contenido */}
             <div className="p-4">
               {/* Preview del archivo */}
-              <div className="mb-4 bg-gray-50 rounded-lg flex items-center justify-center min-h-[300px]">
+              <div className="mb-4 bg-gray-50 rounded-lg flex items-center justify-center min-h-[400px] max-h-[600px] overflow-hidden">
                 {selectedEvidence.file_type?.startsWith('image/') ? (
                   <img 
                     src={selectedEvidence.file_url} 
                     alt={selectedEvidence.title}
-                    className="max-w-full max-h-[500px] object-contain rounded"
+                    className="w-full h-full object-contain rounded"
+                    style={{ maxHeight: '600px' }}
                   />
                 ) : selectedEvidence.file_type === 'application/pdf' ? (
-                  <div className="text-center p-8">
-                    <span className="text-6xl mb-4 block">📄</span>
-                    <p className="text-gray-600 mb-4">Documento PDF</p>
-                    <a
-                      href={selectedEvidence.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-                    >
-                      📥 Abrir PDF
-                    </a>
+                  <div className="w-full h-full">
+                    <iframe
+                      src={selectedEvidence.file_url}
+                      className="w-full h-full rounded"
+                      style={{ minHeight: '500px' }}
+                      title={selectedEvidence.title}
+                    />
                   </div>
                 ) : (
                   <div className="text-center p-8">
