@@ -20,11 +20,11 @@ class HuggingFaceWhisperClient:
     """Cliente para transcripción de audio usando Hugging Face Whisper"""
     
     def __init__(self):
-        # ACTUALIZADO 2025-11-08: Usar el nuevo router de HuggingFace
-        # api-inference.huggingface.co fue deprecado (HTTP 410 Gone)
-        # https://huggingface.co/docs/api-inference/quicktour
-        # Modelo: distil-whisper/distil-large-v3 (6x más rápido que openai/whisper)
-        self.api_url = "https://router.huggingface.co/hf-inference/models/distil-whisper/distil-large-v3"
+        # ACTUALIZADO 2025-11-08: Usar router.huggingface.co (nueva infraestructura)
+        # Formato correcto: https://router.huggingface.co/<repo>/<modelo>
+        # SIN /hf-inference/models/ (esa ruta devuelve 404)
+        # Modelo: openai/whisper-large-v3 (más confiable que distil-whisper)
+        self.api_url = "https://router.huggingface.co/openai/whisper-large-v3"
         self.api_key = getattr(settings, 'HUGGINGFACE_API_KEY', None)
         self.timeout = getattr(settings, 'HUGGINGFACE_TIMEOUT', 120)  # Aumentar timeout para Whisper
         self.max_file_size = getattr(settings, 'HUGGINGFACE_MAX_FILE_SIZE', 25 * 1024 * 1024)  # 25MB
