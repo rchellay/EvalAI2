@@ -33,7 +33,7 @@ from .serializers import (
     UserSettingsSerializer, CustomEventSerializer
 )
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
-from .services.huggingface_whisper_service import huggingface_whisper_client, HuggingFaceWhisperError
+from .services.whisper_cpp_service import get_whisper_client, WhisperCppError
 from .services.openrouter_service import openrouter_client, OpenRouterServiceError
 
 
@@ -1766,13 +1766,13 @@ def audio_evaluation(request):
         print(f"[AUDIO] Archivo temporal guardado en: {temp_file_path}", file=sys.stderr, flush=True)
 
         try:
-            # Transcribir audio con Hugging Face Whisper
+            # Transcribir audio con Whisper.cpp local
             print(f"[AUDIO] Iniciando transcripción para estudiante {student_id}", file=sys.stderr, flush=True)
-            whisper_client = huggingface_whisper_client
-            print(f"[AUDIO] whisper_client disponible: {whisper_client is not None}", file=sys.stderr, flush=True)
+            whisper_client = get_whisper_client()
+            print(f"[AUDIO] Whisper.cpp disponible: {whisper_client.is_available()}", file=sys.stderr, flush=True)
             
-            if not whisper_client:
-                raise Exception("Servicio de transcripción no disponible. Verifica la configuración de HUGGINGFACE_API_KEY.")
+            if not whisper_client.is_available():
+                raise Exception("Servicio de transcripción no disponible. Verifica la instalación de Whisper.cpp.")
             
             transcription = whisper_client.transcribe_audio(temp_file_path, language='es')
             print(f"[AUDIO] Transcripción completada: {transcription[:100]}...", file=sys.stderr, flush=True)
@@ -1806,8 +1806,8 @@ def audio_evaluation(request):
     except Subject.DoesNotExist:
         print(f"[AUDIO] ERROR: Asignatura no encontrada: {subject_id}", file=sys.stderr, flush=True)
         return Response({'error': 'Asignatura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-    except HuggingFaceWhisperError as e:
-        print(f"[AUDIO] ERROR HuggingFaceWhisperError: {str(e)}", file=sys.stderr, flush=True)
+    except WhisperCppError as e:
+        print(f"[AUDIO] ERROR WhisperCppError: {str(e)}", file=sys.stderr, flush=True)
         print(f"[AUDIO] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
         return Response({'error': f'Error en transcripción: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:

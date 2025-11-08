@@ -19,13 +19,6 @@ print("\n" + "="*60, file=sys.stderr)
 print("🔍 DIAGNOSTIC: Checking environment variables at startup", file=sys.stderr)
 print("="*60, file=sys.stderr)
 
-# Check HUGGINGFACE_API_KEY
-huggingface_key = config('HUGGINGFACE_API_KEY', default=None)
-if huggingface_key:
-    print(f"✅ HUGGINGFACE_API_KEY found (ends with: ...{huggingface_key[-8:]})", file=sys.stderr)
-else:
-    print("❌ HUGGINGFACE_API_KEY NOT FOUND in environment variables", file=sys.stderr)
-
 # Check Cloudinary keys
 cloudinary_name = config('CLOUDINARY_CLOUD_NAME', default=None)
 cloudinary_api = config('CLOUDINARY_API_KEY', default=None)
@@ -298,10 +291,11 @@ GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-educ
 GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
 GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
-# HuggingFace Whisper Configuration (Audio Transcription)
-HUGGINGFACE_API_KEY = config('HUGGINGFACE_API_KEY', default='')
-HUGGINGFACE_TIMEOUT = config('HUGGINGFACE_TIMEOUT', default=120, cast=int)  # 120s timeout for audio processing
-HUGGINGFACE_MAX_FILE_SIZE = config('HUGGINGFACE_MAX_FILE_SIZE', default=25 * 1024 * 1024, cast=int)  # 25MB
+# Whisper.cpp Configuration (Local Audio Transcription)
+WHISPER_CPP_PATH = config('WHISPER_CPP_PATH', default='/opt/whisper.cpp')
+WHISPER_MODEL_PATH = config('WHISPER_MODEL_PATH', default='/opt/whisper.cpp/models/ggml-medium.bin')
+WHISPER_TIMEOUT = config('WHISPER_TIMEOUT', default=120, cast=int)  # 120s timeout for audio processing
+WHISPER_MAX_FILE_SIZE = config('WHISPER_MAX_FILE_SIZE', default=25 * 1024 * 1024, cast=int)  # 25MB
 
 # Auto-fix DISABLED - All tables are created via Django migrations
 # This prevents conflicts between manual table creation and Django's migration system
