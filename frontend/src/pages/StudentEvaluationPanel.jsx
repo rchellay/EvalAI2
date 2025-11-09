@@ -184,12 +184,6 @@ const StudentEvaluationPanel = () => {
               titleClassName="text-xl font-bold text-black mb-4"
             />
 
-            <WidgetRecomendacionesIA
-              studentId={id}
-              className="bg-white text-black border border-gray-300 rounded-md shadow-md"
-              titleClassName="text-xl font-bold text-black mb-4"
-            />
-
             <WidgetNotificaciones
               teacherId={student?.teacher_id}
               className="bg-white text-black border border-gray-300 rounded-md shadow-md"
@@ -227,11 +221,22 @@ const StudentEvaluationPanel = () => {
               titleClassName="text-xl font-bold text-black mb-4"
             />
 
+            {/* Recomendaciones IA - Ancho completo */}
+            <div className="md:col-span-2 lg:col-span-3">
+              <WidgetRecomendacionesIA
+                studentId={id}
+                className="bg-white text-black border border-gray-300 rounded-md shadow-md"
+                titleClassName="text-xl font-bold text-black mb-4"
+              />
+            </div>
+
+            {/* Historial de Evaluaciones - Ancho completo */}
             <div className="md:col-span-2 lg:col-span-3">
               <WidgetHistorialEvaluaciones
                 studentId={id}
                 subjectId={asignaturaId}
                 refreshTrigger={refreshHistorial}
+                onEvaluationDeleted={() => setRefreshHistorial(prev => prev + 1)}
                 className="bg-white text-black border border-gray-300 rounded-md shadow-md"
                 titleClassName="text-xl font-bold text-black mb-4"
               />

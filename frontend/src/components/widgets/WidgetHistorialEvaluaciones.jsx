@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/axios';
+import { toast } from 'react-hot-toast';
 
-const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, refreshTrigger }) => {
+const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, refreshTrigger, onEvaluationDeleted }) => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, recent, subject
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (studentId) {
@@ -51,7 +53,8 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, ref
           date: evaluation.date,
           content: evaluation.comment,
           score: evaluation.score,
-          id: `eval-${evaluation.id}`
+          id: `eval-${evaluation.id}`,
+          originalId: evaluation.id
         })),
         ...comments.map(comment => ({
           ...comment,
@@ -59,7 +62,8 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, ref
           date: comment.created_at,
           content: comment.text,
           score: null,
-          id: `comment-${comment.id}`
+          id: `comment-${comment.id}`,
+          originalId: comment.id
         }))
       ];
 
@@ -72,6 +76,35 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, ref
       setActivities([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (activity) => {
+    if (!window.confirm(`¿Estás seguro de eliminar esta ${activity.type === 'evaluation' ? 'evaluación' : 'comentario'}?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(activity.id);
+
+      if (activity.type === 'evaluation') {
+        await api.delete(`/evaluations/${activity.originalId}/`);
+        toast.success('Evaluación eliminada');
+      } else {
+        await api.delete(`/comments/${activity.originalId}/`);
+        toast.success('Comentario eliminado');
+      }
+
+      // Recargar actividades
+      fetchActivities();
+      if (onEvaluationDeleted) {
+        onEvaluationDeleted();
+      }
+    } catch (error) {
+      console.error('Error eliminando:', error);
+      toast.error('Error al eliminar. Inténtalo de nuevo.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -166,16 +199,34 @@ const WidgetHistorialEvaluaciones = ({ studentId, subjectId, titleClassName, ref
                   )}
                 </div>
 
-                {activity.evaluator && (
-                  <span className="text-xs text-gray-500">
-                    Por: {activity.evaluator.username}
-                  </span>
-                )}
-                {activity.author && (
-                  <span className="text-xs text-gray-500">
-                    Por: {activity.author.username}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {activity.evaluator && (
+                    <span className="text-xs text-gray-500">
+                      Por: {activity.evaluator.username}
+                    </span>
+                  )}
+                  {activity.author && (
+                    <span className="text-xs text-gray-500">
+                      Por: {activity.author.username}
+                    </span>
+                  )}
+                  
+                  {/* Botón de eliminar */}
+                  <button
+                    onClick={() => handleDelete(activity)}
+                    disabled={deletingId === activity.id}
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                    title={`Eliminar ${activity.type === 'evaluation' ? 'evaluación' : 'comentario'}`}
+                  >
+                    {deletingId === activity.id ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {activity.content && (
