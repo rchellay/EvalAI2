@@ -1878,19 +1878,25 @@ def student_recommendations(request, student_id):
             student_id=student_id
         ).order_by('-date')[:5].select_related('subject')
         
-        print(f"[RECOMENDACIONES] Evaluaciones encontradas: {evaluations.count()}", file=sys.stderr, flush=True)
+        # También obtener comentarios si no hay evaluaciones suficientes
+        from .models import Comment
+        comments = Comment.objects.filter(
+            student_id=student_id
+        ).order_by('-created_at')[:10].select_related('subject', 'author')
         
-        # Contar evaluaciones explícitamente
         eval_count = evaluations.count()
+        comment_count = comments.count()
         
-        if eval_count == 0:
-            print(f"[RECOMENDACIONES] ⚠️ No hay evaluaciones para el estudiante {student_id}", file=sys.stderr, flush=True)
-            # Crear recomendación vacía
+        print(f"[RECOMENDACIONES] Evaluaciones: {eval_count}, Comentarios: {comment_count}", file=sys.stderr, flush=True)
+        
+        # Si no hay ni evaluaciones ni comentarios
+        if eval_count == 0 and comment_count == 0:
+            print(f"[RECOMENDACIONES] ⚠️ No hay datos para el estudiante {student_id}", file=sys.stderr, flush=True)
             recommendation = StudentRecommendation.objects.create(
                 student_id=student_id,
                 fortalezas=[],
                 debilidades=[],
-                recomendacion='No hay evaluaciones suficientes para generar recomendaciones.',
+                recomendacion='No hay evaluaciones ni comentarios suficientes para generar recomendaciones. Agrega evaluaciones con puntuación o comentarios.',
                 evaluation_count=0,
                 average_score=0.0,
                 generated_by_ai=False
@@ -1898,28 +1904,41 @@ def student_recommendations(request, student_id):
             return Response({
                 'fortalezas': [],
                 'debilidades': [],
-                'recomendacion': 'No hay evaluaciones suficientes para generar recomendaciones.',
+                'recomendacion': 'No hay evaluaciones ni comentarios suficientes para generar recomendaciones. Agrega evaluaciones con puntuación o comentarios.',
                 'evaluation_count': 0,
                 'average_score': 0.0,
                 'generated_by_ai': False,
                 '_from_cache': False
             })
         
-        print(f"[RECOMENDACIONES] ✅ Procesando {eval_count} evaluaciones", file=sys.stderr, flush=True)
+        print(f"[RECOMENDACIONES] ✅ Procesando datos disponibles", file=sys.stderr, flush=True)
         
         # Preparar datos para OpenRouter
         evaluation_data = []
+        
+        # Agregar evaluaciones con puntuación
         for eval in evaluations:
-            # Asegurarse de que score no es None
             score = eval.score if eval.score is not None else 0
             evaluation_data.append({
+                'tipo': 'evaluacion',
                 'fecha': eval.date.isoformat(),
                 'asignatura': eval.subject.name if eval.subject else 'General',
                 'puntuacion': score,
                 'comentario': eval.comment or 'Sin comentarios'
             })
         
-        print(f"[RECOMENDACIONES] Datos preparados: {len(evaluation_data)} evaluaciones", file=sys.stderr, flush=True)
+        # Agregar comentarios
+        for comment in comments:
+            evaluation_data.append({
+                'tipo': 'comentario',
+                'fecha': comment.created_at.isoformat(),
+                'asignatura': comment.subject.name if comment.subject else 'General',
+                'puntuacion': 0,
+                'comentario': comment.content,
+                'autor': comment.author.get_full_name() or comment.author.username if comment.author else 'Sistema'
+            })
+        
+        print(f"[RECOMENDACIONES] Datos preparados: {len(evaluation_data)} items totales", file=sys.stderr, flush=True)
         
         # Calcular estadísticas
         scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
@@ -1954,16 +1973,30 @@ def student_recommendations(request, student_id):
         
         print("[RECOMENDACIONES] Generando análisis con MiniMax M2...", file=sys.stderr, flush=True)
         
-        prompt = f"""Analiza estas evaluaciones recientes de un estudiante y genera recomendaciones:
+        # Construir contexto descriptivo
+        context_parts = []
+        if eval_count > 0:
+            context_parts.append(f"{eval_count} evaluaciones con puntuación")
+        if comment_count > 0:
+            context_parts.append(f"{comment_count} comentarios cualitativos")
+        context = " y ".join(context_parts)
+        
+        prompt = f"""Analiza los siguientes datos de un estudiante ({context}) y genera recomendaciones pedagógicas:
 
-Evaluaciones:
+Datos del estudiante:
 {json.dumps(evaluation_data, indent=2, ensure_ascii=False)}
+
+IMPORTANTE:
+- Si hay comentarios cualitativos, analiza el contenido emocional y comportamental
+- Identifica patrones de fortalezas y áreas de mejora
+- Sé específico con los comentarios mencionados
+- Genera recomendaciones prácticas para el docente
 
 Proporciona una respuesta JSON con esta estructura:
 {{
-    "fortalezas": ["fortaleza 1", "fortaleza 2"],
-    "debilidades": ["debilidad 1", "debilidad 2"], 
-    "recomendacion": "Recomendación general detallada"
+    "fortalezas": ["fortaleza 1 basada en datos", "fortaleza 2 basada en datos", "fortaleza 3 si aplica"],
+    "debilidades": ["área de mejora 1", "área de mejora 2", "área de mejora 3 si aplica"], 
+    "recomendacion": "Recomendación pedagógica detallada de 2-3 párrafos sobre cómo apoyar al estudiante"
 }}"""
         
         try:
