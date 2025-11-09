@@ -1844,6 +1844,9 @@ def student_recommendations(request, student_id):
     try:
         print(f"[RECOMENDACIONES] Iniciando para estudiante {student_id}", file=sys.stderr, flush=True)
         
+        # Verificar si se fuerza regeneración
+        force_regenerate = request.GET.get('force', 'false').lower() == 'true'
+        
         # Verificar si ya existen recomendaciones recientes (últimas 24 horas)
         from datetime import timedelta
         from django.utils import timezone
@@ -1853,7 +1856,7 @@ def student_recommendations(request, student_id):
             created_at__gte=timezone.now() - timedelta(hours=24)
         ).first()
         
-        if recent_recommendation:
+        if recent_recommendation and not force_regenerate:
             print(f"[RECOMENDACIONES] ✅ Usando recomendación guardada (hace {(timezone.now() - recent_recommendation.created_at).seconds // 3600}h)", file=sys.stderr, flush=True)
             return Response({
                 'fortalezas': recent_recommendation.fortalezas,
@@ -1866,6 +1869,10 @@ def student_recommendations(request, student_id):
                 '_from_cache': True
             })
         
+        if force_regenerate and recent_recommendation:
+            print(f"[RECOMENDACIONES] 🔄 Forzando regeneración (eliminando cache)", file=sys.stderr, flush=True)
+            recent_recommendation.delete()
+        
         # Obtener últimas 5 evaluaciones
         evaluations = Evaluation.objects.filter(
             student_id=student_id
@@ -1873,7 +1880,11 @@ def student_recommendations(request, student_id):
         
         print(f"[RECOMENDACIONES] Evaluaciones encontradas: {evaluations.count()}", file=sys.stderr, flush=True)
         
-        if not evaluations:
+        # Contar evaluaciones explícitamente
+        eval_count = evaluations.count()
+        
+        if eval_count == 0:
+            print(f"[RECOMENDACIONES] ⚠️ No hay evaluaciones para el estudiante {student_id}", file=sys.stderr, flush=True)
             # Crear recomendación vacía
             recommendation = StudentRecommendation.objects.create(
                 student_id=student_id,
@@ -1893,6 +1904,8 @@ def student_recommendations(request, student_id):
                 'generated_by_ai': False,
                 '_from_cache': False
             })
+        
+        print(f"[RECOMENDACIONES] ✅ Procesando {eval_count} evaluaciones", file=sys.stderr, flush=True)
         
         # Preparar datos para OpenRouter
         evaluation_data = []

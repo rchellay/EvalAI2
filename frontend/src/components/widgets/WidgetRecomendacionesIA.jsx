@@ -6,12 +6,16 @@ const WidgetRecomendacionesIA = ({ studentId, titleClassName, onRecommendationsG
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const generateRecommendations = async () => {
+  const generateRecommendations = async (forceRegenerate = false) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await api.get(`/alumnos/${studentId}/recomendaciones/`);
+      const url = forceRegenerate 
+        ? `/alumnos/${studentId}/recomendaciones/?force=true`
+        : `/alumnos/${studentId}/recomendaciones/`;
+      
+      const response = await api.get(url);
       setRecommendations(response.data);
 
       if (onRecommendationsGenerated) {
@@ -73,10 +77,14 @@ const WidgetRecomendacionesIA = ({ studentId, titleClassName, onRecommendationsG
           <div className="flex justify-between items-center">
             <h4 className="font-medium text-gray-800">Informe de Evaluación IA</h4>
             <button
-              onClick={() => setRecommendations(null)}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                setRecommendations(null);
+                generateRecommendations(true); // Force regenerate
+              }}
+              disabled={loading}
+              className="text-sm text-purple-600 hover:text-purple-800 disabled:opacity-50"
             >
-              Generar nuevo
+              {loading ? '🔄 Regenerando...' : '🔄 Generar nuevo'}
             </button>
           </div>
 
