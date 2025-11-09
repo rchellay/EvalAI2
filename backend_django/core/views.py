@@ -1846,11 +1846,13 @@ def student_recommendations(request, student_id):
         # Preparar datos para OpenRouter
         evaluation_data = []
         for eval in evaluations:
+            # Asegurarse de que score no es None
+            score = eval.score if eval.score is not None else 0
             evaluation_data.append({
                 'fecha': eval.date.isoformat(),
                 'asignatura': eval.subject.name if eval.subject else 'General',
-                'puntuacion': eval.score,
-                'comentario': eval.comment
+                'puntuacion': score,
+                'comentario': eval.comment or 'Sin comentarios'
             })
         
         print(f"[RECOMENDACIONES] Datos preparados: {len(evaluation_data)} evaluaciones", file=sys.stderr, flush=True)
@@ -1859,7 +1861,8 @@ def student_recommendations(request, student_id):
         if not openrouter_client.api_key:
             print("[RECOMENDACIONES] ⚠️ OPENROUTER_API_KEY no configurada, usando análisis básico", file=sys.stderr, flush=True)
             # Análisis básico sin IA
-            avg_score = sum([e['puntuacion'] for e in evaluation_data]) / len(evaluation_data)
+            scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
+            avg_score = sum(scores) / len(scores) if scores else 0
             
             recommendations = {
                 'fortalezas': [
@@ -1899,7 +1902,8 @@ Proporciona una respuesta JSON con esta estructura:
         except (OpenRouterServiceError, json.JSONDecodeError) as e:
             print(f"[RECOMENDACIONES] ⚠️ Error parseando IA: {str(e)}", file=sys.stderr, flush=True)
             # Fallback si la IA falla
-            avg_score = sum([e['puntuacion'] for e in evaluation_data]) / len(evaluation_data)
+            scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
+            avg_score = sum(scores) / len(scores) if scores else 0
             recommendations = {
                 'fortalezas': [
                     'Progreso constante en las evaluaciones',

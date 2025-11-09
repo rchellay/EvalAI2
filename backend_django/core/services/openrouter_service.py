@@ -26,11 +26,11 @@ class OpenRouterClient:
         self.timeout = getattr(settings, 'OPENROUTER_TIMEOUT', 60)
         self.cache_ttl = getattr(settings, 'OPENROUTER_CACHE_TTL', 86400)  # 24 horas
         
-        # Modelos disponibles
+        # Modelos disponibles (actualizados noviembre 2025 - todos gratuitos)
         self.models = {
-            'qwen_rubrics': 'qwen/qwen3-235b-a22b:free',  # Principal para rúbricas
-            'deepseek_analysis': 'google/gemini-flash-1.5',  # Análisis y feedback (soporta imágenes)
-            'glm_quick': 'z-ai/glm-4.5-air:free'  # Tareas rápidas
+            'qwen_rubrics': 'minimax/minimax-m2:free',  # 230B params - Principal para rúbricas y análisis
+            'deepseek_analysis': 'minimax/minimax-m2:free',  # Mismo modelo - excelente en razonamiento
+            'glm_quick': 'minimax/minimax-m2:free'  # Mismo modelo - consistente y rápido
         }
         
         if not self.api_key:
