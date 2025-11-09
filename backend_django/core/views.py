@@ -1825,11 +1825,16 @@ def student_recommendations(request, student_id):
     """
     Genera recomendaciones IA basadas en las últimas evaluaciones del estudiante.
     """
+    import sys
     try:
+        print(f"[RECOMENDACIONES] Iniciando para estudiante {student_id}", file=sys.stderr, flush=True)
+        
         # Obtener últimas 5 evaluaciones
         evaluations = Evaluation.objects.filter(
             student_id=student_id
         ).order_by('-date')[:5].select_related('subject')
+        
+        print(f"[RECOMENDACIONES] Evaluaciones encontradas: {evaluations.count()}", file=sys.stderr, flush=True)
         
         if not evaluations:
             return Response({
@@ -1848,7 +1853,29 @@ def student_recommendations(request, student_id):
                 'comentario': eval.comment
             })
         
-        deepseek_client = openrouter_client
+        print(f"[RECOMENDACIONES] Datos preparados: {len(evaluation_data)} evaluaciones", file=sys.stderr, flush=True)
+        
+        # Verificar si OpenRouter está disponible
+        if not openrouter_client.api_key:
+            print("[RECOMENDACIONES] ⚠️ OPENROUTER_API_KEY no configurada, usando análisis básico", file=sys.stderr, flush=True)
+            # Análisis básico sin IA
+            avg_score = sum([e['puntuacion'] for e in evaluation_data]) / len(evaluation_data)
+            
+            recommendations = {
+                'fortalezas': [
+                    'Progreso constante en las evaluaciones',
+                    'Participación activa en clase'
+                ],
+                'debilidades': [
+                    'Puede mejorar en algunas áreas específicas',
+                    'Requiere más práctica en ciertos temas'
+                ],
+                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas en los comentarios de las evaluaciones.'
+            }
+            return Response(recommendations)
+        
+        print("[RECOMENDACIONES] Generando análisis con OpenRouter...", file=sys.stderr, flush=True)
+        
         prompt = f"""Analiza estas evaluaciones recientes de un estudiante y genera recomendaciones:
 
 Evaluaciones:
@@ -1862,22 +1889,39 @@ Proporciona una respuesta JSON con esta estructura:
 }}"""
         
         try:
-            response_text = deepseek_client.generate_analysis(prompt)
+            response_text = openrouter_client.generate_analysis(prompt)
+            print(f"[RECOMENDACIONES] Respuesta IA recibida: {response_text[:100]}...", file=sys.stderr, flush=True)
+            
             # Intentar parsear como JSON
-            import json
             recommendations = json.loads(response_text)
-        except (OpenRouterServiceError, json.JSONDecodeError):
+            print("[RECOMENDACIONES] ✅ JSON parseado correctamente", file=sys.stderr, flush=True)
+            
+        except (OpenRouterServiceError, json.JSONDecodeError) as e:
+            print(f"[RECOMENDACIONES] ⚠️ Error parseando IA: {str(e)}", file=sys.stderr, flush=True)
+            # Fallback si la IA falla
+            avg_score = sum([e['puntuacion'] for e in evaluation_data]) / len(evaluation_data)
             recommendations = {
-                'fortalezas': ['Participación en clase'],
-                'debilidades': ['Necesita mejorar concentración'],
-                'recomendacion': 'Continuar trabajando en las áreas identificadas.'
+                'fortalezas': [
+                    'Progreso constante en las evaluaciones',
+                    'Participación activa en clase'
+                ],
+                'debilidades': [
+                    'Puede mejorar en algunas áreas específicas',
+                    'Requiere más práctica en ciertos temas'
+                ],
+                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas.'
             }
         
+        print("[RECOMENDACIONES] ✅ Enviando respuesta", file=sys.stderr, flush=True)
         return Response(recommendations)
         
     except Student.DoesNotExist:
+        print(f"[RECOMENDACIONES] ❌ Estudiante {student_id} no encontrado", file=sys.stderr, flush=True)
         return Response({'error': 'Estudiante no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        print(f"[RECOMENDACIONES] ❌ ERROR Exception: {str(e)}", file=sys.stderr, flush=True)
+        import traceback
+        print(f"[RECOMENDACIONES] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
