@@ -484,12 +484,17 @@ class RubricViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'], throttle_classes=[GeminiGenerateThrottle])
     def generate(self, request):
-        """Generar rúbrica con IA (Gemini)"""
+        """Generar rúbrica con IA (MiniMax M2 via OpenRouter)"""
+        import sys
+        print("[RUBRIC] Iniciando generación de rúbrica", file=sys.stderr, flush=True)
+        
         prompt = request.data.get('prompt', '').strip()
         language = request.data.get('language', 'es')
         num_criteria = int(request.data.get('criteria', 4))
         num_levels = int(request.data.get('levels', 4))
         max_score = int(request.data.get('maxScore', 10))
+        
+        print(f"[RUBRIC] Parámetros: prompt={prompt[:50]}..., language={language}, criteria={num_criteria}, levels={num_levels}, maxScore={max_score}", file=sys.stderr, flush=True)
         
         # Validaciones
         if not prompt:
@@ -517,6 +522,7 @@ class RubricViewSet(viewsets.ModelViewSet):
             )
         
         try:
+            print("[RUBRIC] Llamando a openrouter_client.generate_rubric...", file=sys.stderr, flush=True)
             client = openrouter_client
             result = client.generate_rubric(
                 prompt=prompt,
@@ -525,6 +531,8 @@ class RubricViewSet(viewsets.ModelViewSet):
                 num_levels=num_levels,
                 max_score=max_score
             )
+            
+            print(f"[RUBRIC] ✅ Rúbrica generada exitosamente", file=sys.stderr, flush=True)
             
             # Agregar metadatos
             result['_metadata'] = {
@@ -535,14 +543,18 @@ class RubricViewSet(viewsets.ModelViewSet):
             
             return Response(result, status=status.HTTP_200_OK)
             
-        except DeepSeekServiceError as e:
+        except OpenRouterServiceError as e:
+            print(f"[RUBRIC] ❌ OpenRouterServiceError: {str(e)}", file=sys.stderr, flush=True)
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         except Exception as e:
+            print(f"[RUBRIC] ❌ ERROR Exception: {str(e)}", file=sys.stderr, flush=True)
+            import traceback
+            print(f"[RUBRIC] Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
             return Response(
-                {'error': 'Error interno al generar la rúbrica'},
+                {'error': f'Error interno al generar la rúbrica: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -1824,10 +1836,35 @@ def audio_evaluation(request):
 def student_recommendations(request, student_id):
     """
     Genera recomendaciones IA basadas en las últimas evaluaciones del estudiante.
+    Las recomendaciones se guardan en la base de datos para persistencia.
     """
     import sys
+    from .models import StudentRecommendation
+    
     try:
         print(f"[RECOMENDACIONES] Iniciando para estudiante {student_id}", file=sys.stderr, flush=True)
+        
+        # Verificar si ya existen recomendaciones recientes (últimas 24 horas)
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        recent_recommendation = StudentRecommendation.objects.filter(
+            student_id=student_id,
+            created_at__gte=timezone.now() - timedelta(hours=24)
+        ).first()
+        
+        if recent_recommendation:
+            print(f"[RECOMENDACIONES] ✅ Usando recomendación guardada (hace {(timezone.now() - recent_recommendation.created_at).seconds // 3600}h)", file=sys.stderr, flush=True)
+            return Response({
+                'fortalezas': recent_recommendation.fortalezas,
+                'debilidades': recent_recommendation.debilidades,
+                'recomendacion': recent_recommendation.recomendacion,
+                'evaluation_count': recent_recommendation.evaluation_count,
+                'average_score': recent_recommendation.average_score,
+                'generated_by_ai': recent_recommendation.generated_by_ai,
+                'created_at': recent_recommendation.created_at.isoformat(),
+                '_from_cache': True
+            })
         
         # Obtener últimas 5 evaluaciones
         evaluations = Evaluation.objects.filter(
@@ -1837,10 +1874,24 @@ def student_recommendations(request, student_id):
         print(f"[RECOMENDACIONES] Evaluaciones encontradas: {evaluations.count()}", file=sys.stderr, flush=True)
         
         if not evaluations:
+            # Crear recomendación vacía
+            recommendation = StudentRecommendation.objects.create(
+                student_id=student_id,
+                fortalezas=[],
+                debilidades=[],
+                recomendacion='No hay evaluaciones suficientes para generar recomendaciones.',
+                evaluation_count=0,
+                average_score=0.0,
+                generated_by_ai=False
+            )
             return Response({
                 'fortalezas': [],
                 'debilidades': [],
-                'recomendacion': 'No hay evaluaciones suficientes para generar recomendaciones.'
+                'recomendacion': 'No hay evaluaciones suficientes para generar recomendaciones.',
+                'evaluation_count': 0,
+                'average_score': 0.0,
+                'generated_by_ai': False,
+                '_from_cache': False
             })
         
         # Preparar datos para OpenRouter
@@ -1857,14 +1908,15 @@ def student_recommendations(request, student_id):
         
         print(f"[RECOMENDACIONES] Datos preparados: {len(evaluation_data)} evaluaciones", file=sys.stderr, flush=True)
         
+        # Calcular estadísticas
+        scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
+        avg_score = sum(scores) / len(scores) if scores else 0
+        
         # Verificar si OpenRouter está disponible
         if not openrouter_client.api_key:
             print("[RECOMENDACIONES] ⚠️ OPENROUTER_API_KEY no configurada, usando análisis básico", file=sys.stderr, flush=True)
             # Análisis básico sin IA
-            scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
-            avg_score = sum(scores) / len(scores) if scores else 0
-            
-            recommendations = {
+            recommendations_data = {
                 'fortalezas': [
                     'Progreso constante en las evaluaciones',
                     'Participación activa en clase'
@@ -1873,11 +1925,21 @@ def student_recommendations(request, student_id):
                     'Puede mejorar en algunas áreas específicas',
                     'Requiere más práctica en ciertos temas'
                 ],
-                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas en los comentarios de las evaluaciones.'
+                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas en los comentarios de las evaluaciones.',
+                'evaluation_count': len(evaluation_data),
+                'average_score': avg_score,
+                'generated_by_ai': False
             }
-            return Response(recommendations)
+            
+            # Guardar en BD
+            recommendation = StudentRecommendation.objects.create(
+                student_id=student_id,
+                **recommendations_data
+            )
+            recommendations_data['_from_cache'] = False
+            return Response(recommendations_data)
         
-        print("[RECOMENDACIONES] Generando análisis con OpenRouter...", file=sys.stderr, flush=True)
+        print("[RECOMENDACIONES] Generando análisis con MiniMax M2...", file=sys.stderr, flush=True)
         
         prompt = f"""Analiza estas evaluaciones recientes de un estudiante y genera recomendaciones:
 
@@ -1896,15 +1958,22 @@ Proporciona una respuesta JSON con esta estructura:
             print(f"[RECOMENDACIONES] Respuesta IA recibida: {response_text[:100]}...", file=sys.stderr, flush=True)
             
             # Intentar parsear como JSON
-            recommendations = json.loads(response_text)
+            recommendations_json = json.loads(response_text)
             print("[RECOMENDACIONES] ✅ JSON parseado correctamente", file=sys.stderr, flush=True)
+            
+            recommendations_data = {
+                'fortalezas': recommendations_json.get('fortalezas', []),
+                'debilidades': recommendations_json.get('debilidades', []),
+                'recomendacion': recommendations_json.get('recomendacion', ''),
+                'evaluation_count': len(evaluation_data),
+                'average_score': avg_score,
+                'generated_by_ai': True
+            }
             
         except (OpenRouterServiceError, json.JSONDecodeError) as e:
             print(f"[RECOMENDACIONES] ⚠️ Error parseando IA: {str(e)}", file=sys.stderr, flush=True)
             # Fallback si la IA falla
-            scores = [e['puntuacion'] for e in evaluation_data if e['puntuacion'] > 0]
-            avg_score = sum(scores) / len(scores) if scores else 0
-            recommendations = {
+            recommendations_data = {
                 'fortalezas': [
                     'Progreso constante en las evaluaciones',
                     'Participación activa en clase'
@@ -1913,11 +1982,22 @@ Proporciona una respuesta JSON con esta estructura:
                     'Puede mejorar en algunas áreas específicas',
                     'Requiere más práctica en ciertos temas'
                 ],
-                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas.'
+                'recomendacion': f'El estudiante mantiene un promedio de {avg_score:.1f} puntos. Se recomienda continuar con el trabajo actual y reforzar las áreas identificadas.',
+                'evaluation_count': len(evaluation_data),
+                'average_score': avg_score,
+                'generated_by_ai': False
             }
         
-        print("[RECOMENDACIONES] ✅ Enviando respuesta", file=sys.stderr, flush=True)
-        return Response(recommendations)
+        # Guardar en base de datos
+        recommendation = StudentRecommendation.objects.create(
+            student_id=student_id,
+            **recommendations_data
+        )
+        
+        print("[RECOMENDACIONES] ✅ Recomendación guardada en BD", file=sys.stderr, flush=True)
+        recommendations_data['created_at'] = recommendation.created_at.isoformat()
+        recommendations_data['_from_cache'] = False
+        return Response(recommendations_data)
         
     except Student.DoesNotExist:
         print(f"[RECOMENDACIONES] ❌ Estudiante {student_id} no encontrado", file=sys.stderr, flush=True)

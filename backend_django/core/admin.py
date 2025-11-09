@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Student, Subject, Group, CalendarEvent, Comment, Attendance
+    Student, Subject, Group, CalendarEvent, Comment, Attendance, StudentRecommendation
 )
 
 # Importar admin personalizado para usuarios
@@ -54,4 +54,13 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_display = ['id', 'student', 'subject', 'date', 'status']
     list_filter = ['status', 'date']
     search_fields = ['student__name']
+    list_per_page = 50
+
+
+@admin.register(StudentRecommendation)
+class StudentRecommendationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'student', 'evaluation_count', 'average_score', 'generated_by_ai', 'created_at']
+    list_filter = ['generated_by_ai', 'created_at']
+    search_fields = ['student__name', 'recomendacion']
+    readonly_fields = ['created_at', 'updated_at']
     list_per_page = 50

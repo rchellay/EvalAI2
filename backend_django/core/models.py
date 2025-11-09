@@ -907,3 +907,24 @@ class CustomEvent(models.Model):
     
     def __str__(self):
         return f"{self.titulo} - {self.fecha}"
+
+
+class StudentRecommendation(models.Model):
+    """Recomendaciones IA para estudiantes con persistencia"""
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='recommendations', help_text="Estudiante")
+    fortalezas = models.JSONField(default=list, help_text="Lista de fortalezas identificadas")
+    debilidades = models.JSONField(default=list, help_text="Lista de áreas de mejora")
+    recomendacion = models.TextField(help_text="Recomendación general detallada")
+    evaluation_count = models.IntegerField(default=0, help_text="Número de evaluaciones analizadas")
+    average_score = models.FloatField(default=0.0, help_text="Promedio de puntuaciones")
+    generated_by_ai = models.BooleanField(default=True, help_text="Si fue generado por IA o análisis básico")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Recomendación"
+        verbose_name_plural = "Recomendaciones"
+    
+    def __str__(self):
+        return f"Recomendación para {self.student.name} - {self.created_at.strftime('%Y-%m-%d')}"
