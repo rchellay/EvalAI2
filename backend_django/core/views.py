@@ -1934,7 +1934,7 @@ def student_recommendations(request, student_id):
                 'fecha': comment.created_at.isoformat(),
                 'asignatura': comment.subject.name if comment.subject else 'General',
                 'puntuacion': 0,
-                'comentario': comment.content,
+                'comentario': comment.text,  # El campo correcto es 'text', no 'content'
                 'autor': comment.author.get_full_name() or comment.author.username if comment.author else 'Sistema'
             })
         
