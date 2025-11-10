@@ -461,22 +461,22 @@ const RubricEditorPage = () => {
                       <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full font-semibold text-sm">
                         {index + 1}
                       </span>
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="flex-1 flex gap-3">
                         <input
                           type="text"
                           value={criterion.name}
                           onChange={(e) => updateCriterion(criterion.id, 'name', e.target.value)}
                           placeholder="Nombre del criterio"
-                          className="px-3 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400"
+                          className="w-1/4 px-3 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400"
                         />
-                        <input
-                          type="text"
+                        <textarea
                           value={criterion.description}
                           onChange={(e) => updateCriterion(criterion.id, 'description', e.target.value)}
-                          placeholder="Descripción"
-                          className="px-3 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400"
+                          placeholder="Descripción detallada"
+                          rows="2"
+                          className="flex-1 px-3 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400 resize-none"
                         />
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-24">
                           <input
                             type="number"
                             value={criterion.weight}
@@ -485,7 +485,7 @@ const RubricEditorPage = () => {
                             min="0"
                             max="100"
                             step="0.1"
-                            className="flex-1 px-3 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400"
+                            className="w-full px-2 py-2 bg-white dark:bg-background-dark text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded text-sm placeholder-gray-400"
                           />
                           <span className="text-sm text-gray-500">%</span>
                         </div>
@@ -518,7 +518,7 @@ const RubricEditorPage = () => {
                         </h3>
                         <button
                           onClick={() => addLevel(criterion.id)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition"
+                          className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded transition font-medium"
                         >
                           <span className="material-symbols-outlined text-sm">add</span>
                           Añadir Nivel

@@ -246,7 +246,7 @@ class CalendarEventSerializer(serializers.ModelSerializer):
 class RubricLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = RubricLevel
-        fields = ['id', 'name', 'description', 'score', 'order', 'color', 'created_at']
+        fields = ['id', 'criterion', 'name', 'description', 'score', 'order', 'color', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 
