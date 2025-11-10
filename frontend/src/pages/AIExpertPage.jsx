@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import api from '../lib/axios';
 import ChatBubble from '../components/chat/ChatBubble';
 import MessageInput from '../components/chat/MessageInput';
 import ChatSidebar from '../components/chat/ChatSidebar';
@@ -8,7 +8,7 @@ import ChatSidebar from '../components/chat/ChatSidebar';
 const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
 
 export default function AIExpertPage() {
-  const { user } = useAuth();
+  const [user, setUser] = useState(null);
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatSessions, setChatSessions] = useState([]);
@@ -24,6 +24,16 @@ export default function AIExpertPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load user data
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/me')
+        .then(r => setUser(r.data))
+        .catch(() => setUser(null));
+    }
+  }, []);
 
   // Load chat sessions on mount
   useEffect(() => {

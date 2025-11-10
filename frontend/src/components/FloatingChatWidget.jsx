@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Send, MessageCircle, Minimize2 } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import api from '../lib/axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
 
 export default function FloatingChatWidget() {
-  const { user } = useAuth();
+  const [user, setUser] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [currentChat, setCurrentChat] = useState(null);
@@ -22,6 +22,16 @@ export default function FloatingChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load user data
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/me')
+        .then(r => setUser(r.data))
+        .catch(() => setUser(null));
+    }
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
