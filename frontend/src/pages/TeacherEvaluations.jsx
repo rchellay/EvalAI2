@@ -37,7 +37,7 @@ const TeacherEvaluations = () => {
   };
 
   const handleEdit = (id) => {
-    navigate(`/teacher/evaluations/${id}/edit`);
+    navigate(`/teacher/evaluations/${id}`);
   };
 
   const handleDuplicate = async (id) => {

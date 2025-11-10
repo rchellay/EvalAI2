@@ -123,7 +123,7 @@ function App() {
             
             {/* Autoevaluaciones personalizadas */}
             <Route path="/teacher/evaluations" element={<ProtectedRoute><TeacherEvaluations /></ProtectedRoute>} />
-            <Route path="/teacher/evaluations/:id/edit" element={<ProtectedRoute><EvaluationEditor /></ProtectedRoute>} />
+            <Route path="/teacher/evaluations/:id" element={<ProtectedRoute><EvaluationEditor /></ProtectedRoute>} />
             
             <Route path="/transcripciones" element={<ProtectedRoute><PlaceholderPage title="Transcripciones" /></ProtectedRoute>} />
             <Route path="/rubricas" element={<ProtectedRoute><RubricsPage /></ProtectedRoute>} />
