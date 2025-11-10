@@ -3597,7 +3597,8 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
             from io import BytesIO
             from django.http import HttpResponse
             
-            evaluation = self.get_object()
+            # Obtener directamente sin filtro de usuario (es público)
+            evaluation = CustomEvaluation.objects.get(pk=pk)
             
             # Generar QR
             qr = qrcode.QRCode(

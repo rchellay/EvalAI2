@@ -113,7 +113,7 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
 
   const updateObjectiveStatus = async (objectiveId, newStatus) => {
     try {
-      await axios.patch(`/api/objectives/${objectiveId}/`, { status: newStatus });
+      await api.patch(`/objectives/${objectiveId}/`, { status: newStatus });
       setObjectives(prev =>
         prev.map(obj =>
           obj.id === objectiveId ? { ...obj, status: newStatus } : obj
@@ -121,8 +121,33 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
       );
     } catch (error) {
       console.error('Error actualizando objetivo:', error);
-      alert('Error al actualizar el objetivo');
     }
+  };
+
+  const deleteObjective = async (objectiveId) => {
+    if (!window.confirm('¿Estás seguro de eliminar este objetivo?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/objectives/${objectiveId}/`);
+      setObjectives(prev => prev.filter(obj => obj.id !== objectiveId));
+      alert('Objetivo eliminado exitosamente');
+    } catch (error) {
+      console.error('Error eliminando objetivo:', error);
+      alert('Error al eliminar el objetivo');
+    }
+  };
+
+  const getTrimestreFromDeadline = (deadline) => {
+    if (!deadline) return '';
+    const date = new Date(deadline);
+    const month = date.getMonth() + 1; // 0-11 -> 1-12
+    
+    if (month >= 9 && month <= 12) return '1º Trimestre';
+    if (month >= 1 && month <= 3) return '2º Trimestre';
+    if (month >= 4 && month <= 6) return '3º Trimestre';
+    return 'Fecha personalizada';
   };
 
   const getStatusColor = (status) => {
@@ -272,9 +297,20 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
             <div key={objective.id} className="p-4 border border-gray-200 rounded-lg">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="font-medium text-gray-800">{objective.title}</h4>
-                <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(objective.status)}`}>
-                  {getStatusIcon(objective.status)} {getStatusText(objective.status)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(objective.status)}`}>
+                    {getStatusIcon(objective.status)} {getStatusText(objective.status)}
+                  </span>
+                  <button
+                    onClick={() => deleteObjective(objective.id)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                    title="Eliminar objetivo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {objective.description && (
@@ -282,7 +318,7 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
               )}
 
               <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>📅 Límite: {new Date(objective.deadline).toLocaleDateString()}</span>
+                <span>� {getTrimestreFromDeadline(objective.deadline)}</span>
                 {objective.status !== 'logrado' && objective.status !== 'cancelado' && (
                   <select
                     value={objective.status}

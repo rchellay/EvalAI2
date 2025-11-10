@@ -260,19 +260,23 @@ const WidgetEvidencias = ({ studentId, subjectId, onEvidenceUploaded, titleClass
                 >
                   {/* Preview de imagen o icono de archivo */}
                   <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                    {evidence.file_type?.startsWith('image/') ? (
+                    {evidence.file_type?.startsWith('image/') && evidence.file_url ? (
                       <>
                         <img 
                           src={evidence.file_url} 
                           alt={evidence.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          crossOrigin="anonymous"
                           onError={(e) => {
+                            console.error('Error cargando imagen:', evidence.file_url);
                             e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
+                            e.target.nextElementSibling.style.display = 'flex';
                           }}
                         />
-                        <div className="hidden w-full h-full items-center justify-center">
+                        <div className="hidden w-full h-full items-center justify-center flex-col gap-2">
                           <span className="text-5xl">🖼️</span>
+                          <span className="text-xs text-gray-500">Imagen no disponible</span>
                         </div>
                         {/* Overlay al hover */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
