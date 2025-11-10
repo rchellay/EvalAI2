@@ -237,6 +237,64 @@ class OpenRouterClient:
             logger.error(f"Error generando respuesta rápida: {str(e)}")
             return f"Error generando respuesta rápida: {str(e)}"
     
+    def chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        max_tokens: int = 2048,
+        temperature: float = 0.7
+    ) -> Dict[str, Any]:
+        """
+        Genera respuesta de chat usando mensajes estructurados (para chatbot educativo)
+        
+        Args:
+            messages: Lista de mensajes con formato [{"role": "system/user/assistant", "content": "..."}]
+            model: Modelo a usar
+            max_tokens: Máximo de tokens
+            temperature: Temperatura para generación (0.0-1.0)
+            
+        Returns:
+            Dict: Respuesta completa de OpenRouter con estructura choices
+        """
+        if not self.api_key:
+            raise OpenRouterServiceError("Chat completion no disponible - API key no configurada")
+        
+        try:
+            logger.info(f"Chat completion con modelo {model}, {len(messages)} mensajes")
+            
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://evalai.education',
+                'X-Title': 'EvalAI Education Platform'
+            }
+            
+            data = {
+                'model': model,
+                'messages': messages,
+                'max_tokens': max_tokens,
+                'temperature': temperature,
+                'top_p': 0.9
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=self.timeout
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"Error en OpenRouter API: {response.status_code} - {response.text}")
+                raise OpenRouterServiceError(f"Error en API: {response.status_code}")
+                
+        except requests.exceptions.Timeout:
+            raise OpenRouterServiceError("Timeout en OpenRouter API")
+        except requests.exceptions.RequestException as e:
+            raise OpenRouterServiceError(f"Error de conexión: {str(e)}")
+    
     def _build_rubric_prompt(
         self,
         user_prompt: str,

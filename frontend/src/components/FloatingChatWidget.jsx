@@ -44,8 +44,9 @@ export default function FloatingChatWidget() {
           message: messageText
         });
 
-        setCurrentChat(response.data);
-        setMessages(response.data.messages || []);
+        // Backend returns { chat: {...}, success: true }
+        setCurrentChat(response.data.chat);
+        setMessages(response.data.chat.messages || []);
       } else {
         // Send to existing chat
         const response = await api.post(`/ai/chat/${currentChat.id}/send_message/`, {

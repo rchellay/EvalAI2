@@ -68,8 +68,9 @@ export default function AIExpertPage() {
           message: messageText
         });
 
-        setCurrentChat(response.data);
-        setMessages(response.data.messages || []);
+        // Backend returns { chat: {...}, success: true }
+        setCurrentChat(response.data.chat);
+        setMessages(response.data.chat.messages || []);
         await loadChatSessions(); // Refresh sidebar
       } else {
         // Send message to existing chat
