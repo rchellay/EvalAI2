@@ -279,8 +279,13 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 }
             
             elif function_name == 'create_subject':
+                from datetime import time
+                
                 subject_name = function_args.get('subject_name')
-                description = function_args.get('description', '')
+                days = function_args.get('days', ['L'])  # Default: Lunes
+                start_time_str = function_args.get('start_time', '09:00')
+                end_time_str = function_args.get('end_time', '10:00')
+                color = function_args.get('color', '#3B82F6')
                 
                 if not subject_name:
                     return {
@@ -288,11 +293,24 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                         'message': 'Falta el nombre de la asignatura.'
                     }
                 
+                # Parsear horas
+                try:
+                    start_hour, start_min = map(int, start_time_str.split(':'))
+                    end_hour, end_min = map(int, end_time_str.split(':'))
+                    start_time = time(start_hour, start_min)
+                    end_time = time(end_hour, end_min)
+                except:
+                    start_time = time(9, 0)
+                    end_time = time(10, 0)
+                
                 # Crear la asignatura
                 subject = Subject.objects.create(
                     name=subject_name,
-                    description=description,
-                    teacher=user
+                    teacher=user,
+                    days=days,
+                    start_time=start_time,
+                    end_time=end_time,
+                    color=color
                 )
                 
                 return {

@@ -139,6 +139,26 @@ export default function AIExpertPage() {
     loadChatMessages(chatId);
   };
 
+  const handleDeleteChat = async (chatId) => {
+    try {
+      await api.delete(`/ai/chat/${chatId}/`);
+      
+      // Si estamos viendo el chat eliminado, limpiar la vista
+      if (currentChat?.id === chatId) {
+        setCurrentChat(null);
+        setMessages([]);
+        localStorage.removeItem('comenius_last_chat_id');
+        localStorage.removeItem('comenius_last_chat_messages');
+      }
+      
+      // Recargar lista de sesiones
+      await loadChatSessions();
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      alert('Error al eliminar la conversación');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -147,6 +167,7 @@ export default function AIExpertPage() {
         currentChatId={currentChat?.id}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />

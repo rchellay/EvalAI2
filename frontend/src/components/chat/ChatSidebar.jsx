@@ -1,6 +1,13 @@
-export default function ChatSidebar({ chatSessions, currentChatId, onSelectChat, onNewChat, isOpen, onToggle }) {
+export default function ChatSidebar({ chatSessions, currentChatId, onSelectChat, onNewChat, onDeleteChat, isOpen, onToggle }) {
   // Validación defensiva: asegurar que chatSessions sea un array
   const sessions = Array.isArray(chatSessions) ? chatSessions : [];
+  
+  const handleDelete = (e, sessionId) => {
+    e.stopPropagation(); // Evitar que se seleccione el chat al hacer clic en eliminar
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+      onDeleteChat(sessionId);
+    }
+  };
   
   return (
     <>
@@ -47,28 +54,43 @@ export default function ChatSidebar({ chatSessions, currentChatId, onSelectChat,
           ) : (
             <div className="space-y-2">
               {sessions.map((session) => (
-                <button
+                <div
                   key={session.id}
-                  onClick={() => onSelectChat(session.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  className={`relative group rounded-lg transition-colors ${
                     currentChatId === session.id
                       ? 'bg-blue-50 border-2 border-blue-600'
                       : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                   }`}
                 >
-                  <div className="font-medium text-gray-800 truncate mb-1">
-                    {session.title || 'Nueva conversación'}
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{session.message_count} mensajes</span>
-                    <span>
-                      {new Date(session.updated_at).toLocaleDateString('es-ES', {
-                        day: 'numeric',
-                        month: 'short'
-                      })}
-                    </span>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => onSelectChat(session.id)}
+                    className="w-full text-left p-3 rounded-lg"
+                  >
+                    <div className="font-medium text-gray-800 truncate mb-1 pr-8">
+                      {session.title || 'Nueva conversación'}
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{session.message_count} mensajes</span>
+                      <span>
+                        {new Date(session.updated_at).toLocaleDateString('es-ES', {
+                          day: 'numeric',
+                          month: 'short'
+                        })}
+                      </span>
+                    </div>
+                  </button>
+                  
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => handleDelete(e, session.id)}
+                    className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Eliminar conversación"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
           )}

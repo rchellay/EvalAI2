@@ -69,9 +69,22 @@ class EducationalResearchAgent:
                             "type": "string",
                             "description": "Nombre de la asignatura (ej: 'Matemáticas', 'Lengua Catalana')"
                         },
-                        "description": {
+                        "days": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Días de la semana (ej: ['L', 'X', 'V']). L=Lunes, M=Martes, X=Miércoles, J=Jueves, V=Viernes"
+                        },
+                        "start_time": {
                             "type": "string",
-                            "description": "Descripción opcional de la asignatura"
+                            "description": "Hora de inicio en formato HH:MM (ej: '09:00')"
+                        },
+                        "end_time": {
+                            "type": "string",
+                            "description": "Hora de fin en formato HH:MM (ej: '10:00')"
+                        },
+                        "color": {
+                            "type": "string",
+                            "description": "Color en hexadecimal (ej: '#3B82F6')"
                         }
                     },
                     "required": ["subject_name"]
