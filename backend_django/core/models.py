@@ -1,6 +1,8 @@
 ﻿from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Group(models.Model):
@@ -997,3 +999,55 @@ class EvaluationResponse(models.Model):
     
     def __str__(self):
         return f"{self.student.full_name} - {self.evaluation.title}"
+
+
+class UserProfile(models.Model):
+    """Perfil extendido para usuarios (profesores)"""
+    GENDER_CHOICES = [
+        ('M', 'Masculino'),
+        ('F', 'Femenino'),
+        ('O', 'Otro'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', help_text="Usuario asociado")
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, help_text="Género del usuario")
+    phone = models.CharField(max_length=20, blank=True, default='', help_text="Teléfono de contacto")
+    bio = models.TextField(blank=True, default='', help_text="Biografía o descripción")
+    avatar = models.FileField(upload_to="avatars/", null=True, blank=True, help_text="Foto de perfil")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Perfil de Usuario"
+        verbose_name_plural = "Perfiles de Usuario"
+    
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+    
+    @property
+    def welcome_message(self):
+        """Retorna 'Bienvenido' o 'Bienvenida' según el género"""
+        if self.gender == 'F':
+            return 'Bienvenida'
+        elif self.gender == 'M':
+            return 'Bienvenido'
+        else:
+            return 'Bienvenido/a'
+
+
+# Señales para crear automáticamente el perfil cuando se crea un usuario
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Crear perfil automáticamente cuando se crea un usuario"""
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """Guardar perfil cuando se guarda el usuario"""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        # Si por alguna razón no existe el perfil, créalo
+        UserProfile.objects.get_or_create(user=instance)

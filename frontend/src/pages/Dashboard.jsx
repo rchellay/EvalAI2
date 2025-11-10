@@ -9,20 +9,20 @@ import WidgetClases from '../components/widgets/WidgetClases';
 import WidgetRendimiento from '../components/widgets/WidgetRendimiento';
 import WidgetComentarios from '../components/widgets/WidgetComentarios';
 import WidgetIA from '../components/widgets/WidgetIA';
-import WidgetRubricas from '../components/widgets/WidgetRubricas';
 import WidgetPendientes from '../components/widgets/WidgetPendientes';
-import WidgetAccesos from '../components/widgets/WidgetAccesos';
 import WidgetNoticias from '../components/widgets/WidgetNoticias';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Verificar autenticación
+    // Verificar autenticación y obtener datos del usuario
     const checkAuth = async () => {
       try {
-        await api.get('/auth/me');
+        const response = await api.get('/auth/me');
+        setUser(response.data);
         setLoading(false);
       } catch (err) {
         setError('No autorizado');
@@ -74,10 +74,10 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <h1 className="text-4xl font-bold text-slate-800 flex items-center">
             <span className="mr-3">🎓</span>
-            Panel del Profesor
+            {user?.first_name ? `Hola ${user.first_name}` : 'Panel del Profesor'}
           </h1>
           <p className="text-slate-600 mt-2">
-            Bienvenido a tu centro de control educativo
+            {user?.profile?.welcome_message || 'Bienvenido'} a tu centro de control educativo
           </p>
         </div>
       </motion.div>
@@ -131,38 +131,20 @@ const Dashboard = () => {
             <WidgetIA />
           </motion.div>
 
-          {/* Widget Rúbricas más usadas */}
+          {/* Widget Evaluaciones Pendientes */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <WidgetRubricas />
-          </motion.div>
-
-          {/* Widget Evaluaciones Pendientes */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
             <WidgetPendientes />
-          </motion.div>
-
-          {/* Widget Accesos Rápidos */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
-            <WidgetAccesos />
           </motion.div>
 
           {/* Widget Noticias Educativas */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.9 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
             className="md:col-span-2"
           >
             <WidgetNoticias />

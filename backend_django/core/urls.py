@@ -29,7 +29,7 @@ from .views import (
     dashboard_resumen, proximas_clases, evolucion_rendimiento, analizar_tendencias,
     comentarios_recientes, insights_ia, rubricas_estadisticas, evaluaciones_pendientes,
     noticias_educacion, corregir_texto, obtener_estadisticas_texto,
-    # procesar_imagen_ocr, procesar_y_corregir_imagen, idiomas_ocr_soportados, validar_imagen_ocr,
+    procesar_imagen_ocr, procesar_y_corregir_imagen, idiomas_ocr_soportados, validar_imagen_ocr,
     guardar_correccion_como_evidencia, evidencias_correccion_estudiante, evidencias_correccion_profesor,
     actualizar_evidencia_correccion, estadisticas_correccion_estudiante,
     CustomEventViewSet, user_settings, change_password, test_notification, non_school_days,
@@ -178,11 +178,11 @@ urlpatterns = [
     path('correccion/texto/', corregir_texto, name='corregir-texto'),
     path('correccion/estadisticas/', obtener_estadisticas_texto, name='estadisticas-texto'),
     
-    # OCR endpoints (temporalmente deshabilitados)
-    # path('ocr/procesar/', procesar_imagen_ocr, name='procesar-imagen-ocr'),
-    # path('ocr/procesar-y-corregir/', procesar_y_corregir_imagen, name='procesar-y-corregir-imagen'),
-    # path('ocr/idiomas/', idiomas_ocr_soportados, name='idiomas-ocr-soportados'),
-    # path('ocr/validar/', validar_imagen_ocr, name='validar-imagen-ocr'),
+    # OCR endpoints
+    path('ocr/procesar/', procesar_imagen_ocr, name='procesar-imagen-ocr'),
+    path('ocr/procesar-y-corregir/', procesar_y_corregir_imagen, name='procesar-y-corregir-imagen'),
+    path('ocr/idiomas/', idiomas_ocr_soportados, name='idiomas-ocr-soportados'),
+    path('ocr/validar/', validar_imagen_ocr, name='validar-imagen-ocr'),
     
     # Corrección como evidencia endpoints
     path('correccion/guardar-evidencia/', guardar_correccion_como_evidencia, name='guardar-correccion-evidencia'),

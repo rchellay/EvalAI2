@@ -39,7 +39,11 @@ const OCRImagen = () => {
   const cargarEstudiantes = async () => {
     try {
       const response = await api.get('/students/');
-      if (response.data && Array.isArray(response.data)) {
+      // Manejar respuesta paginada de DRF
+      const data = response.data.results || response.data;
+      if (data && Array.isArray(data)) {
+        setEstudiantes(data);
+      } else if (Array.isArray(response.data)) {
         setEstudiantes(response.data);
       } else {
         console.warn('Respuesta de estudiantes no es un array:', response.data);
@@ -55,7 +59,11 @@ const OCRImagen = () => {
   const cargarAsignaturas = async () => {
     try {
       const response = await api.get('/subjects/');
-      if (response.data && Array.isArray(response.data)) {
+      // Manejar respuesta paginada de DRF
+      const data = response.data.results || response.data;
+      if (data && Array.isArray(data)) {
+        setAsignaturas(data);
+      } else if (Array.isArray(response.data)) {
         setAsignaturas(response.data);
       } else {
         console.warn('Respuesta de asignaturas no es un array:', response.data);

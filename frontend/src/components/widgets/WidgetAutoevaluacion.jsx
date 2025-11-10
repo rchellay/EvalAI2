@@ -5,14 +5,7 @@ import api from '../../lib/axios';
 const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, titleClassName }) => {
   const [selfEvaluations, setSelfEvaluations] = useState([]);
   const [customEvaluations, setCustomEvaluations] = useState([]);
-  const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [formData, setFormData] = useState({
-    score: 3,
-    comment: '',
-    evaluation_type: 'autoevaluacion'
-  });
-  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Cargar autoevaluaciones existentes y evaluaciones personalizadas disponibles
@@ -171,14 +164,15 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
           <span className="mr-2">🧠</span>
           Autoevaluación
         </h3>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
+        <a
+          href={`/teacher/evaluations/new?studentId=${studentId}`}
+          className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm inline-block"
         >
-          {showForm ? 'Cancelar' : '+ Evaluarme'}
-        </button>
+          + Crear Autoevaluación
+        </a>
       </div>
 
+      {/* FORMULARIO SIMPLE OCULTO - Ya no se usa
       {showForm && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h4 className="font-medium mb-3">Mi Autoevaluación</h4>

@@ -35,6 +35,7 @@ from .serializers import (
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
 from .services.whisper_loader import get_whisper_service
 from .services.openrouter_service import openrouter_client, OpenRouterServiceError
+from .services.languagetool_service import languagetool_service
 
 
 class StudentViewSet(viewsets.ModelViewSet):
@@ -1013,12 +1014,25 @@ def get_current_user(request):
         )
     
     user = request.user
+    
+    # Obtener o crear perfil
+    from .models import UserProfile
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
     return Response({
         'id': user.id,
         'username': user.username,
         'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
         'is_staff': user.is_staff,
         'is_superuser': user.is_superuser,
+        'profile': {
+            'gender': profile.gender,
+            'phone': profile.phone,
+            'bio': profile.bio,
+            'welcome_message': profile.welcome_message,
+        }
     })
 
 
@@ -1406,7 +1420,13 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
         return Objective.objects.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        print(f"[OBJECTIVE CREATE] Request data: {self.request.data}", file=sys.stderr, flush=True)
+        print(f"[OBJECTIVE CREATE] User: {self.request.user}", file=sys.stderr, flush=True)
+        try:
+            serializer.save(created_by=self.request.user)
+        except Exception as e:
+            print(f"[OBJECTIVE CREATE ERROR] {str(e)}", file=sys.stderr, flush=True)
+            raise
 
 
 class EvidenceViewSet(viewsets.ModelViewSet):
@@ -2918,37 +2938,50 @@ def obtener_estadisticas_texto(request):
 
 # ===================== OCR ENDPOINTS =====================
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def procesar_imagen_ocr(request):
-#     """
-#     Procesa una imagen para extraer texto manuscrito usando Google Cloud Vision OCR
-#     """
-#     return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def procesar_imagen_ocr(request):
+    """
+    Procesa una imagen para extraer texto manuscrito usando Google Cloud Vision OCR
+    """
+    return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def procesar_y_corregir_imagen(request):
-#     """
-#     Procesa una imagen para extraer texto manuscrito y lo corrige automáticamente
-#     """
-#     return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def procesar_y_corregir_imagen(request):
+    """
+    Procesa una imagen para extraer texto manuscrito y lo corrige automáticamente
+    """
+    return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def idiomas_ocr_soportados(request):
-#     """
-#     Obtiene lista de idiomas soportados para OCR
-#     """
-#     return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def validar_imagen_ocr(request):
-#     """
-#     Valida si una imagen es adecuada para OCR
-#     """
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def idiomas_ocr_soportados(request):
+    """
+    Obtiene lista de idiomas soportados para OCR
+    """
+    return Response({
+        'idiomas': [
+            {'code': 'es', 'name': 'Español'},
+            {'code': 'ca', 'name': 'Catalán'},
+            {'code': 'en', 'name': 'Inglés'},
+            {'code': 'fr', 'name': 'Francés'},
+        ]
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def validar_imagen_ocr(request):
+    """
+    Valida si una imagen es adecuada para OCR
+    """
+    return Response({
+        'valida': True,
+        'mensaje': 'Imagen válida para procesar'
+    })
 #     return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 

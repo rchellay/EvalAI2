@@ -462,6 +462,7 @@ class EvidenceSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source='subject.name', read_only=True)
     uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True)
     file_url = serializers.SerializerMethodField()
+    file_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Evidence
@@ -475,6 +476,43 @@ class EvidenceSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+    
+    def get_file_type(self, obj):
+        """Detectar tipo de archivo desde la extensión"""
+        import sys
+        print(f"[EVIDENCE] get_file_type called for Evidence id={obj.id}", file=sys.stderr, flush=True)
+        print(f"[EVIDENCE] obj.file: {obj.file}", file=sys.stderr, flush=True)
+        print(f"[EVIDENCE] obj.file.name: {obj.file.name if obj.file else 'None'}", file=sys.stderr, flush=True)
+        
+        if not obj.file:
+            print(f"[EVIDENCE] No file attached, returning empty string", file=sys.stderr, flush=True)
+            return ''
+        
+        import os
+        import mimetypes
+        
+        # Intentar obtener el tipo MIME
+        file_name = obj.file.name
+        mime_type, _ = mimetypes.guess_type(file_name)
+        
+        print(f"[EVIDENCE] file_name: {file_name}, mime_type: {mime_type}", file=sys.stderr, flush=True)
+        
+        if mime_type:
+            return mime_type
+        
+        # Fallback: detectar por extensión
+        file_ext = os.path.splitext(file_name)[1].lower()
+        
+        if file_ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif']:
+            return 'image/jpeg'
+        elif file_ext == '.pdf':
+            return 'application/pdf'
+        elif file_ext in ['.mp3', '.wav', '.m4a', '.ogg']:
+            return 'audio/mpeg'
+        elif file_ext in ['.mp4', '.mov', '.avi']:
+            return 'video/mp4'
+        
+        return 'application/octet-stream'
     
     def validate_file(self, value):
         """Validar archivo incluyendo soporte para formatos de iPhone (HEIC/HEIF)"""
