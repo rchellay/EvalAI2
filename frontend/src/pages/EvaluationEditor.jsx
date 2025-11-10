@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Switch } from 'antd';
+import Switch from '../components/Switch';
 import api from '../lib/axios';
 
 const EvaluationEditor = () => {
