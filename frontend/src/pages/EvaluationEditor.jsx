@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { Switch } from 'antd';
 import api from '../lib/axios';
 
 const EvaluationEditor = () => {
@@ -292,7 +293,7 @@ const EvaluationEditor = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 bg-white"
                 rows="3"
                 placeholder="Instrucciones para los alumnos..."
               />
@@ -306,7 +307,7 @@ const EvaluationEditor = () => {
                 name="group"
                 value={formData.group}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 bg-white"
                 required
               >
                 <option value="">Selecciona un grupo</option>
@@ -318,28 +319,22 @@ const EvaluationEditor = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="allow_multiple_attempts"
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Permitir múltiples intentos</span>
+                <Switch
                   checked={formData.allow_multiple_attempts}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  onChange={(checked) => setFormData(prev => ({ ...prev, allow_multiple_attempts: checked }))}
                 />
-                <span className="text-sm text-gray-700">Permitir múltiples intentos</span>
-              </label>
+              </div>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_active"
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Activa (los alumnos pueden responder)</span>
+                <Switch
                   checked={formData.is_active}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  onChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
                 />
-                <span className="text-sm text-gray-700">Activa (los alumnos pueden responder)</span>
-              </label>
+              </div>
             </div>
           </div>
         </div>
@@ -347,7 +342,7 @@ const EvaluationEditor = () => {
         {/* Editor de preguntas */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">❓ Preguntas ({formData.questions.length})</h2>
+            <h2 className="text-xl font-semibold text-gray-800">❓ Preguntas ({formData.questions.length})</h2>
             {!editingQuestion && questionForm.id === null && (
               <button
                 type="button"
@@ -389,7 +384,7 @@ const EvaluationEditor = () => {
                     name="type"
                     value={questionForm.type}
                     onChange={handleQuestionFormChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
                   >
                     <option value="likert">⭐ Escala Likert (1-5)</option>
                     <option value="multiple_choice">☑️ Selección Múltiple</option>
