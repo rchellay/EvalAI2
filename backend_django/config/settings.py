@@ -284,7 +284,12 @@ OPENROUTER_CACHE_TTL = config('OPENROUTER_CACHE_TTL', default=86400, cast=int)
 # Modelos específicos para diferentes tareas
 QWEN_MODEL = config('QWEN_MODEL', default='qwen/qwen3-235b-a22b:free')  # Principal para rúbricas
 DEEPSEEK_MODEL = config('DEEPSEEK_MODEL', default='google/gemini-flash-1.5')  # Análisis y feedback (soporta imágenes)
-GLM_MODEL = config('GLM_MODEL', default='z-ai/glm-4.5-air:free')  # Tareas rápidas
+GLM_MODEL = config('GLM_MODEL', default='z-ai/glm-4-air:free')  # Tareas rápidas
+
+# Educational Research Chatbot Configuration
+AI_MODEL = config('AI_MODEL', default='anthropic/claude-3-5-haiku')  # Modelo para chatbot educativo
+AI_MAX_TOKENS = config('AI_MAX_TOKENS', default=2000, cast=int)
+AI_TEMPERATURE = config('AI_TEMPERATURE', default=0.3, cast=float)  # Más determinista para evidencia
 
 # Google Cloud Vision OCR Configuration
 GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-education')

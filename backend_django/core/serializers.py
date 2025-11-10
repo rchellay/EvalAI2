@@ -4,7 +4,7 @@ from .models import (
     Student, Subject, Group, CalendarEvent,
     Rubric, RubricCriterion, RubricLevel, RubricScore, Comment, Evaluation,
     Objective, Evidence, SelfEvaluation, Attendance, Notification, CorrectionEvidence,
-    UserSettings, CustomEvent, CustomEvaluation, EvaluationResponse
+    UserSettings, CustomEvent, CustomEvaluation, EvaluationResponse, ChatSession, ChatMessage
 )
 
 

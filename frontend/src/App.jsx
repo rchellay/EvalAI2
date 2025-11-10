@@ -22,6 +22,7 @@ import GoogleCallback from './pages/GoogleCallback';
 import TeacherEvaluations from './pages/TeacherEvaluations';
 import EvaluationEditor from './pages/EvaluationEditor';
 import PublicAutoeval from './pages/PublicAutoeval';
+import AIExpertPage from './pages/AIExpertPage';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -124,6 +125,9 @@ function App() {
             {/* Autoevaluaciones personalizadas */}
             <Route path="/teacher/evaluations" element={<ProtectedRoute><TeacherEvaluations /></ProtectedRoute>} />
             <Route path="/teacher/evaluations/:id" element={<ProtectedRoute><EvaluationEditor /></ProtectedRoute>} />
+            
+            {/* Asistente de Investigación Educativa con IA */}
+            <Route path="/teacher/ai-expert" element={<ProtectedRoute><AIExpertPage /></ProtectedRoute>} />
             
             <Route path="/transcripciones" element={<ProtectedRoute><PlaceholderPage title="Transcripciones" /></ProtectedRoute>} />
             <Route path="/rubricas" element={<ProtectedRoute><RubricsPage /></ProtectedRoute>} />

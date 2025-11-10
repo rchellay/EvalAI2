@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Student, Subject, Group, CalendarEvent, Comment, Attendance, StudentRecommendation,
-    CustomEvaluation, EvaluationResponse, UserProfile
+    CustomEvaluation, EvaluationResponse, UserProfile, ChatSession, ChatMessage
 )
 
 # Importar admin personalizado para usuarios
@@ -92,4 +92,26 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone']
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 50
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'title', 'message_count', 'created_at', 'updated_at']
+    list_filter = ['created_at', 'user']
+    search_fields = ['user__username', 'title']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'message_count']
+    list_per_page = 50
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'chat', 'sender', 'timestamp', 'content_preview']
+    list_filter = ['sender', 'timestamp']
+    search_fields = ['content', 'chat__user__username']
+    readonly_fields = ['timestamp']
+    list_per_page = 50
+    
+    def content_preview(self, obj):
+        return obj.content[:100] + '...' if len(obj.content) > 100 else obj.content
+    content_preview.short_description = 'Contenido'
 

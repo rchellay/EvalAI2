@@ -1051,3 +1051,64 @@ def save_user_profile(sender, instance, **kwargs):
     else:
         # Si por alguna razón no existe el perfil, créalo
         UserProfile.objects.get_or_create(user=instance)
+
+
+class ChatSession(models.Model):
+    """Sesión de chat con el agente de investigación educativa"""
+    import uuid
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions', help_text="Usuario que inicia el chat")
+    title = models.CharField(max_length=500, blank=True, default='Nueva conversación', help_text="Título de la conversación")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = "Sesión de Chat"
+        verbose_name_plural = "Sesiones de Chat"
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title[:50]}"
+    
+    @property
+    def message_count(self):
+        """Total de mensajes en la conversación"""
+        return self.messages.count()
+    
+    @property
+    def last_message(self):
+        """Último mensaje de la conversación"""
+        return self.messages.last()
+
+
+class ChatMessage(models.Model):
+    """Mensaje individual dentro de una sesión de chat"""
+    SENDER_CHOICES = [
+        ('user', 'Usuario'),
+        ('assistant', 'Asistente IA'),
+    ]
+    
+    id = models.BigAutoField(primary_key=True)
+    chat = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages', help_text="Sesión de chat")
+    sender = models.CharField(max_length=10, choices=SENDER_CHOICES, help_text="Quién envió el mensaje")
+    content = models.TextField(help_text="Contenido del mensaje")
+    papers = models.JSONField(default=list, blank=True, help_text="Papers científicos citados (JSON)")
+    # Estructura de papers:
+    # [
+    #   {
+    #     "title": "...",
+    #     "authors": ["..."],
+    #     "year": 2023,
+    #     "abstract": "...",
+    #     "url": "https://..."
+    #   }
+    # ]
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        verbose_name = "Mensaje de Chat"
+        verbose_name_plural = "Mensajes de Chat"
+    
+    def __str__(self):
+        return f"{self.sender} - {self.content[:50]}"

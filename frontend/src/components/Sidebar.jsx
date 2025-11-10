@@ -14,7 +14,8 @@ import {
   LogOut,
   ClipboardCheck,
   BookOpen,
-  QrCode
+  QrCode,
+  BrainCircuit
 } from 'lucide-react';
 
 const menuItems = [
@@ -24,6 +25,7 @@ const menuItems = [
   { path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia' },
   { path: '/rubricas', icon: ClipboardList, label: 'Rúbricas' },
   { path: '/teacher/evaluations', icon: QrCode, label: 'Autoevaluaciones' },
+  { path: '/teacher/ai-expert', icon: BrainCircuit, label: 'Asistente IA', highlight: true },
   { path: '/correccion', icon: BookOpen, label: 'Corrección' },
   { path: '/calendario', icon: Calendar, label: 'Calendario' },
   { path: '/informes', icon: BarChart3, label: 'Informes' },
@@ -72,15 +74,24 @@ export default function Sidebar() {
                 flex items-center px-4 py-2.5 text-sm font-medium rounded-lg
                 transition-colors duration-150
                 ${isActive 
-                  ? 'bg-blue-600 text-white' 
-                  : 'hover:bg-slate-700 text-slate-300'
+                  ? (item.highlight ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' : 'bg-blue-600 text-white')
+                  : (item.highlight ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-600 hover:to-purple-600 text-blue-100' : 'hover:bg-slate-700 text-slate-300')
                 }
                 ${collapsed ? 'justify-center' : ''}
               `}
               title={collapsed ? item.label : ''}
             >
               <Icon size={20} className={collapsed ? '' : 'mr-3'} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="flex items-center">
+                  {item.label}
+                  {item.highlight && (
+                    <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-400 text-gray-900 rounded-full font-bold">
+                      NUEVO
+                    </span>
+                  )}
+                </span>
+              )}
             </Link>
           );
         })}

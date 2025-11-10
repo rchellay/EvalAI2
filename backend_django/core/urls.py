@@ -38,6 +38,7 @@ from .views import (
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
 from .views_hierarchy import GroupHierarchyViewSet, StudentHierarchyViewSet
+from .views_chat import ChatSessionViewSet, test_research_search
 from .auth_views import login_view, register_view, google_login_view, ping_view
 from .admin_views import cleanup_duplicates_view
 from .migration_views import run_migrations_view, check_migrations_view
@@ -82,6 +83,9 @@ router.register(r'asistencia', AttendanceViewSet, basename='asistencia')
 # Rutas jerárquicas para grupos y estudiantes
 router.register(r'grupos', GroupHierarchyViewSet, basename='grupo-hierarchy')
 router.register(r'estudiantes', StudentHierarchyViewSet, basename='estudiante-hierarchy')
+
+# Chatbot de investigación educativa
+router.register(r'ai/chat', ChatSessionViewSet, basename='chat-session')
 
 # Ruta de debug para testing
 from .views_hierarchy import debug_group_endpoint
@@ -190,6 +194,9 @@ urlpatterns = [
     path('correccion/evidencias/profesor/', evidencias_correccion_profesor, name='evidencias-correccion-profesor'),
     path('correccion/evidencias/<int:evidence_id>/actualizar/', actualizar_evidencia_correccion, name='actualizar-evidencia-correccion'),
     path('correccion/estadisticas/estudiante/<int:student_id>/', estadisticas_correccion_estudiante, name='estadisticas-correccion-estudiante'),
+    
+    # AI Research Chat endpoints
+    path('ai/test-search/', test_research_search, name='test-research-search'),
     
     # Ajustes de usuario
     path('settings/', user_settings, name='user-settings'),
