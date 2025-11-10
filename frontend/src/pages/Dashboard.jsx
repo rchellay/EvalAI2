@@ -11,6 +11,7 @@ import WidgetComentarios from '../components/widgets/WidgetComentarios';
 import WidgetIA from '../components/widgets/WidgetIA';
 import WidgetPendientes from '../components/widgets/WidgetPendientes';
 import WidgetNoticias from '../components/widgets/WidgetNoticias';
+import FloatingChatWidget from '../components/FloatingChatWidget';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -152,6 +153,9 @@ const Dashboard = () => {
 
         </div>
       </div>
+
+      {/* Floating Chat Widget */}
+      <FloatingChatWidget />
     </div>
   );
 };

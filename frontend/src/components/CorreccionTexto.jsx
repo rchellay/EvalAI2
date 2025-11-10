@@ -10,6 +10,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mostrarSugerencias, setMostrarSugerencias] = useState({});
+  const [idioma, setIdioma] = useState(''); // Idioma seleccionado (obligatorio)
   
   // Estados para vincular con alumno
   const [estudiantes, setEstudiantes] = useState([]);
@@ -74,13 +75,19 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
       return;
     }
 
+    if (!idioma) {
+      setError('Por favor, selecciona el idioma del texto antes de corregir');
+      toast.error('Debes seleccionar un idioma');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const response = await api.post('/correccion/texto/', {
         texto: texto,
-        idioma: 'es'
+        idioma: idioma
       });
 
       setCorreccion(response.data.correccion);
@@ -276,6 +283,34 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
             <BarChart3 className="mr-1 h-4 w-4" />
             {estadisticas.total_palabras} palabras
           </div>
+        )}
+      </div>
+
+      {/* Selector de idioma (OBLIGATORIO) */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Idioma del texto: <span className="text-red-600">*</span>
+        </label>
+        <select
+          value={idioma}
+          onChange={(e) => setIdioma(e.target.value)}
+          className={`w-full px-3 py-2 bg-white text-gray-900 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            !idioma ? 'border-red-300' : 'border-gray-300'
+          }`}
+        >
+          <option value="">-- Selecciona el idioma --</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="ca">🏴 Catalán</option>
+          <option value="en">🇬🇧 Inglés</option>
+          <option value="fr">🇫🇷 Francés</option>
+          <option value="de">🇩🇪 Alemán</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="pt">🇵🇹 Portugués</option>
+        </select>
+        {!idioma && (
+          <p className="mt-1 text-xs text-red-600">
+            ⚠️ Debes seleccionar el idioma antes de corregir
+          </p>
         )}
       </div>
 

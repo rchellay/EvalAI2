@@ -2427,7 +2427,7 @@ def proximas_clases(request):
         
         print(f"[PROXIMAS_CLASES] Today: {today}, Weekday: {today_weekday}", file=sys.stderr, flush=True)
         
-        # Mapeo español -> inglés de días (por si acaso)
+        # Mapeo español -> inglés de días
         day_map_es_to_en = {
             'lunes': 'monday',
             'martes': 'tuesday',
@@ -2439,6 +2439,20 @@ def proximas_clases(request):
             'sabado': 'saturday',
             'domingo': 'sunday'
         }
+        
+        # Mapeo catalán -> inglés de días
+        day_map_ca_to_en = {
+            'dilluns': 'monday',
+            'dimarts': 'tuesday',
+            'dimecres': 'wednesday',
+            'dijous': 'thursday',
+            'divendres': 'friday',
+            'dissabte': 'saturday',
+            'diumenge': 'sunday'
+        }
+        
+        # Combinar ambos mapeos
+        day_map_to_en = {**day_map_es_to_en, **day_map_ca_to_en}
         
         clases_data = []
         
@@ -2456,12 +2470,13 @@ def proximas_clases(request):
             # Normalizar días a minúsculas
             subject_days_normalized = [day.lower() for day in subject_days]
             
-            # Intentar también con mapeo español -> inglés
+            # Mapear a inglés usando diccionario combinado
             subject_days_normalized_en = []
             for day in subject_days_normalized:
-                if day in day_map_es_to_en:
-                    subject_days_normalized_en.append(day_map_es_to_en[day])
+                if day in day_map_to_en:
+                    subject_days_normalized_en.append(day_map_to_en[day])
                 else:
+                    # Si ya está en inglés, mantener
                     subject_days_normalized_en.append(day)
             
             print(f"[PROXIMAS_CLASES] Normalized: {subject_days_normalized}, EN: {subject_days_normalized_en}", file=sys.stderr, flush=True)
