@@ -39,10 +39,13 @@ const EvaluationEditor = () => {
   const fetchGroups = async () => {
     try {
       const response = await api.get('/groups/');
-      setGroups(response.data);
+      // Manejar respuesta paginada o array directo
+      const data = Array.isArray(response.data) ? response.data : (response.data.results || []);
+      setGroups(data);
     } catch (error) {
       console.error('Error cargando grupos:', error);
       toast.error('Error al cargar grupos');
+      setGroups([]);
     }
   };
 
