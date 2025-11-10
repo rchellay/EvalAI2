@@ -7,9 +7,22 @@ from django.urls import path
 from django.shortcuts import render
 from django.db import transaction
 import traceback
+from .models import UserProfile
+
+
+class UserProfileInline(admin.StackedInline):
+    """Inline para editar UserProfile desde User admin"""
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Perfil de Usuario'
+    fields = ['gender', 'phone', 'bio', 'avatar']
+    extra = 0
+
 
 class CustomUserAdmin(BaseUserAdmin):
     """Admin personalizado para usuarios que maneja errores 500"""
+    
+    inlines = [UserProfileInline]
     
     def save_model(self, request, obj, form, change):
         """Método personalizado para guardar usuarios con manejo de errores"""
