@@ -3440,6 +3440,10 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
         try:
             evaluation = self.get_object()
             
+            print(f"[PUBLIC] Evaluation ID: {evaluation.id}")
+            print(f"[PUBLIC] Is Active: {evaluation.is_active}")
+            print(f"[PUBLIC] Group: {evaluation.group}")
+            
             if not evaluation.is_active:
                 return Response(
                     {'error': 'Esta autoevaluación ya no está disponible'},
@@ -3451,6 +3455,8 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
                 'id', 'name', 'apellidos'
             ).order_by('apellidos', 'name')
             
+            print(f"[PUBLIC] Students count: {students.count()}")
+            
             return Response({
                 'id': evaluation.id,
                 'title': evaluation.title,
@@ -3460,6 +3466,9 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
                 'allow_multiple_attempts': evaluation.allow_multiple_attempts
             })
         except Exception as e:
+            print(f"[PUBLIC ERROR] {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

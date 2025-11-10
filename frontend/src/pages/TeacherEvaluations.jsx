@@ -273,7 +273,7 @@ const TeacherEvaluations = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">📱 Código QR</h3>
+              <h3 className="text-xl font-bold text-gray-800">📱 Código QR</h3>
               <button
                 onClick={() => setShowQR(null)}
                 className="text-gray-500 hover:text-gray-700"
@@ -282,7 +282,7 @@ const TeacherEvaluations = () => {
               </button>
             </div>
             <div className="text-center">
-              <h4 className="font-semibold mb-2">{showQR.title}</h4>
+              <h4 className="font-semibold mb-2 text-gray-800">{showQR.title}</h4>
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
                 <img
                   src={`${api.defaults.baseURL}/custom-evaluations/${showQR.id}/qr/`}

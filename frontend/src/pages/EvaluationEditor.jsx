@@ -267,7 +267,7 @@ const EvaluationEditor = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Información básica */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">📋 Información Básica</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">📋 Información Básica</h2>
           
           <div className="space-y-4">
             <div>
