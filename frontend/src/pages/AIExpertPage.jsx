@@ -35,10 +35,41 @@ export default function AIExpertPage() {
     }
   }, []);
 
-  // Load chat sessions on mount
+  // Load chat sessions on mount AND restore last chat from localStorage
   useEffect(() => {
     loadChatSessions();
+    restoreLastChat();
   }, []);
+
+  // Save current chat to localStorage whenever it changes
+  useEffect(() => {
+    if (currentChat && currentChat.id) {
+      localStorage.setItem('comenius_last_chat_id', currentChat.id);
+      if (messages.length > 0) {
+        localStorage.setItem('comenius_last_chat_messages', JSON.stringify(messages));
+      }
+    }
+  }, [currentChat, messages]);
+
+  const restoreLastChat = async () => {
+    const savedChatId = localStorage.getItem('comenius_last_chat_id');
+    const savedMessages = localStorage.getItem('comenius_last_chat_messages');
+    
+    if (savedChatId && savedMessages) {
+      try {
+        // Cargar el chat completo desde el servidor
+        const response = await api.get(`/ai/chat/${savedChatId}/`);
+        setCurrentChat(response.data);
+        setMessages(response.data.messages || []);
+      } catch (error) {
+        // Si falla (chat eliminado o expirado), limpiar localStorage
+        console.error('Error restoring chat:', error);
+        localStorage.removeItem('comenius_last_chat_id');
+        localStorage.removeItem('comenius_last_chat_messages');
+        // No restaurar nada si el chat no existe en el servidor
+      }
+    }
+  };
 
   const loadChatSessions = async () => {
     try {
@@ -99,6 +130,9 @@ export default function AIExpertPage() {
   const handleNewChat = () => {
     setCurrentChat(null);
     setMessages([]);
+    // Limpiar persistencia del localStorage
+    localStorage.removeItem('comenius_last_chat_id');
+    localStorage.removeItem('comenius_last_chat_messages');
   };
 
   const handleSelectChat = (chatId) => {

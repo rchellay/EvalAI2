@@ -301,12 +301,13 @@ RECUERDA: Tu propósito es ser ÚTIL, PRÁCTICO y FUNDAMENTADO. Nunca digas que 
             })
             
             # Agregar historial si existe (últimos 5 mensajes)
-            if chat_history:
+            if chat_history and isinstance(chat_history, list) and len(chat_history) > 0:
                 for msg in chat_history[-5:]:
-                    messages.append({
-                        "role": msg.get("sender", "user"),
-                        "content": msg.get("content", "")
-                    })
+                    if isinstance(msg, dict) and 'sender' in msg and 'content' in msg:
+                        messages.append({
+                            "role": msg.get("sender", "user"),
+                            "content": msg.get("content", "")
+                        })
             
             # Mensaje del usuario con contexto científico (si hay)
             if papers and len(papers) > 0:
