@@ -29,7 +29,7 @@ export default function MessageInput({ onSendMessage, disabled }) {
               onKeyPress={handleKeyPress}
               placeholder="Pregunta sobre investigación educativa... (Shift+Enter para nueva línea)"
               disabled={disabled}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 placeholder:text-gray-400"
               rows={3}
             />
             <div className="text-xs text-gray-500 mt-1">

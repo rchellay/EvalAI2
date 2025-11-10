@@ -299,13 +299,9 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
           }`}
         >
           <option value="">-- Selecciona el idioma --</option>
-          <option value="es">🇪🇸 Español</option>
-          <option value="ca">🏴 Catalán</option>
-          <option value="en">🇬🇧 Inglés</option>
-          <option value="fr">🇫🇷 Francés</option>
-          <option value="de">🇩🇪 Alemán</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="pt">🇵🇹 Portugués</option>
+          <option value="ca">🏴 Català</option>
+          <option value="es">�� Castellano</option>
+          <option value="en">�� English</option>
         </select>
         {!idioma && (
           <p className="mt-1 text-xs text-red-600">

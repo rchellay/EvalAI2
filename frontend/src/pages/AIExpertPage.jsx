@@ -121,24 +121,16 @@ export default function AIExpertPage() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img src={comeniusLogo} alt="ComeniusAI" className="w-10 h-10" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  ComeniusAI
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Asistente educativo basado en evidencia científica
-                </p>
-              </div>
+          <div className="flex items-center">
+            <img src={comeniusLogo} alt="ComeniusAI" className="w-10 h-10 mr-3" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">
+                ComeniusAI
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Asistente educativo basado en evidencia científica
+              </p>
             </div>
-            <button
-              onClick={handleNewChat}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              + Nueva Conversación
-            </button>
           </div>
         </div>
 

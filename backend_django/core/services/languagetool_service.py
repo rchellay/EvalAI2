@@ -36,10 +36,18 @@ class LanguageToolService:
                     'matches': []
                 }
             
+            # Mapear códigos de idioma a formato LanguageTool
+            language_map = {
+                'ca': 'ca-ES',  # Catalán
+                'es': 'es',     # Español
+                'en': 'en-US'   # Inglés
+            }
+            language_code = language_map.get(idioma, idioma)
+            
             # Preparar datos para la API
             data = {
                 "text": texto,
-                "language": idioma,
+                "language": language_code,
                 "enabledOnly": "false",
                 "disabledRules": "",
                 "enabledRules": "",
