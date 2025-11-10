@@ -235,11 +235,10 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                         'message': f'No se encontró el grupo con ID {group_id}. ¿Cuál es el nombre del grupo correcto?'
                     }
                 
-                # Crear el alumno
+                # Crear el alumno (usar grupo_principal, no group)
                 student = Student.objects.create(
                     name=name,
-                    group=group,
-                    teacher=user
+                    grupo_principal=group
                 )
                 
                 return {
@@ -269,8 +268,7 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 for student_name in student_names:
                     student = Student.objects.create(
                         name=student_name,
-                        group=group,
-                        teacher=user
+                        grupo_principal=group
                     )
                     students_created.append(student.name)
                 
