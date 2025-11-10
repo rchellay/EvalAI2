@@ -21,7 +21,7 @@ from .models import (
     Student, Subject, Group, CalendarEvent,
     Rubric, RubricCriterion, RubricLevel, RubricScore, Comment, Evaluation,
     Objective, Evidence, SelfEvaluation, Notification, Attendance, CorrectionEvidence,
-    UserSettings, CustomEvent
+    UserSettings, CustomEvent, CustomEvaluation, EvaluationResponse
 )
 from .serializers import (
     StudentSerializer, SubjectSerializer, SubjectCreateSerializer, GroupSerializer, CalendarEventSerializer,
@@ -30,7 +30,7 @@ from .serializers import (
     EvaluationSerializer, StudentDetailSerializer, GroupDetailSerializer, SubjectDetailSerializer,
     ObjectiveSerializer, EvidenceSerializer, SelfEvaluationSerializer, AttendanceSerializer, NotificationSerializer,
     CorrectionEvidenceSerializer, CorrectionEvidenceCreateSerializer, CorrectionEvidenceUpdateSerializer,
-    UserSettingsSerializer, CustomEventSerializer
+    UserSettingsSerializer, CustomEventSerializer, CustomEvaluationSerializer, EvaluationResponseSerializer
 )
 # from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
 from .services.whisper_loader import get_whisper_service
@@ -3417,3 +3417,206 @@ def admin_cleanup_user_duplicates(request):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+class CustomEvaluationViewSet(viewsets.ModelViewSet):
+    """ViewSet para autoevaluaciones personalizadas con QR"""
+    serializer_class = CustomEvaluationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filtrar evaluaciones del profesor actual"""
+        if self.request.user.is_superuser:
+            return CustomEvaluation.objects.all().select_related('group', 'teacher')
+        return CustomEvaluation.objects.filter(teacher=self.request.user).select_related('group', 'teacher')
+    
+    def perform_create(self, serializer):
+        """Asignar profesor automáticamente"""
+        serializer.save(teacher=self.request.user)
+    
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def public(self, request, pk=None):
+        """Endpoint público para que alumnos vean la autoevaluación (sin login)"""
+        try:
+            evaluation = self.get_object()
+            
+            if not evaluation.is_active:
+                return Response(
+                    {'error': 'Esta autoevaluación ya no está disponible'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Obtener lista de estudiantes del grupo
+            students = Student.objects.filter(grupo_principal=evaluation.group).values(
+                'id', 'name', 'apellidos'
+            ).order_by('apellidos', 'name')
+            
+            return Response({
+                'id': evaluation.id,
+                'title': evaluation.title,
+                'description': evaluation.description,
+                'questions': evaluation.questions,
+                'students': list(students),
+                'allow_multiple_attempts': evaluation.allow_multiple_attempts
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+    def submit(self, request, pk=None):
+        """Endpoint público para enviar respuestas (sin login)"""
+        try:
+            evaluation = self.get_object()
+            
+            if not evaluation.is_active:
+                return Response(
+                    {'error': 'Esta autoevaluación ya no está disponible'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            student_id = request.data.get('student_id')
+            responses = request.data.get('responses')
+            
+            if not student_id or not responses:
+                return Response(
+                    {'error': 'Faltan datos: student_id y responses son requeridos'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificar que el estudiante pertenezca al grupo
+            student = Student.objects.filter(id=student_id, grupo_principal=evaluation.group).first()
+            if not student:
+                return Response(
+                    {'error': 'Estudiante no encontrado en este grupo'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Verificar si ya respondió
+            existing_response = EvaluationResponse.objects.filter(
+                evaluation=evaluation,
+                student=student
+            ).first()
+            
+            if existing_response and not evaluation.allow_multiple_attempts:
+                return Response(
+                    {'error': 'Ya has respondido esta autoevaluación'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Crear o actualizar respuesta
+            if existing_response and evaluation.allow_multiple_attempts:
+                existing_response.responses = responses
+                existing_response.save()
+                response_obj = existing_response
+            else:
+                response_obj = EvaluationResponse.objects.create(
+                    evaluation=evaluation,
+                    student=student,
+                    responses=responses
+                )
+            
+            return Response({
+                'id': response_obj.id,
+                'message': '¡Gracias! Tu autoevaluación ha sido enviada correctamente.'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            print(f"[CUSTOM_EVAL] Error en submit: {str(e)}", file=sys.stderr, flush=True)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['get'])
+    def qr(self, request, pk=None):
+        """Generar QR code como imagen PNG"""
+        try:
+            import qrcode
+            from io import BytesIO
+            from django.http import HttpResponse
+            
+            evaluation = self.get_object()
+            
+            # Generar QR
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(evaluation.qr_url)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convertir a bytes
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            
+            return HttpResponse(buffer, content_type='image/png')
+            
+        except Exception as e:
+            print(f"[CUSTOM_EVAL] Error generando QR: {str(e)}", file=sys.stderr, flush=True)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Duplicar una autoevaluación"""
+        try:
+            import copy
+            evaluation = self.get_object()
+            
+            # Crear copia
+            new_evaluation = CustomEvaluation.objects.create(
+                title=f"{evaluation.title} (Copia)",
+                description=evaluation.description,
+                group=evaluation.group,
+                teacher=request.user,
+                questions=copy.deepcopy(evaluation.questions),
+                allow_multiple_attempts=evaluation.allow_multiple_attempts,
+                is_active=False  # Desactivada por defecto
+            )
+            
+            serializer = self.get_serializer(new_evaluation)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['get'])
+    def responses(self, request, pk=None):
+        """Ver todas las respuestas de una autoevaluación"""
+        try:
+            evaluation = self.get_object()
+            responses = EvaluationResponse.objects.filter(evaluation=evaluation).select_related('student')
+            serializer = EvaluationResponseSerializer(responses, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class EvaluationResponseViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet read-only para respuestas de autoevaluaciones"""
+    serializer_class = EvaluationResponseSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filtrar respuestas de autoevaluaciones del profesor"""
+        if self.request.user.is_superuser:
+            return EvaluationResponse.objects.all().select_related('evaluation', 'student')
+        return EvaluationResponse.objects.filter(
+            evaluation__teacher=self.request.user
+        ).select_related('evaluation', 'student')

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Student, Subject, Group, CalendarEvent, Comment, Attendance, StudentRecommendation
+    Student, Subject, Group, CalendarEvent, Comment, Attendance, StudentRecommendation,
+    CustomEvaluation, EvaluationResponse
 )
 
 # Importar admin personalizado para usuarios
@@ -64,3 +65,22 @@ class StudentRecommendationAdmin(admin.ModelAdmin):
     search_fields = ['student__name', 'recomendacion']
     readonly_fields = ['created_at', 'updated_at']
     list_per_page = 50
+
+
+@admin.register(CustomEvaluation)
+class CustomEvaluationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'title', 'group', 'teacher', 'is_active', 'total_responses', 'created_at']
+    list_filter = ['is_active', 'teacher', 'group', 'created_at']
+    search_fields = ['title', 'description']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'qr_url', 'total_responses']
+    list_per_page = 50
+
+
+@admin.register(EvaluationResponse)
+class EvaluationResponseAdmin(admin.ModelAdmin):
+    list_display = ['id', 'evaluation', 'student', 'submitted_at']
+    list_filter = ['evaluation', 'submitted_at']
+    search_fields = ['student__name', 'student__apellidos', 'evaluation__title']
+    readonly_fields = ['id', 'submitted_at']
+    list_per_page = 50
+

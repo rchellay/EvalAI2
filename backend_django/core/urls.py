@@ -33,7 +33,7 @@ from .views import (
     guardar_correccion_como_evidencia, evidencias_correccion_estudiante, evidencias_correccion_profesor,
     actualizar_evidencia_correccion, estadisticas_correccion_estudiante,
     CustomEventViewSet, user_settings, change_password, test_notification, non_school_days,
-    admin_cleanup_user_duplicates
+    admin_cleanup_user_duplicates, CustomEvaluationViewSet, EvaluationResponseViewSet
 )
 from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
@@ -62,6 +62,10 @@ router.register(r'notifications', NotificationViewSet, basename='notification')
 
 # Eventos personalizados del calendario
 router.register(r'eventos', CustomEventViewSet, basename='evento')
+
+# Autoevaluaciones personalizadas con QR
+router.register(r'custom-evaluations', CustomEvaluationViewSet, basename='custom-evaluation')
+router.register(r'evaluation-responses', EvaluationResponseViewSet, basename='evaluation-response')
 
 # ViewSets con datos anidados para navegación desde calendario
 router.register(r'subjects-detail', SubjectDetailViewSet, basename='subject-detail')

@@ -14,8 +14,6 @@ import WidgetObjetivos from '../components/widgets/WidgetObjetivos';
 import WidgetEvidencias from '../components/widgets/WidgetEvidencias';
 import WidgetAutoevaluacion from '../components/widgets/WidgetAutoevaluacion';
 import WidgetHistorialEvaluaciones from '../components/widgets/WidgetHistorialEvaluaciones';
-import WidgetNotificaciones from '../components/widgets/WidgetNotificaciones';
-import WidgetExportarPDF from '../components/widgets/WidgetExportarPDF';
 
 const StudentEvaluationPanel = () => {
   const { id } = useParams();
@@ -180,19 +178,6 @@ const StudentEvaluationPanel = () => {
               studentId={id}
               subjectId={asignaturaId}
               onEvaluationCreated={handleEvaluationCreated}
-              className="bg-white text-black border border-gray-300 rounded-md shadow-md"
-              titleClassName="text-xl font-bold text-black mb-4"
-            />
-
-            <WidgetNotificaciones
-              teacherId={student?.teacher_id}
-              className="bg-white text-black border border-gray-300 rounded-md shadow-md"
-              titleClassName="text-xl font-bold text-black mb-4"
-            />
-
-            <WidgetExportarPDF
-              studentId={id}
-              studentName={student?.name}
               className="bg-white text-black border border-gray-300 rounded-md shadow-md"
               titleClassName="text-xl font-bold text-black mb-4"
             />

@@ -4,7 +4,7 @@ from .models import (
     Student, Subject, Group, CalendarEvent,
     Rubric, RubricCriterion, RubricLevel, RubricScore, Comment, Evaluation,
     Objective, Evidence, SelfEvaluation, Attendance, Notification, CorrectionEvidence,
-    UserSettings, CustomEvent
+    UserSettings, CustomEvent, CustomEvaluation, EvaluationResponse
 )
 
 
@@ -658,3 +658,35 @@ class CustomEventSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_by', 'created_by_name', 'created_at', 'updated_at']
+
+
+class CustomEvaluationSerializer(serializers.ModelSerializer):
+    """Serializer para autoevaluaciones personalizadas con QR"""
+    teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    total_responses = serializers.IntegerField(read_only=True)
+    qr_url = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = CustomEvaluation
+        fields = [
+            'id', 'title', 'description', 'group', 'group_name', 'teacher', 'teacher_name',
+            'questions', 'allow_multiple_attempts', 'is_active',
+            'total_responses', 'qr_url', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'teacher', 'teacher_name', 'group_name', 'total_responses', 
+                           'qr_url', 'created_at', 'updated_at']
+
+
+class EvaluationResponseSerializer(serializers.ModelSerializer):
+    """Serializer para respuestas de autoevaluaciones"""
+    student_name = serializers.CharField(source='student.full_name', read_only=True)
+    evaluation_title = serializers.CharField(source='evaluation.title', read_only=True)
+    
+    class Meta:
+        model = EvaluationResponse
+        fields = [
+            'id', 'evaluation', 'evaluation_title', 'student', 'student_name',
+            'responses', 'submitted_at'
+        ]
+        read_only_fields = ['id', 'student_name', 'evaluation_title', 'submitted_at']

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../../lib/axios';
 
 const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, titleClassName }) => {
   const [selfEvaluations, setSelfEvaluations] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [formData, setFormData] = useState({
     score: 3,
     comment: '',
@@ -53,7 +55,7 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
 
   const saveSelfEvaluation = async () => {
     if (!formData.comment.trim()) {
-      alert('Debes escribir un comentario para tu autoevaluación');
+      toast.error('Debes escribir un comentario para tu autoevaluación');
       return;
     }
 
@@ -79,12 +81,30 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
         onSelfEvaluationCreated(response.data);
       }
 
-      alert('Autoevaluación guardada exitosamente');
+      toast.success('Autoevaluación guardada exitosamente');
     } catch (error) {
       console.error('Error guardando autoevaluación:', error);
-      alert('Error al guardar la autoevaluación');
+      toast.error('Error al guardar la autoevaluación');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (evaluationId) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta autoevaluación?')) {
+      return;
+    }
+
+    try {
+      setDeletingId(evaluationId);
+      await api.delete(`/self-evaluations/${evaluationId}/`);
+      setSelfEvaluations(prev => prev.filter(ev => ev.id !== evaluationId));
+      toast.success('Autoevaluación eliminada');
+    } catch (error) {
+      console.error('Error eliminando autoevaluación:', error);
+      toast.error('Error al eliminar. Inténtalo de nuevo.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -230,9 +250,25 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500 capitalize">
-                  {evaluation.evaluation_type === 'autoevaluacion' ? 'Autoevaluación' : 'Coevaluación'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 capitalize">
+                    {evaluation.evaluation_type === 'autoevaluacion' ? 'Autoevaluación' : 'Coevaluación'}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(evaluation.id)}
+                    disabled={deletingId === evaluation.id}
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                    title="Eliminar autoevaluación"
+                  >
+                    {deletingId === evaluation.id ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <p className="text-sm text-gray-700 leading-relaxed">

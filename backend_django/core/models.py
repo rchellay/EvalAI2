@@ -928,3 +928,72 @@ class StudentRecommendation(models.Model):
     
     def __str__(self):
         return f"Recomendación para {self.student.name} - {self.created_at.strftime('%Y-%m-%d')}"
+
+
+class CustomEvaluation(models.Model):
+    """Autoevaluaciones personalizables con QR para alumnos"""
+    import uuid
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255, help_text="Título de la autoevaluación")
+    description = models.TextField(blank=True, help_text="Descripción o instrucciones")
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='custom_evaluations', help_text="Grupo al que se asigna")
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_evaluations', help_text="Profesor creador")
+    questions = models.JSONField(default=list, help_text="Lista de preguntas en formato JSON")
+    # Estructura de questions:
+    # [
+    #   {
+    #     "id": 1,
+    #     "text": "¿Cómo calificas tu participación?",
+    #     "type": "likert",  # "likert", "multiple_choice", "text"
+    #     "options": ["Opción 1", "Opción 2"]  # Solo para multiple_choice
+    #   }
+    # ]
+    allow_multiple_attempts = models.BooleanField(default=False, help_text="Permitir múltiples intentos")
+    is_active = models.BooleanField(default=True, help_text="Si está activa para recibir respuestas")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Autoevaluación Personalizada"
+        verbose_name_plural = "Autoevaluaciones Personalizadas"
+    
+    def __str__(self):
+        return f"{self.title} - {self.group.name}"
+    
+    @property
+    def qr_url(self):
+        """URL para generar QR"""
+        from django.conf import settings
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'https://eval-ai-2.vercel.app')
+        return f"{frontend_url}/autoeval/{self.id}"
+    
+    @property
+    def total_responses(self):
+        """Total de respuestas recibidas"""
+        return self.responses.count()
+
+
+class EvaluationResponse(models.Model):
+    """Respuestas de alumnos a autoevaluaciones personalizadas"""
+    import uuid
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    evaluation = models.ForeignKey(CustomEvaluation, on_delete=models.CASCADE, related_name='responses', help_text="Autoevaluación respondida")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='evaluation_responses', help_text="Estudiante que responde")
+    responses = models.JSONField(help_text="Respuestas del estudiante en formato JSON")
+    # Estructura de responses:
+    # {
+    #   "1": "5",  # question_id: answer
+    #   "2": "Opción A",
+    #   "3": "Mi respuesta en texto libre"
+    # }
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Respuesta de Autoevaluación"
+        verbose_name_plural = "Respuestas de Autoevaluaciones"
+        unique_together = ['evaluation', 'student']  # Un alumno solo puede responder una vez (a menos que allow_multiple_attempts=True)
+    
+    def __str__(self):
+        return f"{self.student.full_name} - {self.evaluation.title}"
