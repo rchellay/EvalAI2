@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import api from '../lib/axios';
 import ChatBubble from '../components/chat/ChatBubble';
 import MessageInput from '../components/chat/MessageInput';
 import ChatSidebar from '../components/chat/ChatSidebar';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
 
 export default function AIExpertPage() {
   const [user, setUser] = useState(null);
@@ -42,10 +39,7 @@ export default function AIExpertPage() {
 
   const loadChatSessions = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/ai/chat/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/ai/chat/');
       setChatSessions(response.data);
     } catch (error) {
       console.error('Error loading chat sessions:', error);
@@ -54,10 +48,7 @@ export default function AIExpertPage() {
 
   const loadChatMessages = async (chatId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/ai/chat/${chatId}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/ai/chat/${chatId}/`);
       setCurrentChat(response.data);
       setMessages(response.data.messages || []);
     } catch (error) {
@@ -71,26 +62,20 @@ export default function AIExpertPage() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-
       // If no current chat, start a new one
       if (!currentChat) {
-        const response = await axios.post(
-          `${API_URL}/api/ai/chat/start_new/`,
-          { message: messageText },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.post('/ai/chat/start_new/', {
+          message: messageText
+        });
 
         setCurrentChat(response.data);
         setMessages(response.data.messages || []);
         await loadChatSessions(); // Refresh sidebar
       } else {
         // Send message to existing chat
-        const response = await axios.post(
-          `${API_URL}/api/ai/chat/${currentChat.id}/send_message/`,
-          { message: messageText },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.post(`/ai/chat/${currentChat.id}/send_message/`, {
+          message: messageText
+        });
 
         // Append both user and assistant messages
         setMessages(prev => [

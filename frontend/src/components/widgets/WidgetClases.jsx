@@ -16,7 +16,10 @@ const WidgetClases = () => {
     try {
       setLoading(true);
       const response = await api.get('/dashboard/proximas_clases/');
-      console.log('[WidgetClases] Response:', response.data);
+      console.log('[WidgetClases] Full Response:', response.data);
+      console.log('[WidgetClases] Clases array:', response.data.clases);
+      console.log('[WidgetClases] Weekday:', response.data.weekday);
+      console.log('[WidgetClases] Today:', response.data.today);
       setClases(response.data.clases || []);
     } catch (err) {
       setError('Error al cargar clases');

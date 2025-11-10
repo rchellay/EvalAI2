@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Send, MessageCircle, Minimize2 } from 'lucide-react';
-import axios from 'axios';
 import api from '../lib/axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
 
 export default function FloatingChatWidget() {
   const [user, setUser] = useState(null);
@@ -41,25 +38,19 @@ export default function FloatingChatWidget() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-
       if (!currentChat) {
         // Start new chat
-        const response = await axios.post(
-          `${API_URL}/api/ai/chat/start_new/`,
-          { message: messageText },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.post('/ai/chat/start_new/', {
+          message: messageText
+        });
 
         setCurrentChat(response.data);
         setMessages(response.data.messages || []);
       } else {
         // Send to existing chat
-        const response = await axios.post(
-          `${API_URL}/api/ai/chat/${currentChat.id}/send_message/`,
-          { message: messageText },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.post(`/ai/chat/${currentChat.id}/send_message/`, {
+          message: messageText
+        });
 
         setMessages(prev => [
           ...prev,
