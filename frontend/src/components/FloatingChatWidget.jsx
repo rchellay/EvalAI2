@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Send, MessageCircle, Minimize2 } from 'lucide-react';
 import api from '../lib/axios';
 
+// Logo - reemplazar con: import comeniusLogo from '../assets/comenius-ai-logo.png';
+const comeniusLogo = '/comenius-ai-logo-temp.svg';
+
 export default function FloatingChatWidget() {
   const [user, setUser] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -81,9 +84,9 @@ export default function FloatingChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-blue-600"
       >
-        <MessageCircle size={28} className="group-hover:scale-110 transition-transform" />
+        <img src={comeniusLogo} alt="ComeniusAI" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
       </button>
     );
@@ -93,11 +96,11 @@ export default function FloatingChatWidget() {
     return (
       <div className="fixed bottom-6 right-6 z-50 bg-white rounded-lg shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow" onClick={() => setIsMinimized(false)}>
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-            <MessageCircle size={20} className="text-white" />
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center p-1">
+            <img src={comeniusLogo} alt="ComeniusAI" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="font-semibold text-gray-800">Asistente IA</div>
+            <div className="font-semibold text-gray-800">ComeniusAI</div>
             <div className="text-xs text-gray-500">{messages.length} mensajes</div>
           </div>
         </div>
@@ -110,12 +113,12 @@ export default function FloatingChatWidget() {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <MessageCircle size={20} />
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
+            <img src={comeniusLogo} alt="ComeniusAI" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="font-semibold">Asistente de Investigación</div>
-            <div className="text-xs text-blue-100">Evidencia científica educativa</div>
+            <div className="font-semibold">ComeniusAI</div>
+            <div className="text-xs text-blue-100">Asistente educativo basado en evidencia</div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -137,17 +140,21 @@ export default function FloatingChatWidget() {
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="text-5xl mb-3">🔬</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              ¡Hola, {user?.first_name}!
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <img src={comeniusLogo} alt="ComeniusAI" className="w-20 h-20 mb-4" />
+            <h3 className="text-lg font-bold text-gray-800 mb-3">
+              ¡Hola! Soy ComeniusAI, tu asistente educativo basado en evidencia.
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Pregúntame sobre investigación educativa
+            <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+              ¿Tienes dudas sobre <strong>metodologías, evaluación, motivación</strong> o <strong>gestión de aula</strong>?
             </p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>💡 Ejemplo:</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Te daré respuestas rápidas apoyadas en investigaciones científicas reales.
+            </p>
+            <div className="text-xs text-gray-500 bg-white p-3 rounded-lg border border-gray-200 space-y-1">
+              <p className="font-semibold text-gray-700">💡 Ejemplos:</p>
               <p>"¿Qué dice la evidencia sobre aprendizaje cooperativo?"</p>
+              <p>"¿Cómo mejorar la motivación según la investigación?"</p>
             </div>
           </div>
         ) : (

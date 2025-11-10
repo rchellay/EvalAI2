@@ -4,6 +4,9 @@ import ChatBubble from '../components/chat/ChatBubble';
 import MessageInput from '../components/chat/MessageInput';
 import ChatSidebar from '../components/chat/ChatSidebar';
 
+// Logo - reemplazar con: import comeniusLogo from '../assets/comenius-ai-logo.png';
+const comeniusLogo = '/comenius-ai-logo-temp.svg';
+
 export default function AIExpertPage() {
   const [user, setUser] = useState(null);
   const [currentChat, setCurrentChat] = useState(null);
@@ -119,13 +122,16 @@ export default function AIExpertPage() {
         {/* Header */}
         <div className="bg-white border-b px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                🎓 Asistente de Investigación Educativa
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Respuestas basadas en evidencia científica real
-              </p>
+            <div className="flex items-center space-x-3">
+              <img src={comeniusLogo} alt="ComeniusAI" className="w-10 h-10" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  ComeniusAI
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Asistente educativo basado en evidencia científica
+                </p>
+              </div>
             </div>
             <button
               onClick={handleNewChat}
@@ -140,20 +146,23 @@ export default function AIExpertPage() {
         <div className="flex-1 overflow-y-auto px-6 py-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="text-6xl mb-4">🔬</div>
-              <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-                ¡Hola, {user?.first_name}!
+              <img src={comeniusLogo} alt="ComeniusAI" className="w-24 h-24 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                ¡Hola! Soy ComeniusAI, tu asistente educativo basado en evidencia.
               </h2>
-              <p className="text-gray-600 max-w-md">
-                Pregúntame sobre investigación educativa. Buscaré estudios científicos reales
-                de Semantic Scholar y OpenAlex para darte respuestas respaldadas por evidencia.
+              <p className="text-gray-700 max-w-md mb-2">
+                ¿Tienes dudas sobre <strong>metodologías, evaluación, motivación</strong> o <strong>gestión de aula</strong>?
               </p>
-              <div className="mt-6 text-left bg-white p-6 rounded-lg shadow-sm max-w-md">
-                <p className="font-semibold text-gray-700 mb-2">Ejemplos de preguntas:</p>
+              <p className="text-gray-600 max-w-md mb-6">
+                Te daré respuestas rápidas apoyadas en investigaciones científicas reales.
+              </p>
+              <div className="mt-6 text-left bg-white p-6 rounded-lg shadow-sm max-w-md border border-gray-200">
+                <p className="font-semibold text-gray-700 mb-3">💡 ¿En qué puedo ayudarte hoy?</p>
+                <p className="text-sm text-gray-500 mb-3">Ejemplos de preguntas:</p>
                 <ul className="text-sm text-gray-600 space-y-2">
                   <li>• ¿Qué dice la evidencia sobre el aprendizaje cooperativo?</li>
                   <li>• ¿Cómo puedo mejorar la comprensión lectora en primaria?</li>
-                  <li>• ¿Qué estrategias funcionan para motivar a estudiantes desmotivados?</li>
+                  <li>• ¿Qué estrategias funcionan para motivar a estudiantes?</li>
                   <li>• Evidencia sobre el uso de gamificación en el aula</li>
                 </ul>
               </div>

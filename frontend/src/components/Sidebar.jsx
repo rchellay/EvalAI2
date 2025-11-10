@@ -25,7 +25,7 @@ const menuItems = [
   { path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia' },
   { path: '/rubricas', icon: ClipboardList, label: 'Rúbricas' },
   { path: '/teacher/evaluations', icon: QrCode, label: 'Autoevaluaciones' },
-  { path: '/teacher/ai-expert', icon: BrainCircuit, label: 'Asistente IA', highlight: true },
+  { path: '/teacher/ai-expert', icon: BrainCircuit, label: 'ComeniusAI', highlight: true },
   { path: '/correccion', icon: BookOpen, label: 'Corrección' },
   { path: '/calendario', icon: Calendar, label: 'Calendario' },
   { path: '/informes', icon: BarChart3, label: 'Informes' },
