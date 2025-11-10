@@ -19,6 +19,9 @@ import CorreccionPage from './pages/CorreccionPage';
 import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
 import SettingsPage from './pages/SettingsPage';
 import GoogleCallback from './pages/GoogleCallback';
+import TeacherEvaluations from './pages/TeacherEvaluations';
+import EvaluationEditor from './pages/EvaluationEditor';
+import PublicAutoeval from './pages/PublicAutoeval';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
 import { useState, useEffect } from 'react';
@@ -98,6 +101,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/auth/callback" element={<GoogleCallback />} />
+          
+          {/* Ruta pública sin login para autoevaluaciones */}
+          <Route path="/autoeval/:evaluationId" element={<PublicAutoeval />} />
+          
           <Route element={<LayoutWithSidebar />}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             
@@ -113,6 +120,10 @@ function App() {
             {/* Grupos */}
             <Route path="/grupos" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
             <Route path="/grupos/:id" element={<ProtectedRoute><GroupDetailPage /></ProtectedRoute>} />
+            
+            {/* Autoevaluaciones personalizadas */}
+            <Route path="/teacher/evaluations" element={<ProtectedRoute><TeacherEvaluations /></ProtectedRoute>} />
+            <Route path="/teacher/evaluations/:id/edit" element={<ProtectedRoute><EvaluationEditor /></ProtectedRoute>} />
             
             <Route path="/transcripciones" element={<ProtectedRoute><PlaceholderPage title="Transcripciones" /></ProtectedRoute>} />
             <Route path="/rubricas" element={<ProtectedRoute><RubricsPage /></ProtectedRoute>} />

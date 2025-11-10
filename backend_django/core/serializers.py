@@ -661,6 +661,37 @@ class CustomEventSerializer(serializers.ModelSerializer):
 
 
 class CustomEvaluationSerializer(serializers.ModelSerializer):
+    """Serializer para autoevaluaciones personalizadas"""
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    teacher_name = serializers.CharField(source='teacher.username', read_only=True)
+    qr_url = serializers.CharField(read_only=True)
+    total_responses = serializers.IntegerField(read_only=True)
+    
+    class Meta:
+        model = CustomEvaluation
+        fields = [
+            'id', 'title', 'description', 'group', 'group_name', 'teacher', 'teacher_name',
+            'questions', 'allow_multiple_attempts', 'is_active',
+            'qr_url', 'total_responses', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'teacher', 'teacher_name', 'group_name', 'qr_url', 'total_responses', 'created_at', 'updated_at']
+
+
+class EvaluationResponseSerializer(serializers.ModelSerializer):
+    """Serializer para respuestas de autoevaluaciones"""
+    student_name = serializers.CharField(source='student.full_name', read_only=True)
+    evaluation_title = serializers.CharField(source='evaluation.title', read_only=True)
+    
+    class Meta:
+        model = EvaluationResponse
+        fields = [
+            'id', 'evaluation', 'evaluation_title', 'student', 'student_name',
+            'responses', 'submitted_at'
+        ]
+        read_only_fields = ['id', 'student_name', 'evaluation_title', 'submitted_at']
+
+
+class CustomEvaluationSerializer(serializers.ModelSerializer):
     """Serializer para autoevaluaciones personalizadas con QR"""
     teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)

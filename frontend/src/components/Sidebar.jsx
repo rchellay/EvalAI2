@@ -13,7 +13,8 @@ import {
   ChevronRight,
   LogOut,
   ClipboardCheck,
-  BookOpen
+  BookOpen,
+  QrCode
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { path: '/grupos', icon: UsersRound, label: 'Grupos' },
   { path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia' },
   { path: '/rubricas', icon: ClipboardList, label: 'Rúbricas' },
+  { path: '/teacher/evaluations', icon: QrCode, label: 'Autoevaluaciones' },
   { path: '/correccion', icon: BookOpen, label: 'Corrección' },
   { path: '/calendario', icon: Calendar, label: 'Calendario' },
   { path: '/informes', icon: BarChart3, label: 'Informes' },
