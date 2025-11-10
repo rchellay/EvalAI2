@@ -44,15 +44,11 @@ class LanguageToolService:
             }
             language_code = language_map.get(idioma, idioma)
             
-            # Preparar datos para la API
+            # Preparar datos para la API (SOLO los necesarios)
             data = {
                 "text": texto,
                 "language": language_code,
-                "enabledOnly": "false",
-                "disabledRules": "",
-                "enabledRules": "",
-                "preferredVariants": "",
-                "motherTongue": "es"
+                "enabledOnly": "false"
             }
             
             # Realizar petición a LanguageTool
