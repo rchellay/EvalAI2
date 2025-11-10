@@ -3425,7 +3425,12 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        """Filtrar evaluaciones del profesor actual"""
+        """Filtrar evaluaciones del profesor actual (excepto en acciones públicas)"""
+        # Para acciones públicas, no filtrar por usuario
+        if self.action in ['public', 'submit']:
+            return CustomEvaluation.objects.all().select_related('group', 'teacher')
+        
+        # Para el resto, filtrar por profesor
         if self.request.user.is_superuser:
             return CustomEvaluation.objects.all().select_related('group', 'teacher')
         return CustomEvaluation.objects.filter(teacher=self.request.user).select_related('group', 'teacher')
@@ -3539,9 +3544,9 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def qr(self, request, pk=None):
-        """Generar QR code como imagen PNG"""
+        """Generar QR code como imagen PNG (público)"""
         try:
             import qrcode
             from io import BytesIO
