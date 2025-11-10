@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { isValid } from '../auth/token';
 
 // Usar variable de entorno de Vite, con fallback a producción para desarrollo
-const API_BASE = import.meta.env.VITE_API_URL || 'https://eval-ai-backend.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com/api';
 
 console.log('AXIOS Base URL:', API_BASE);
 
