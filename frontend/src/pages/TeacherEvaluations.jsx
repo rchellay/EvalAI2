@@ -20,10 +20,13 @@ const TeacherEvaluations = () => {
     try {
       setLoading(true);
       const response = await api.get('/custom-evaluations/');
-      setEvaluations(response.data);
+      // El API puede devolver un array directo o un objeto paginado con 'results'
+      const data = Array.isArray(response.data) ? response.data : (response.data.results || []);
+      setEvaluations(data);
     } catch (error) {
       console.error('Error cargando autoevaluaciones:', error);
       toast.error('Error al cargar autoevaluaciones');
+      setEvaluations([]);
     } finally {
       setLoading(false);
     }
