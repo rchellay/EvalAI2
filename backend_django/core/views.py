@@ -3532,6 +3532,51 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
                     responses=responses
                 )
             
+            # 🔗 CONECTAR CON WIDGET: Crear SelfEvaluation automáticamente
+            try:
+                # Calcular score promedio de preguntas tipo likert (1-5)
+                likert_scores = []
+                comment_parts = []
+                
+                for question in evaluation.questions:
+                    question_id = str(question['id'])
+                    answer = responses.get(question_id, '')
+                    
+                    if question['type'] == 'likert':
+                        try:
+                            likert_scores.append(int(answer))
+                        except (ValueError, TypeError):
+                            pass
+                    elif question['type'] in ['multiple_choice', 'text']:
+                        if answer:
+                            comment_parts.append(f"{question['text']}: {answer}")
+                
+                # Calcular score promedio (1-5) o usar 3 por defecto
+                average_score = int(sum(likert_scores) / len(likert_scores)) if likert_scores else 3
+                average_score = max(1, min(5, average_score))  # Asegurar rango 1-5
+                
+                # Construir comentario
+                comment = f"Autoevaluación: {evaluation.title}\n"
+                if comment_parts:
+                    comment += "\n".join(comment_parts[:3])  # Máximo 3 respuestas en el comentario
+                
+                # Buscar subject relacionado (primer subject del grupo, o None)
+                subject = evaluation.group.subjects.first() if evaluation.group.subjects.exists() else None
+                
+                # Crear SelfEvaluation
+                from .models import SelfEvaluation
+                SelfEvaluation.objects.create(
+                    student=student,
+                    subject=subject,
+                    score=average_score,
+                    comment=comment,
+                    evaluation_type='autoevaluacion'
+                )
+                print(f"[CUSTOM_EVAL] ✅ SelfEvaluation creado para {student.full_name} con score {average_score}")
+            except Exception as e:
+                # No fallar si hay error creando SelfEvaluation, solo loguearlo
+                print(f"[CUSTOM_EVAL] ⚠️ Error creando SelfEvaluation: {str(e)}")
+            
             return Response({
                 'id': response_obj.id,
                 'message': '¡Gracias! Tu autoevaluación ha sido enviada correctamente.'

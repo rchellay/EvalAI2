@@ -12,6 +12,9 @@ const TeacherEvaluations = () => {
   const [responses, setResponses] = useState([]);
   const [loadingResponses, setLoadingResponses] = useState(false);
 
+  // URL base del API para acceso directo (sin token)
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com/api';
+
   useEffect(() => {
     fetchEvaluations();
   }, []);
@@ -285,10 +288,14 @@ const TeacherEvaluations = () => {
               <h4 className="font-semibold mb-2 text-gray-800">{showQR.title}</h4>
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
                 <img
-                  src={`${api.defaults.baseURL}/custom-evaluations/${showQR.id}/qr/`}
+                  src={`${API_BASE}/custom-evaluations/${showQR.id}/qr/`}
                   alt="QR Code"
                   className="mx-auto"
                   style={{ width: '256px', height: '256px' }}
+                  onError={(e) => {
+                    console.error('Error cargando QR:', e);
+                    e.target.style.display = 'none';
+                  }}
                 />
               </div>
               <p className="text-sm text-gray-600 mb-4 break-all">
@@ -310,7 +317,7 @@ const TeacherEvaluations = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full my-8 mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">📊 Respuestas: {showResponses.title}</h3>
+              <h3 className="text-xl font-bold text-gray-800">📊 Respuestas: {showResponses.title}</h3>
               <button
                 onClick={() => setShowResponses(null)}
                 className="text-gray-500 hover:text-gray-700"

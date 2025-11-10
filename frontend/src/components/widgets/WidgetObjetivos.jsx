@@ -7,7 +7,8 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    deadline: '',
+    deadline: '', // Se auto-calculará según el trimestre
+    trimestre: '1',
     status: 'pendiente'
   });
   const [saving, setSaving] = useState(false);
@@ -37,15 +38,43 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Si cambia el trimestre, auto-calcular la fecha límite
+    if (name === 'trimestre') {
+      const today = new Date();
+      const year = today.getFullYear();
+      let deadline = '';
+      
+      switch(value) {
+        case '1': // Primer trimestre (septiembre-diciembre)
+          deadline = `${year}-12-20`; // 20 de diciembre
+          break;
+        case '2': // Segundo trimestre (enero-marzo)
+          deadline = `${year + 1}-03-20`; // 20 de marzo
+          break;
+        case '3': // Tercer trimestre (abril-junio)
+          deadline = `${year + 1}-06-20`; // 20 de junio
+          break;
+        default:
+          deadline = '';
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        trimestre: value,
+        deadline: deadline
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const saveObjective = async () => {
-    if (!formData.title.trim() || !formData.deadline) {
-      alert('El título y fecha límite son obligatorios');
+    if (!formData.title.trim() || !formData.trimestre) {
+      alert('El título y trimestre son obligatorios');
       return;
     }
 
@@ -64,6 +93,7 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
         title: '',
         description: '',
         deadline: '',
+        trimestre: '1',
         status: 'pendiente'
       });
       setShowForm(false);
@@ -186,15 +216,19 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha límite *
+                  Trimestre *
                 </label>
-                <input
-                  type="date"
-                  name="deadline"
-                  value={formData.deadline}
+                <select
+                  name="trimestre"
+                  value={formData.trimestre}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  className="w-full p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black bg-white font-semibold"
+                  required
+                >
+                  <option value="1">1º Trimestre (Sep-Dic)</option>
+                  <option value="2">2º Trimestre (Ene-Mar)</option>
+                  <option value="3">3º Trimestre (Abr-Jun)</option>
+                </select>
               </div>
 
               <div>
