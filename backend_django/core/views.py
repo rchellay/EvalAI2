@@ -2405,6 +2405,8 @@ def proximas_clases(request):
         today = timezone.now().date()
         today_weekday = today.strftime('%A').lower()  # 'monday', 'tuesday', etc.
         
+        print(f"[PROXIMAS_CLASES] Today: {today}, Weekday: {today_weekday}", file=sys.stderr, flush=True)
+        
         # Mapeo español -> inglés de días (por si acaso)
         day_map_es_to_en = {
             'lunes': 'monday',
@@ -2423,14 +2425,29 @@ def proximas_clases(request):
         # 1. Obtener clases recurrentes de asignaturas del usuario
         user_subjects = Subject.objects.filter(teacher=request.user)
         
+        print(f"[PROXIMAS_CLASES] User subjects count: {user_subjects.count()}", file=sys.stderr, flush=True)
+        
         for subject in user_subjects:
             # Verificar si la asignatura tiene clase hoy
             subject_days = subject.days or []
             
+            print(f"[PROXIMAS_CLASES] Subject: {subject.name}, Days: {subject_days}", file=sys.stderr, flush=True)
+            
             # Normalizar días a minúsculas
             subject_days_normalized = [day.lower() for day in subject_days]
             
-            if today_weekday in subject_days_normalized:
+            # Intentar también con mapeo español -> inglés
+            subject_days_normalized_en = []
+            for day in subject_days_normalized:
+                if day in day_map_es_to_en:
+                    subject_days_normalized_en.append(day_map_es_to_en[day])
+                else:
+                    subject_days_normalized_en.append(day)
+            
+            print(f"[PROXIMAS_CLASES] Normalized: {subject_days_normalized}, EN: {subject_days_normalized_en}", file=sys.stderr, flush=True)
+            print(f"[PROXIMAS_CLASES] Checking if {today_weekday} in {subject_days_normalized_en}", file=sys.stderr, flush=True)
+            
+            if today_weekday in subject_days_normalized_en:
                 # Obtener los grupos asociados a esta asignatura
                 groups = subject.groups.all()
                 group_names = ', '.join([g.name for g in groups]) if groups.exists() else 'Sin grupo'
@@ -3438,6 +3455,51 @@ class CustomEvaluationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Asignar profesor automáticamente"""
         serializer.save(teacher=self.request.user)
+    
+    @action(detail=False, methods=['get'], url_path='for-student/(?P<student_id>[^/.]+)')
+    def for_student(self, request, student_id=None):
+        """Obtener evaluaciones disponibles para un estudiante específico"""
+        try:
+            student = Student.objects.get(id=student_id)
+            
+            # Obtener evaluaciones activas del grupo del estudiante
+            evaluations = CustomEvaluation.objects.filter(
+                group=student.grupo_principal,
+                is_active=True
+            ).select_related('teacher').order_by('-created_at')
+            
+            # Verificar qué evaluaciones ya respondió el estudiante
+            evaluation_data = []
+            for evaluation in evaluations:
+                has_responded = EvaluationResponse.objects.filter(
+                    evaluation=evaluation,
+                    student=student
+                ).exists()
+                
+                evaluation_data.append({
+                    'id': str(evaluation.id),
+                    'title': evaluation.title,
+                    'description': evaluation.description,
+                    'created_at': evaluation.created_at,
+                    'has_responded': has_responded,
+                    'allow_multiple_attempts': evaluation.allow_multiple_attempts,
+                    'qr_url': evaluation.qr_url,
+                    'teacher_name': evaluation.teacher.get_full_name() or evaluation.teacher.username
+                })
+            
+            return Response(evaluation_data)
+            
+        except Student.DoesNotExist:
+            return Response(
+                {'error': 'Estudiante no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"[FOR_STUDENT] Error: {str(e)}", file=sys.stderr, flush=True)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def public(self, request, pk=None):

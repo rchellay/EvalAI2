@@ -4,6 +4,7 @@ import api from '../../lib/axios';
 
 const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, titleClassName }) => {
   const [selfEvaluations, setSelfEvaluations] = useState([]);
+  const [customEvaluations, setCustomEvaluations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -14,10 +15,21 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Cargar autoevaluaciones existentes
+  // Cargar autoevaluaciones existentes y evaluaciones personalizadas disponibles
   useEffect(() => {
     fetchSelfEvaluations();
+    fetchCustomEvaluations();
   }, [studentId, subjectId]);
+
+  const fetchCustomEvaluations = async () => {
+    try {
+      const response = await api.get(`/custom-evaluations/for-student/${studentId}/`);
+      setCustomEvaluations(response.data || []);
+    } catch (error) {
+      console.error('Error cargando evaluaciones personalizadas:', error);
+      setCustomEvaluations([]);
+    }
+  };
 
   const fetchSelfEvaluations = async () => {
     try {
@@ -224,6 +236,57 @@ const WidgetAutoevaluacion = ({ studentId, subjectId, onSelfEvaluationCreated, t
                 '💾 Guardar Autoevaluación'
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Autoevaluaciones personalizadas disponibles */}
+      {customEvaluations.length > 0 && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+            <span className="mr-2">📝</span>
+            Autoevaluaciones Disponibles
+          </h4>
+          <div className="space-y-2">
+            {customEvaluations.map(evaluation => (
+              <div key={evaluation.id} className="bg-white rounded-lg p-3 border border-blue-200">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <h5 className="font-medium text-gray-900">{evaluation.title}</h5>
+                    {evaluation.description && (
+                      <p className="text-sm text-gray-600 mt-1">{evaluation.description}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Creada por: {evaluation.teacher_name}
+                    </p>
+                  </div>
+                  {evaluation.has_responded && (
+                    <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full ml-2">
+                      ✓ Respondida
+                    </span>
+                  )}
+                </div>
+                <a
+                  href={evaluation.qr_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-block w-full text-center py-2 px-4 rounded-md text-sm font-medium transition ${
+                    evaluation.has_responded && !evaluation.allow_multiple_attempts
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  onClick={(e) => {
+                    if (evaluation.has_responded && !evaluation.allow_multiple_attempts) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  {evaluation.has_responded && !evaluation.allow_multiple_attempts
+                    ? '✓ Ya respondida'
+                    : '📝 Responder Autoevaluación'}
+                </a>
+              </div>
+            ))}
           </div>
         </div>
       )}

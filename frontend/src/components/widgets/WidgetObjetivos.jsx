@@ -81,7 +81,10 @@ const WidgetObjetivos = ({ studentId, subjectId, onObjectiveCreated, titleClassN
     try {
       setSaving(true);
       const objectiveData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        deadline: formData.deadline, // Ya calculado desde trimestre
+        status: formData.status,
         student: studentId,
         subject: subjectId || null
       };
