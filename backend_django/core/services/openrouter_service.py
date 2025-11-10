@@ -242,7 +242,8 @@ class OpenRouterClient:
         messages: List[Dict[str, str]],
         model: str,
         max_tokens: int = 2048,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        tools: Optional[List[Dict]] = None
     ) -> Dict[str, Any]:
         """
         Genera respuesta de chat usando mensajes estructurados (para chatbot educativo)
@@ -252,6 +253,7 @@ class OpenRouterClient:
             model: Modelo a usar
             max_tokens: Máximo de tokens
             temperature: Temperatura para generación (0.0-1.0)
+            tools: Lista de funciones disponibles para function calling (opcional)
             
         Returns:
             Dict: Respuesta completa de OpenRouter con estructura choices
@@ -261,6 +263,8 @@ class OpenRouterClient:
         
         try:
             logger.info(f"Chat completion con modelo {model}, {len(messages)} mensajes")
+            if tools:
+                logger.info(f"Tools disponibles: {[t['name'] for t in tools]}")
             
             headers = {
                 'Authorization': f'Bearer {self.api_key}',
@@ -276,6 +280,11 @@ class OpenRouterClient:
                 'temperature': temperature,
                 'top_p': 0.9
             }
+            
+            # Añadir tools si están disponibles (function calling)
+            if tools and len(tools) > 0:
+                data['tools'] = [{"type": "function", "function": tool} for tool in tools]
+                data['tool_choice'] = 'auto'
             
             response = requests.post(
                 f"{self.base_url}/chat/completions",

@@ -1,4 +1,7 @@
 export default function ChatSidebar({ chatSessions, currentChatId, onSelectChat, onNewChat, isOpen, onToggle }) {
+  // Validación defensiva: asegurar que chatSessions sea un array
+  const sessions = Array.isArray(chatSessions) ? chatSessions : [];
+  
   return (
     <>
       {/* Toggle Button (mobile) */}
@@ -36,14 +39,14 @@ export default function ChatSidebar({ chatSessions, currentChatId, onSelectChat,
             Conversaciones
           </h3>
           
-          {chatSessions.length === 0 ? (
+          {sessions.length === 0 ? (
             <div className="text-center text-gray-500 text-sm mt-8">
               <p>No hay conversaciones aún</p>
               <p className="text-xs mt-2">Inicia una nueva para comenzar</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {chatSessions.map((session) => (
+              {sessions.map((session) => (
                 <button
                   key={session.id}
                   onClick={() => onSelectChat(session.id)}

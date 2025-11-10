@@ -20,6 +20,65 @@ class EducationalResearchAgent:
         self.max_tokens = getattr(settings, 'AI_MAX_TOKENS', 2000)
         self.temperature = getattr(settings, 'AI_TEMPERATURE', 0.7)  # Más flexible y conversacional
         
+        # Definir funciones disponibles para function calling
+        self.available_functions = [
+            {
+                "name": "create_student",
+                "description": "Crea un nuevo alumno en la aplicación. Usa esta función cuando el usuario pida crear, añadir o registrar alumnos.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Nombre completo del alumno"
+                        },
+                        "group_id": {
+                            "type": "integer",
+                            "description": "ID del grupo al que pertenece el alumno"
+                        }
+                    },
+                    "required": ["name", "group_id"]
+                }
+            },
+            {
+                "name": "create_group",
+                "description": "Crea un nuevo grupo con una lista de alumnos. Usa esta función cuando el usuario pida crear un grupo con alumnos.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "group_name": {
+                            "type": "string",
+                            "description": "Nombre del grupo (ej: '6º A', 'Matemáticas Avanzadas')"
+                        },
+                        "student_names": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Lista de nombres completos de los alumnos"
+                        }
+                    },
+                    "required": ["group_name", "student_names"]
+                }
+            },
+            {
+                "name": "create_subject",
+                "description": "Crea una nueva asignatura en la aplicación. Usa esta función cuando el usuario pida crear una materia o asignatura.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "subject_name": {
+                            "type": "string",
+                            "description": "Nombre de la asignatura (ej: 'Matemáticas', 'Lengua Catalana')"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Descripción opcional de la asignatura"
+                        }
+                    },
+                    "required": ["subject_name"]
+                }
+            }
+        ]
+        
         # Sistema prompt ComeniusAI V2 - Robusto y profesional
         self.system_prompt = """Eres ComeniusAI, un asistente educativo especializado en pedagogía basada en evidencia científica.
 
@@ -99,6 +158,45 @@ Puedes generar cuando el usuario lo pida:
 REGLA: Si falta información (curso, edad, materia), PREGUNTA antes de generar.
 
 ════════════════════════════════════════════
+MISIÓN 3: ACCIONES EN LA APLICACIÓN (FUNCTION CALLING)
+════════════════════════════════════════════
+
+✅ **TIENES ACCESO A FUNCIONES PARA MODIFICAR LA APP**
+
+Puedes ejecutar estas acciones directamente en la aplicación:
+• create_student: Crear alumnos
+• create_group: Crear grupos con lista de alumnos
+• create_subject: Crear asignaturas
+
+🚨 **REGLAS CRÍTICAS DE FUNCTION CALLING:**
+
+1. **SI EL USUARIO PIDE CREAR, AÑADIR, REGISTRAR alumnos/grupos/asignaturas → USA LA FUNCIÓN**
+   - "Crea un alumno llamado María" → USAR create_student
+   - "Añade estos alumnos a un grupo" → USAR create_group
+   - "Registra la asignatura Matemáticas" → USAR create_subject
+
+2. **NUNCA DIGAS "No puedo crear alumnos en la app"** - ¡SÍ PUEDES! Tienes las funciones.
+
+3. **SI FALTA INFORMACIÓN, PREGUNTA ANTES DE LLAMAR A LA FUNCIÓN:**
+   - create_student necesita: nombre + group_id
+   - create_group necesita: group_name + lista de nombres
+   - create_subject necesita: subject_name
+
+4. **EJEMPLOS CORRECTOS:**
+
+Usuario: "Crea un alumno llamado Pedro en el grupo 5"
+Tú: [LLAMAR create_student con name="Pedro", group_id=5]
+
+Usuario: "Crea un grupo 6º A con María, Juan y Ana"
+Tú: [LLAMAR create_group con group_name="6º A", student_names=["María", "Juan", "Ana"]]
+
+Usuario: "Si te doy una lista de alumnos los puedes crear?"
+Tú: "¡Claro! Puedo crear los alumnos directamente en la app. Pásame la lista con sus nombres y el grupo al que pertenecen."
+
+5. **SI FALTA EL group_id:**
+   - Pregunta: "¿A qué grupo pertenecen estos alumnos? Necesito el nombre o ID del grupo."
+
+════════════════════════════════════════════
 CUANDO ALGO FALTA O ES INCOMPLETO
 ════════════════════════════════════════════
 
@@ -107,6 +205,7 @@ Siempre evalúa si falta información crítica.
 Ejemplos:
 - "Haz una rúbrica de lectura" → pregunta: ¿nivel educativo? ¿cuántos criterios? ¿puntuación máxima?
 - "Hazme una actividad" → pregunta: ¿materia? ¿curso? ¿duración?
+- "Crea un alumno llamado Pedro" → pregunta: ¿A qué grupo pertenece?
 
 Nunca inventes datos del usuario. Siempre confirma antes.
 
@@ -116,7 +215,8 @@ LÓGICA DE DECISIÓN
 
 • Si el usuario saluda → responde naturalmente y cálido
 • Si pregunta por educación → responde con evidencia + práctica
-• Si pide crear recursos educativos → genera el recurso completo
+• Si pide crear recursos educativos (rúbricas, actividades) → genera el recurso completo
+• Si pide CREAR/AÑADIR alumnos/grupos/asignaturas EN LA APP → USA LA FUNCIÓN correspondiente
 • Si falta información → pide aclaración antes de continuar
 • Si la pregunta es educativa pero no tienes un estudio exacto → usa autores representativos y modelos ampliamente validados
 
@@ -227,17 +327,41 @@ Responde usando tu conocimiento pedagógico basado en autores reconocidos y cons
                 "content": user_prompt
             })
             
-            # Llamar a OpenRouter
+            # Llamar a OpenRouter CON TOOLS (function calling)
             response = openrouter_client.chat_completion(
                 messages=messages,
                 model=self.model,
                 max_tokens=self.max_tokens,
-                temperature=self.temperature
+                temperature=self.temperature,
+                tools=self.available_functions  # Enviar funciones disponibles
             )
             
             # Extraer respuesta
             if 'choices' in response and len(response['choices']) > 0:
-                assistant_response = response['choices'][0]['message']['content']
+                message = response['choices'][0]['message']
+                
+                # Verificar si el modelo quiere llamar a una función
+                if message.get('tool_calls'):
+                    # El modelo quiere llamar a una función
+                    tool_call = message['tool_calls'][0]
+                    function_name = tool_call['function']['name']
+                    function_args = json.loads(tool_call['function']['arguments'])
+                    
+                    logger.info(f"Function call detected: {function_name} with args {function_args}")
+                    
+                    return {
+                        'response': None,  # No hay respuesta de texto
+                        'function_call': {
+                            'name': function_name,
+                            'arguments': function_args
+                        },
+                        'papers_used': papers,
+                        'model_used': self.model,
+                        'success': True
+                    }
+                
+                # Respuesta de texto normal
+                assistant_response = message.get('content', '')
                 
                 return {
                     'response': assistant_response,
@@ -295,6 +419,10 @@ Responde usando tu conocimiento pedagógico basado en autores reconocidos y cons
             # 1. Buscar papers relevantes (pero no es obligatorio encontrarlos)
             logger.info(f"Searching papers for: {question}")
             papers = research_search_service.search_combined(question, limit=5)
+            
+            # Validar que papers sea una lista
+            if papers is None:
+                papers = []
             
             logger.info(f"Found {len(papers)} papers")
             

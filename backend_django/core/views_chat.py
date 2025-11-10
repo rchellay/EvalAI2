@@ -74,13 +74,31 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 chat_history=chat_history
             )
             
-            # Guardar respuesta del asistente
-            assistant_message = ChatMessage.objects.create(
-                chat=chat,
-                sender='assistant',
-                content=result.get('response', 'Lo siento, no pude generar una respuesta.'),
-                papers=result.get('papers_used', [])
-            )
+            # Verificar si el modelo quiere llamar a una función
+            if result.get('function_call'):
+                function_name = result['function_call']['name']
+                function_args = result['function_call']['arguments']
+                
+                logger.info(f"Function call requested: {function_name}")
+                
+                # Ejecutar la función
+                function_result = self._execute_function(request.user, function_name, function_args)
+                
+                # Guardar respuesta del asistente con el resultado de la función
+                assistant_message = ChatMessage.objects.create(
+                    chat=chat,
+                    sender='assistant',
+                    content=function_result.get('message', 'Acción completada.'),
+                    papers=[]
+                )
+            else:
+                # Guardar respuesta del asistente normal
+                assistant_message = ChatMessage.objects.create(
+                    chat=chat,
+                    sender='assistant',
+                    content=result.get('response', 'Lo siento, no pude generar una respuesta.'),
+                    papers=result.get('papers_used', [])
+                )
             
             # Actualizar título del chat si es el primer mensaje
             if chat.message_count == 2:  # Usuario + Asistente
@@ -143,13 +161,31 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 chat_history=None
             )
             
-            # Guardar respuesta del asistente
-            assistant_message = ChatMessage.objects.create(
-                chat=chat,
-                sender='assistant',
-                content=result.get('response', 'Lo siento, no pude generar una respuesta.'),
-                papers=result.get('papers_used', [])
-            )
+            # Verificar si el modelo quiere llamar a una función
+            if result.get('function_call'):
+                function_name = result['function_call']['name']
+                function_args = result['function_call']['arguments']
+                
+                logger.info(f"Function call requested: {function_name}")
+                
+                # Ejecutar la función
+                function_result = self._execute_function(request.user, function_name, function_args)
+                
+                # Guardar respuesta del asistente con el resultado de la función
+                assistant_message = ChatMessage.objects.create(
+                    chat=chat,
+                    sender='assistant',
+                    content=function_result.get('message', 'Acción completada.'),
+                    papers=[]
+                )
+            else:
+                # Guardar respuesta del asistente normal
+                assistant_message = ChatMessage.objects.create(
+                    chat=chat,
+                    sender='assistant',
+                    content=result.get('response', 'Lo siento, no pude generar una respuesta.'),
+                    papers=result.get('papers_used', [])
+                )
             
             # Serializar respuesta completa
             chat_data = ChatSessionSerializer(chat).data
@@ -165,6 +201,120 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 {'error': f'Error al iniciar el chat: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    def _execute_function(self, user, function_name, function_args):
+        """
+        Ejecuta la función solicitada por el modelo
+        
+        Args:
+            user: Usuario que hace la petición
+            function_name: Nombre de la función a ejecutar
+            function_args: Argumentos de la función
+            
+        Returns:
+            Dict con el resultado de la función
+        """
+        from .models import Student, Group, Subject
+        
+        try:
+            if function_name == 'create_student':
+                name = function_args.get('name')
+                group_id = function_args.get('group_id')
+                
+                if not name or not group_id:
+                    return {
+                        'success': False,
+                        'message': 'Faltan parámetros: necesito el nombre del alumno y el ID del grupo.'
+                    }
+                
+                try:
+                    group = Group.objects.get(id=group_id, teacher=user)
+                except Group.DoesNotExist:
+                    return {
+                        'success': False,
+                        'message': f'No se encontró el grupo con ID {group_id}. ¿Cuál es el nombre del grupo correcto?'
+                    }
+                
+                # Crear el alumno
+                student = Student.objects.create(
+                    name=name,
+                    group=group,
+                    teacher=user
+                )
+                
+                return {
+                    'success': True,
+                    'message': f'✅ Alumno "{name}" creado exitosamente en el grupo "{group.name}".',
+                    'student_id': student.id
+                }
+            
+            elif function_name == 'create_group':
+                group_name = function_args.get('group_name')
+                student_names = function_args.get('student_names', [])
+                
+                if not group_name:
+                    return {
+                        'success': False,
+                        'message': 'Falta el nombre del grupo.'
+                    }
+                
+                # Crear el grupo
+                group = Group.objects.create(
+                    name=group_name,
+                    teacher=user
+                )
+                
+                # Crear los alumnos
+                students_created = []
+                for student_name in student_names:
+                    student = Student.objects.create(
+                        name=student_name,
+                        group=group,
+                        teacher=user
+                    )
+                    students_created.append(student.name)
+                
+                return {
+                    'success': True,
+                    'message': f'✅ Grupo "{group_name}" creado con {len(students_created)} alumnos: {", ".join(students_created)}',
+                    'group_id': group.id
+                }
+            
+            elif function_name == 'create_subject':
+                subject_name = function_args.get('subject_name')
+                description = function_args.get('description', '')
+                
+                if not subject_name:
+                    return {
+                        'success': False,
+                        'message': 'Falta el nombre de la asignatura.'
+                    }
+                
+                # Crear la asignatura
+                subject = Subject.objects.create(
+                    name=subject_name,
+                    description=description,
+                    teacher=user
+                )
+                
+                return {
+                    'success': True,
+                    'message': f'✅ Asignatura "{subject_name}" creada exitosamente.',
+                    'subject_id': subject.id
+                }
+            
+            else:
+                return {
+                    'success': False,
+                    'message': f'Función desconocida: {function_name}'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error executing function {function_name}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'message': f'Error al ejecutar la función: {str(e)}'
+            }
 
 
 @api_view(['POST'])

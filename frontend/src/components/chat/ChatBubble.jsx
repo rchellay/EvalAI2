@@ -35,7 +35,7 @@ export default function ChatBubble({ message }) {
         </div>
 
         {/* Papers Section (only for assistant) */}
-        {!isUser && message.papers && message.papers.length > 0 && (
+        {!isUser && message.papers && Array.isArray(message.papers) && message.papers.length > 0 && (
           <div className="mt-3 space-y-2">
             <div className="text-xs font-semibold text-gray-600 mb-2">
               📚 Estudios citados ({message.papers.length}):

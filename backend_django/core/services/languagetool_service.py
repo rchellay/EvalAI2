@@ -59,6 +59,8 @@ class LanguageToolService:
                 return self._procesar_resultado(result)
             else:
                 logger.error(f"Error en LanguageTool API: {response.status_code}")
+                logger.error(f"Response content: {response.text}")
+                logger.error(f"Request data: {data}")
                 return {
                     'error': 'Error al conectar con el servicio de corrección',
                     'matches': []

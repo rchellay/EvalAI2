@@ -142,7 +142,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
       // Agregar texto antes del error
       if (inicio > ultimoIndice) {
         elementos.push(
-          <span key={`texto-${index}`}>
+          <span key={`texto-${index}`} className="text-gray-900">
             {texto.substring(ultimoIndice, inicio)}
           </span>
         );
@@ -150,10 +150,10 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
 
       // Agregar el error marcado
       const claseSeveridad = {
-        'alta': 'bg-red-200 border-red-400 text-red-800',
-        'media': 'bg-yellow-200 border-yellow-400 text-yellow-800',
-        'baja': 'bg-blue-200 border-blue-400 text-blue-800'
-      }[error.severity] || 'bg-gray-200 border-gray-400 text-gray-800';
+        'alta': 'bg-red-200 border-red-400 text-red-900',
+        'media': 'bg-yellow-200 border-yellow-400 text-yellow-900',
+        'baja': 'bg-blue-200 border-blue-400 text-blue-900'
+      }[error.severity] || 'bg-gray-200 border-gray-400 text-gray-900';
 
       elementos.push(
         <span
@@ -196,7 +196,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
     // Agregar texto restante
     if (ultimoIndice < texto.length) {
       elementos.push(
-        <span key="texto-final">
+        <span key="texto-final" className="text-gray-900">
           {texto.substring(ultimoIndice)}
         </span>
       );
@@ -490,7 +490,7 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
           {/* Texto con errores marcados */}
           <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
             <h4 className="font-medium text-gray-900 mb-2">Texto Corregido</h4>
-            <div className="text-sm leading-relaxed">
+            <div className="text-sm leading-relaxed text-gray-900">
               {renderizarTextoConErrores()}
             </div>
             <div className="mt-2 text-xs text-gray-600">

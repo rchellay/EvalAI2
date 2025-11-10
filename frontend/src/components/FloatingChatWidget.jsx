@@ -7,13 +7,42 @@ const comeniusLogo = '/comenius-ai-logo-temp.svg';
 
 export default function FloatingChatWidget() {
   const [user, setUser] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    // Recuperar estado de localStorage
+    const saved = localStorage.getItem('floatingChat_isOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [isMinimized, setIsMinimized] = useState(false);
-  const [currentChat, setCurrentChat] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [currentChat, setCurrentChat] = useState(() => {
+    // Recuperar chat actual de localStorage
+    const saved = localStorage.getItem('floatingChat_currentChat');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [messages, setMessages] = useState(() => {
+    // Recuperar mensajes de localStorage
+    const saved = localStorage.getItem('floatingChat_messages');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Guardar estado en localStorage cuando cambie
+  useEffect(() => {
+    localStorage.setItem('floatingChat_isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (currentChat) {
+      localStorage.setItem('floatingChat_currentChat', JSON.stringify(currentChat));
+    }
+  }, [currentChat]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('floatingChat_messages', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,6 +107,9 @@ export default function FloatingChatWidget() {
   const handleNewChat = () => {
     setCurrentChat(null);
     setMessages([]);
+    // Limpiar localStorage
+    localStorage.removeItem('floatingChat_currentChat');
+    localStorage.removeItem('floatingChat_messages');
   };
 
   if (!isOpen) {
