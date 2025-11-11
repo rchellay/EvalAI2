@@ -176,11 +176,11 @@ const InformesInteligentes = () => {
                   setSelectedGrupo(null);
                   setStudents([]);
                 }}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:border-blue-400"
               >
-                <option value="">-- Selecciona un nivel --</option>
+                <option value="" className="text-gray-500">-- Selecciona un nivel --</option>
                 {niveles.map(nivel => (
-                  <option key={nivel.id} value={nivel.id}>
+                  <option key={nivel.id} value={nivel.id} className="text-gray-900">
                     {nivel.nombre}
                   </option>
                 ))}
@@ -199,11 +199,11 @@ const InformesInteligentes = () => {
                   setSelectedGrupo(grupo);
                 }}
                 disabled={!selectedNivel}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
               >
-                <option value="">-- Selecciona un grupo --</option>
+                <option value="" className="text-gray-500">-- Selecciona un grupo --</option>
                 {grupos.map(grupo => (
-                  <option key={grupo.id} value={grupo.id}>
+                  <option key={grupo.id} value={grupo.id} className="text-gray-900">
                     {grupo.nombre}
                   </option>
                 ))}

@@ -2850,41 +2850,78 @@ def evaluaciones_pendientes(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def noticias_educacion(request):
-    """Noticias educativas de Cataluña"""
+    """Noticias educativas sobre evaluación educativa y educación en español/catalán"""
     try:
-        # Simular noticias educativas (en producción se conectaría a RSS/API real)
+        from datetime import timedelta
+        import hashlib
+        
+        # Cache de 2 días (48 horas)
+        cache_key = 'noticias_educacion_cache'
+        cache_timeout = 60 * 60 * 48  # 48 horas en segundos
+        
+        # Intentar obtener del cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
+        # Generar noticias actualizadas (aquí se conectaría a un RSS/API real)
+        # Por ahora usamos datos simulados con fecha dinámica
+        today = timezone.now()
+        
         noticias_data = [
             {
                 'id': 1,
-                'title': 'Nuevas metodologías educativas en Cataluña',
-                'summary': 'El Departament d\'Educació presenta nuevas estrategias pedagógicas...',
-                'source': 'Diari de l\'Educació',
-                'date': '2025-10-17',
-                'url': 'https://diarieducacio.cat/noticia/12345'
+                'title': 'Nuevas tendencias en evaluación educativa competencial',
+                'summary': 'Análisis de metodologías innovadoras en evaluación por competencias y su impacto en el aprendizaje del alumnado...',
+                'source': 'Revista Educación 3.0',
+                'date': (today - timedelta(days=1)).strftime('%Y-%m-%d'),
+                'url': 'https://www.educaciontrespuntocero.com'
             },
             {
                 'id': 2,
-                'title': 'Formación docente en competencias digitales',
-                'summary': 'Programa de formación para profesores en herramientas digitales...',
-                'source': 'EducaBcn',
-                'date': '2025-10-16',
-                'url': 'https://educabcn.cat/noticia/67890'
+                'title': 'Evaluación formativa: claves para la mejora educativa',
+                'summary': 'Estrategias y herramientas para implementar una evaluación formativa efectiva en el aula...',
+                'source': 'Diari de l\'Educació',
+                'date': (today - timedelta(days=2)).strftime('%Y-%m-%d'),
+                'url': 'https://diarieducacio.cat'
             },
             {
                 'id': 3,
-                'title': 'Innovación en evaluación educativa',
-                'summary': 'Nuevas tendencias en evaluación formativa y competencial...',
+                'title': 'Innovación pedagógica en centros educativos',
+                'summary': 'Experiencias de éxito en la implementación de metodologías activas y evaluación auténtica...',
+                'source': 'EducaLab',
+                'date': (today - timedelta(days=3)).strftime('%Y-%m-%d'),
+                'url': 'https://intef.es/recursos-educativos/recursos-para-el-aprendizaje-en-linea'
+            },
+            {
+                'id': 4,
+                'title': 'Rúbricas de evaluación: diseño y aplicación práctica',
+                'summary': 'Guía completa sobre el diseño e implementación de rúbricas en diferentes etapas educativas...',
                 'source': 'Blog XTEC',
-                'date': '2025-10-15',
-                'url': 'https://bloc.xtec.cat/noticia/11111'
+                'date': (today - timedelta(days=4)).strftime('%Y-%m-%d'),
+                'url': 'https://bloc.xtec.cat'
+            },
+            {
+                'id': 5,
+                'title': 'Autoevaluación y coevaluación en el aula',
+                'summary': 'Herramientas y estrategias para fomentar la autoevaluación y la evaluación entre pares...',
+                'source': 'EducaBcn',
+                'date': (today - timedelta(days=5)).strftime('%Y-%m-%d'),
+                'url': 'https://ajuntament.barcelona.cat/educacio'
             }
         ]
         
-        return Response({
+        response_data = {
             'noticias': noticias_data,
             'total': len(noticias_data),
-            'last_updated': timezone.now().isoformat()
-        })
+            'last_updated': today.isoformat(),
+            'next_update': (today + timedelta(days=2)).isoformat()
+        }
+        
+        # Guardar en cache por 2 días
+        cache.set(cache_key, response_data, cache_timeout)
+        
+        return Response(response_data)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

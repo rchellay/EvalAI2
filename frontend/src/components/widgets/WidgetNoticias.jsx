@@ -73,7 +73,7 @@ const WidgetNoticias = () => {
           <div className="text-3xl mr-3">🗞️</div>
           <div>
             <h3 className="text-xl font-semibold text-slate-800">Noticias Educativas</h3>
-            <p className="text-sm text-slate-600">Cataluña - Últimas novedades</p>
+            <p className="text-sm text-slate-600">Evaluación y educación - Actualización cada 2 días</p>
           </div>
         </div>
         <div className="text-sm text-slate-500">
@@ -128,10 +128,10 @@ const WidgetNoticias = () => {
       <div className="mt-4 pt-4 border-t border-slate-200">
         <div className="flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            <span>Fuentes: Diari de l'Educació, EducaBcn, Blog XTEC</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            <span>Evaluación educativa y pedagogía</span>
           </div>
-          <span>Actualizado: Ahora</span>
+          <span>🔄 Actualización cada 2 días</span>
         </div>
       </div>
     </motion.div>

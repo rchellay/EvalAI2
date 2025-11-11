@@ -140,6 +140,8 @@ export default function AIExpertPage() {
     // Limpiar persistencia del localStorage
     localStorage.removeItem('comenius_last_chat_id');
     localStorage.removeItem('comenius_last_chat_messages');
+    // Recargar la lista de sesiones para mostrar la conversación anterior guardada
+    loadChatSessions();
   };
 
   const handleSelectChat = (chatId) => {
