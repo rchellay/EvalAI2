@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '../../lib/axios';
 import { toast } from 'react-hot-toast';
+import Switch from '../Switch';
 
 const AddAttendanceModal = ({ isOpen, onClose, studentId, studentGroup, onSuccess }) => {
   const [subjects, setSubjects] = useState([]);
@@ -98,17 +99,7 @@ const AddAttendanceModal = ({ isOpen, onClose, studentId, studentGroup, onSucces
           
           {/* Opción de registrar todas las asignaturas */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.register_all}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  register_all: e.target.checked,
-                  subject_id: e.target.checked ? '' : formData.subject_id
-                })}
-                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
                   Registrar para todas las asignaturas del día
@@ -117,7 +108,15 @@ const AddAttendanceModal = ({ isOpen, onClose, studentId, studentGroup, onSucces
                   Marca esta opción para registrar la asistencia en todas las clases programadas para este día
                 </p>
               </div>
-            </label>
+              <Switch
+                checked={formData.register_all}
+                onChange={(checked) => setFormData({ 
+                  ...formData, 
+                  register_all: checked,
+                  subject_id: checked ? '' : formData.subject_id
+                })}
+              />
+            </div>
           </div>
 
           {/* Asignatura */}

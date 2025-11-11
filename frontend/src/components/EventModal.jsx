@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Repeat, Tag, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../lib/axios';
 import RecurrenceEditor from './RecurrenceEditor';
+import Switch from './Switch';
 
 export default function EventModal({ isOpen, onClose, event, onSave, subjects = [] }) {
   const [formData, setFormData] = useState({
@@ -202,17 +203,14 @@ export default function EventModal({ isOpen, onClose, event, onSave, subjects = 
           </div>
 
           {/* All Day */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="all_day"
-              checked={formData.all_day}
-              onChange={(e) => handleChange('all_day', e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <label htmlFor="all_day" className="text-sm font-medium text-gray-700">
               Evento de día completo
             </label>
+            <Switch
+              checked={formData.all_day}
+              onChange={(checked) => handleChange('all_day', checked)}
+            />
           </div>
 
           {/* Event Type & Subject Row */}

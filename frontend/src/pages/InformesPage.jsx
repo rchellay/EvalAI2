@@ -3,6 +3,7 @@ import api from '../lib/axios';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Switch from '../components/Switch';
 // TEMPORALMENTE COMENTADO PARA VERCEL BUILD
 // import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -187,8 +188,8 @@ export default function InformesPage() {
           <DatePicker selectsRange startDate={dateRange[0]} endDate={dateRange[1]} onChange={(update) => setDateRange(update)} isClearable placeholderText="Selecciona rango..." className="w-full p-2 border border-gray-400 rounded text-black bg-white placeholder-gray-500 font-semibold" />
         </div>
         <div className="flex items-center gap-2">
-          <input type="checkbox" checked={analizarIA} onChange={e => setAnalizarIA(e.target.checked)} className="h-5 w-5 accent-blue-600 border-2 border-gray-600 bg-white focus:ring-2 focus:ring-blue-500" />
-         <span className="text-sm"></span>
+          <span className="text-sm font-medium">Analizar con IA</span>
+          <Switch checked={analizarIA} onChange={(checked) => setAnalizarIA(checked)} />
         </div>
         <button className="bg-blue-600 text-white px-4 py-2 rounded font-semibold" onClick={generarInforme} disabled={loading}>Generar informe</button>
       </div>
