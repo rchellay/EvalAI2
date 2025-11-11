@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'anymail',  # Sistema de emails con SendGrid
     
     # Django Allauth
     'allauth',
@@ -109,6 +110,7 @@ INSTALLED_APPS = [
     
     # Local
     'core',
+    'emails',  # Sistema de emails con SendGrid
 ]
 
 # Required for django-allauth
@@ -386,3 +388,31 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 # Fix for Google OAuth redirect_uri mismatch
 SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+
+
+# ========================================
+# 📧 CONFIGURACIÓN DE EMAILS - SENDGRID
+# ========================================
+
+# Backend de email con django-anymail + SendGrid
+EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
+# API Key de SendGrid (desde variable de entorno)
+ANYMAIL = {
+    'SENDGRID_API_KEY': config('SENDGRID_API_KEY', default=''),
+}
+
+# Configuración general de emails
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@evalai.app')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Nombre visible del remitente
+EMAIL_FROM_NAME = 'EvalAI'
+
+# Versión de la app (para footer de emails)
+APP_VERSION = '2.0.0'
+
+# Dominio del frontend (para enlaces en emails)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# ========================================

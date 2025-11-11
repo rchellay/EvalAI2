@@ -9,10 +9,46 @@ from .models import (
 
 
 class UserSerializer(serializers.ModelSerializer):
+    gender = serializers.SerializerMethodField()
+    welcome_message = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gender', 'welcome_message', 'avatar_url', 'display_name']
+        read_only_fields = ['id', 'gender', 'welcome_message', 'avatar_url', 'display_name']
+    
+    def get_gender(self, obj):
+        """Obtener género del perfil del usuario"""
+        if hasattr(obj, 'profile') and obj.profile.gender:
+            return obj.profile.gender
+        return None
+    
+    def get_welcome_message(self, obj):
+        """Retorna 'Bienvenido' o 'Bienvenida' según el género"""
+        if hasattr(obj, 'profile'):
+            return obj.profile.welcome_message
+        return 'Bienvenido/a'
+    
+    def get_avatar_url(self, obj):
+        """Obtener URL del avatar del perfil del usuario"""
+        if hasattr(obj, 'profile') and obj.profile.avatar:
+            try:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.profile.avatar.url)
+                return obj.profile.avatar.url
+            except Exception:
+                # Si hay error obteniendo la URL, retornar None
+                return None
+        return None
+    
+    def get_display_name(self, obj):
+        """Obtener nombre a mostrar del perfil del usuario"""
+        if hasattr(obj, 'profile') and obj.profile.display_name:
+            return obj.profile.display_name
+        return obj.get_full_name() or obj.username
 
 
 class StudentSerializer(serializers.ModelSerializer):

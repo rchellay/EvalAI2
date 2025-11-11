@@ -1,0 +1,32 @@
+¡Bienvenido a EvalAI!
+========================================
+
+Hola {{username}},
+
+Nos alegra mucho que te hayas unido a EvalAI, la plataforma inteligente 
+diseñada para ayudarte a evaluar, organizar y analizar el progreso de 
+tus alumnos de manera eficiente y profesional.
+
+🎯 Con EvalAI podrás:
+
+  ✅ Crear y gestionar rúbricas de evaluación personalizadas
+  ✅ Realizar seguimiento individualizado de cada estudiante
+  ✅ Generar informes automáticos con IA
+  ✅ Organizar clases, asistencias y evidencias de aprendizaje
+
+Estamos aquí para simplificar tu labor docente y permitirte enfocarte 
+en lo más importante: el aprendizaje de tus estudiantes.
+
+¡Gracias por confiar en nosotros!
+
+Atentamente,
+El equipo de EvalAI
+
+========================================
+EvalAI - Plataforma de Evaluación Educativa Inteligente
+Versión {{app_version}}
+
+¿Necesitas ayuda? Contáctanos en: soporte@evalai.app
+
+Este correo fue enviado automáticamente. 
+Por favor, no respondas a este mensaje.

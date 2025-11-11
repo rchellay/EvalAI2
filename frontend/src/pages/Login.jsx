@@ -11,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState(''); // Nuevo: campo de género
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,9 +56,13 @@ export default function Login() {
     e.preventDefault();
     setLoading(true); setError(null);
     try {
-      await api.post('/auth/register', { username, email, password });
-      toast.success('Usuario registrado');
+      const payload = { username, email, password };
+      if (gender) payload.gender = gender; // Incluir género si se seleccionó
+      await api.post('/auth/register', payload);
+      toast.success('Usuario registrado exitosamente');
       setMode('login');
+      // Limpiar campos
+      setGender('');
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Error registrando');
       setError(e.response?.data?.detail || 'Error registrando');
@@ -147,6 +152,30 @@ export default function Login() {
             <div className="input-group">
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" required />
+            </div>
+          )}
+          {mode==='register' && (
+            <div className="input-group">
+              <label>Género (opcional)</label>
+              <select 
+                value={gender} 
+                onChange={(e) => setGender(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: '#1e293b',
+                  color: 'white',
+                  border: '1px solid #334155',
+                  borderRadius: '0.5rem',
+                  fontSize: '1rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">Preferir no decir</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+              </select>
             </div>
           )}
           <div className="input-group">

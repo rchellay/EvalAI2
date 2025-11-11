@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a EvalAI!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f3f4f6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .header-title {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .greeting {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+        .description {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+        .highlight {
+            background-color: #f0f4ff;
+            border-left: 4px solid #4f46e5;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .highlight p {
+            margin: 0;
+            color: #374151;
+            font-size: 15px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 5px 0;
+        }
+        .footer-link {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 20px 10px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .header-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header con logo -->
+        <div class="header">
+            <img src="https://eval-ai-2.vercel.app/evalai-logo.png" 
+                 alt="EvalAI Logo" 
+                 class="logo">
+            <h1 class="header-title">¡Bienvenido a EvalAI!</h1>
+        </div>
+        
+        <!-- Contenido principal -->
+        <div class="content">
+            <p class="greeting">Hola {{username}},</p>
+            
+            <p class="description">
+                Nos alegra mucho que te hayas unido a <strong>EvalAI</strong>, la plataforma inteligente 
+                diseñada para ayudarte a evaluar, organizar y analizar el progreso de tus alumnos de manera 
+                eficiente y profesional.
+            </p>
+            
+            <div class="highlight">
+                <p>
+                    <strong>🎯 Con EvalAI podrás:</strong><br><br>
+                    ✅ Crear y gestionar rúbricas de evaluación personalizadas<br>
+                    ✅ Realizar seguimiento individualizado de cada estudiante<br>
+                    ✅ Generar informes automáticos con IA<br>
+                    ✅ Organizar clases, asistencias y evidencias de aprendizaje
+                </p>
+            </div>
+            
+            <p class="description">
+                Estamos aquí para simplificar tu labor docente y permitirte enfocarte en lo más importante: 
+                <strong>el aprendizaje de tus estudiantes</strong>.
+            </p>
+            
+            <p class="description">
+                ¡Gracias por confiar en nosotros!
+            </p>
+            
+            <p class="description" style="margin-top: 30px;">
+                Atentamente,<br>
+                <strong>El equipo de EvalAI</strong>
+            </p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text">
+                <strong>EvalAI</strong> - Plataforma de Evaluación Educativa Inteligente
+            </p>
+            <p class="footer-text">
+                Versión {{app_version}}
+            </p>
+            <p class="footer-text">
+                ¿Necesitas ayuda? 
+                <a href="mailto:soporte@evalai.app" class="footer-link">Contáctanos</a>
+            </p>
+            <p class="footer-text" style="margin-top: 20px; color: #9ca3af; font-size: 12px;">
+                Este correo fue enviado automáticamente. Por favor, no respondas a este mensaje.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -32,7 +32,7 @@ from .serializers import (
     CorrectionEvidenceSerializer, CorrectionEvidenceCreateSerializer, CorrectionEvidenceUpdateSerializer,
     UserSettingsSerializer, CustomEventSerializer, CustomEvaluationSerializer, EvaluationResponseSerializer
 )
-# from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
+from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
 from .services.whisper_loader import get_whisper_service
 from .services.openrouter_service import openrouter_client, OpenRouterServiceError
 from .services.languagetool_service import languagetool_service
@@ -962,10 +962,12 @@ def custom_login(request):
 def custom_register(request):
     """
     Custom registration endpoint for frontend compatibility.
+    Accepts: username, email, password, gender (optional)
     """
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
+    gender = request.data.get('gender', '')  # Opcional: 'M', 'F', 'O'
     
     if not username or not email or not password:
         return Response(
@@ -985,16 +987,30 @@ def custom_register(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
+    # Validar género si se proporciona
+    if gender and gender not in ['M', 'F', 'O']:
+        return Response(
+            {'detail': 'Gender must be M (Masculino), F (Femenino) or O (Otro)'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Crear usuario
     user = User.objects.create_user(
         username=username,
         email=email,
         password=password
     )
     
+    # Actualizar perfil con género (el perfil se crea automáticamente por signal)
+    if gender:
+        user.profile.gender = gender
+        user.profile.save()
+    
     return Response({
         'id': user.id,
         'username': user.username,
         'email': user.email,
+        'gender': user.profile.gender if user.profile.gender else None,
         'message': 'User created successfully'
     }, status=status.HTTP_201_CREATED)
 

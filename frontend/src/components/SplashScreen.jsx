@@ -14,12 +14,8 @@ export default function SplashScreen({ onComplete }) {
     if (!hasSeenSplash || forceSplash === '1') {
       setShouldShow(true);
       
-      // Auto-skip después de 8 segundos
-      const autoSkipTimer = setTimeout(() => {
-        handleComplete();
-      }, 8000);
-      
-      return () => clearTimeout(autoSkipTimer);
+      // ELIMINADO: Auto-skip después de 8 segundos
+      // El video ahora se reproduce completo sin saltar automáticamente
     } else {
       onComplete();
     }
@@ -63,7 +59,7 @@ export default function SplashScreen({ onComplete }) {
 
         {/* Contenido principal */}
         <div className="relative z-10 flex flex-col items-center justify-center px-4">
-          {/* Logo principal */}
+          {/* Logo principal - SIN título duplicado */}
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -81,26 +77,13 @@ export default function SplashScreen({ onComplete }) {
             />
           </motion.div>
 
-          {/* Título animado */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight">
-              EvalAI
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-300 font-light">
-              Evaluación Inteligente para el Futuro
-            </p>
-          </motion.div>
-
-          {/* Barra de progreso */}
+          {/* TÍTULO ELIMINADO: ya está en el logo */}
+          
+          {/* Barra de progreso (basada en duración del video) */}
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: '100%' }}
-            transition={{ duration: 8, ease: "linear" }}
+            transition={{ duration: 15, ease: "linear" }} // Ajusta según duración de tu video
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
           />
         </div>
