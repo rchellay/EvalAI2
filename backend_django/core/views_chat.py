@@ -27,7 +27,9 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filtrar sesiones por usuario"""
-        return ChatSession.objects.filter(user=self.request.user)
+        queryset = ChatSession.objects.filter(user=self.request.user).order_by('-updated_at')
+        logger.info(f"Loading chat sessions for user {self.request.user.username}: found {queryset.count()} sessions")
+        return queryset
     
     def perform_create(self, serializer):
         """Crear nueva sesión asignada al usuario actual"""
@@ -146,6 +148,7 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 title=title
             )
+            logger.info(f"✅ Created new chat session {chat.id} for user {request.user.username} with title: {title}")
             
             # Guardar mensaje del usuario
             user_message = ChatMessage.objects.create(

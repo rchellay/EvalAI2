@@ -42,6 +42,10 @@ from .views_chat import ChatSessionViewSet, test_research_search
 from .auth_views import login_view, register_view, google_login_view, ping_view
 from .admin_views import cleanup_duplicates_view
 from .migration_views import run_migrations_view, check_migrations_view
+from .views_informes import (
+    informe_grupo, informe_estudiante, generar_comentarios_ia, guardar_borrador_informe,
+    exportar_pdf_grupo, exportar_excel_grupo, exportar_pdf_individual, exportar_excel_individual
+)
 
 router = DefaultRouter()
 router.register(r'students', StudentViewSet, basename='student')
@@ -218,4 +222,14 @@ urlpatterns = [
 
     # Debug endpoint for Group model
     path('debug/groups/', debug_group_endpoint, name='debug-groups'),
+    
+    # Informes Inteligentes 2.0
+    path('informes/grupo/', informe_grupo, name='informe-grupo'),
+    path('informes/estudiante/', informe_estudiante, name='informe-estudiante'),
+    path('informes/generar-comentarios-ia/', generar_comentarios_ia, name='generar-comentarios-ia'),
+    path('informes/guardar-borrador/', guardar_borrador_informe, name='guardar-borrador-informe'),
+    path('informes/grupo/pdf/', exportar_pdf_grupo, name='exportar-pdf-grupo'),
+    path('informes/grupo/excel/', exportar_excel_grupo, name='exportar-excel-grupo'),
+    path('informes/estudiante/pdf/', exportar_pdf_individual, name='exportar-pdf-individual'),
+    path('informes/estudiante/excel/', exportar_excel_individual, name='exportar-excel-individual'),
 ]

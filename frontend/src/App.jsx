@@ -15,6 +15,7 @@ import RubricResultsPage from "./pages/RubricResultsPage";
 import AttendancePage from "./pages/AttendancePage";
 import ProtectedRoute from './auth/ProtectedRoute';
 import InformesPage from './pages/InformesPage';
+import InformesInteligentes from './pages/InformesInteligentes';
 import CorreccionPage from './pages/CorreccionPage';
 import EvidenciasCorreccionPage from './pages/EvidenciasCorreccionPage';
 import SettingsPage from './pages/SettingsPage';
@@ -141,7 +142,7 @@ function App() {
             <Route path="/correccion" element={<ProtectedRoute><CorreccionPage /></ProtectedRoute>} />
             <Route path="/evidencias-correccion/:studentId" element={<ProtectedRoute><EvidenciasCorreccionPage /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
-            <Route path="/informes" element={<ProtectedRoute><InformesPage /></ProtectedRoute>} />
+            <Route path="/informes" element={<ProtectedRoute><InformesInteligentes /></ProtectedRoute>} />
             <Route path="/ajustes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           </Route>
         </Routes>

@@ -2978,12 +2978,12 @@ def idiomas_ocr_soportados(request):
     Obtiene lista de idiomas soportados para OCR
     """
     return Response({
-        'idiomas': [
-            {'code': 'es', 'name': 'Español'},
-            {'code': 'ca', 'name': 'Catalán'},
-            {'code': 'en', 'name': 'Inglés'},
-            {'code': 'fr', 'name': 'Francés'},
-        ]
+        'idiomas': {
+            'es': 'Español',
+            'ca': 'Catalán',
+            'en': 'Inglés',
+            'fr': 'Francés'
+        }
     })
 
 
@@ -3050,50 +3050,66 @@ def guardar_correccion_como_evidencia(request):
                 )
         
         # Crear evidencia de corrección
-        evidence_data = {
-            'student': student,
-            'subject': subject,
-            'title': title or f"Corrección de {student.name} - {correction_type}",
-            'original_text': original_text,
-            'corrected_text': corrected_text,
-            'correction_type': correction_type,
-            'language_tool_matches': request.data.get('language_tool_matches', []),
-            'ocr_info': request.data.get('ocr_info', {}),
-            'statistics': request.data.get('statistics', {}),
-            'teacher_feedback': request.data.get('teacher_feedback', ''),
-        }
+        from .models import CorrectionEvidence
+        
+        # Parsear language_tool_matches si es string
+        language_tool_matches = request.data.get('language_tool_matches', '[]')
+        if isinstance(language_tool_matches, str):
+            try:
+                import json
+                language_tool_matches = json.loads(language_tool_matches)
+            except:
+                language_tool_matches = []
+        
+        # Parsear statistics si es string
+        statistics = request.data.get('statistics', '{}')
+        if isinstance(statistics, str):
+            try:
+                import json
+                statistics = json.loads(statistics)
+            except:
+                statistics = {}
+        
+        # Crear evidencia directamente
+        evidence = CorrectionEvidence.objects.create(
+            student=student,
+            subject=subject,
+            title=title or f"Corrección de {student.name} - {correction_type}",
+            original_text=original_text,
+            corrected_text=corrected_text,
+            correction_type=correction_type,
+            language_tool_matches=language_tool_matches,
+            ocr_info=request.data.get('ocr_info', {}),
+            statistics=statistics,
+            teacher_feedback=request.data.get('teacher_feedback', ''),
+        )
         
         # Manejar imagen si es corrección OCR
         if correction_type == 'ocr' and 'original_image' in request.FILES:
-            evidence_data['original_image'] = request.FILES['original_image']
+            evidence.original_image = request.FILES['original_image']
+            evidence.save()
         
-        # Crear evidencia usando serializer
-        serializer = CorrectionEvidenceCreateSerializer(
-            data=evidence_data,
-            context={'request': request}
-        )
+        # Crear notificación para el estudiante si tiene usuario asociado
+        if hasattr(student, 'user') and student.user:
+            Notification.objects.create(
+                recipient=student.user,
+                title=f"Nueva corrección: {evidence.title}",
+                message=f"El profesor {request.user.username} ha corregido tu texto. Revisa las sugerencias.",
+                notification_type='correction_feedback',
+                related_student=student
+            )
         
-        if serializer.is_valid():
-            evidence = serializer.save()
-            
-            # Crear notificación para el estudiante si tiene usuario asociado
-            if hasattr(student, 'user') and student.user:
-                Notification.objects.create(
-                    recipient=student.user,
-                    title=f"Nueva corrección: {evidence.title}",
-                    message=f"El profesor {request.user.username} ha corregido tu texto. Revisa las sugerencias.",
-                    notification_type='correction_feedback',
-                    related_student=student
-                )
-            
-            return Response({
-                'message': 'Corrección guardada como evidencia exitosamente',
-                'evidence': CorrectionEvidenceSerializer(evidence).data
-            }, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Serializar la evidencia para la respuesta
+        from .serializers import CorrectionEvidenceSerializer
+        return Response({
+            'message': 'Corrección guardada como evidencia exitosamente',
+            'evidence': CorrectionEvidenceSerializer(evidence).data
+        }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
+        import traceback
+        print(f"Error guardando evidencia: {e}", flush=True)
+        print(traceback.format_exc(), flush=True)
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

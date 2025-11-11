@@ -211,6 +211,39 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
     setMostrarSugerencias({});
   };
 
+  const generarTextoCorregido = () => {
+    if (!correccion || !correccion.matches || correccion.matches.length === 0) {
+      return texto;
+    }
+
+    // Ordenar errores por posición (de atrás hacia adelante para no alterar los índices)
+    const erroresOrdenados = [...correccion.matches].sort((a, b) => b.offset - a.offset);
+
+    let textoCorregido = texto;
+
+    // Aplicar todas las correcciones (primera sugerencia de cada error)
+    erroresOrdenados.forEach((error) => {
+      if (error.suggestions && error.suggestions.length > 0) {
+        const inicio = error.offset;
+        const fin = error.offset + error.length;
+        const sugerencia = error.suggestions[0].value;
+
+        textoCorregido = textoCorregido.substring(0, inicio) + sugerencia + textoCorregido.substring(fin);
+      }
+    });
+
+    return textoCorregido;
+  };
+
+  const aplicarTodasLasCorrecciones = () => {
+    const textoCorregido = generarTextoCorregido();
+    setTexto(textoCorregido);
+    // Recorregir para ver si quedan errores
+    setTimeout(() => {
+      corregirTexto();
+    }, 500);
+  };
+
   const guardarComoEvidencia = async () => {
     if (!estudianteSeleccionado) {
       toast.error('Selecciona un estudiante para guardar la corrección');
@@ -225,11 +258,13 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
     setGuardandoEvidencia(true);
 
     try {
+      const textoCorregido = generarTextoCorregido();
+      
       const formData = new FormData();
       formData.append('student_id', estudianteSeleccionado.id);
       formData.append('title', tituloCorreccion || `Corrección de ${estudianteSeleccionado.name}`);
       formData.append('original_text', texto);
-      formData.append('corrected_text', texto); // El texto ya está corregido
+      formData.append('corrected_text', textoCorregido); // Usar el texto corregido automáticamente
       formData.append('correction_type', 'texto');
       formData.append('language_tool_matches', JSON.stringify(correccion.matches || []));
       formData.append('statistics', JSON.stringify(estadisticas || {}));
@@ -485,12 +520,39 @@ const CorreccionTexto = ({ onCorreccionCompleta }) => {
 
           {/* Texto con errores marcados */}
           <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <h4 className="font-medium text-gray-900 mb-2">Texto Corregido</h4>
-            <div className="text-sm leading-relaxed text-gray-900">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-gray-900">Texto con Errores Marcados</h4>
+              <button
+                onClick={aplicarTodasLasCorrecciones}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center text-sm"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Aplicar todas las correcciones
+              </button>
+            </div>
+            <div className="text-sm leading-relaxed text-gray-900 mb-3">
               {renderizarTextoConErrores()}
             </div>
             <div className="mt-2 text-xs text-gray-600">
               💡 Haz clic en las palabras marcadas para ver sugerencias de corrección
+            </div>
+          </div>
+
+          {/* Texto completamente corregido */}
+          <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+            <h4 className="font-medium text-green-900 mb-2 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Texto Corregido (Automático)
+            </h4>
+            <div className="text-sm leading-relaxed text-green-900 p-3 bg-white rounded border border-green-200">
+              {generarTextoCorregido()}
+            </div>
+            <div className="mt-2 text-xs text-green-700">
+              ✨ Este es el texto con todas las correcciones aplicadas automáticamente
             </div>
           </div>
 

@@ -73,10 +73,14 @@ export default function AIExpertPage() {
 
   const loadChatSessions = async () => {
     try {
+      console.log('🔍 Loading chat sessions...');
       const response = await api.get('/ai/chat/');
+      console.log('✅ Chat sessions loaded:', response.data);
+      console.log('📊 Number of sessions:', response.data?.length || 0);
       setChatSessions(response.data);
     } catch (error) {
-      console.error('Error loading chat sessions:', error);
+      console.error('❌ Error loading chat sessions:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -98,13 +102,16 @@ export default function AIExpertPage() {
     try {
       // If no current chat, start a new one
       if (!currentChat) {
+        console.log('🆕 Creating new chat with message:', messageText);
         const response = await api.post('/ai/chat/start_new/', {
           message: messageText
         });
+        console.log('✅ New chat created:', response.data);
 
         // Backend returns { chat: {...}, success: true }
         setCurrentChat(response.data.chat);
         setMessages(response.data.chat.messages || []);
+        console.log('🔄 Reloading chat sessions...');
         await loadChatSessions(); // Refresh sidebar
       } else {
         // Send message to existing chat
