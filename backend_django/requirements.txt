@@ -24,3 +24,4 @@ cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
 pillow-heif==0.21.0
 qrcode[pil]==8.0
+sentry-sdk==2.19.2

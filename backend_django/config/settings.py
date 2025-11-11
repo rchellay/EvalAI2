@@ -13,21 +13,25 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import sys
-import sentry_sdk
 
-# Configurar Sentry para monitoreo de errores
-sentry_sdk.init(
-    dsn="https://a4ef134f523f9670c1dfaded11bae86f@o4510346772938752.ingest.de.sentry.io/4510346792403024",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-    # Add data like request headers and IP for users
-    send_default_pii=True,
-)
+# Configurar Sentry para monitoreo de errores (opcional)
+try:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn="https://a4ef134f523f9670c1dfaded11bae86f@o4510346772938752.ingest.de.sentry.io/4510346792403024",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        # Add data like request headers and IP for users
+        send_default_pii=True,
+    )
+    print("✅ Sentry initialized successfully")
+except ImportError:
+    print("⚠️ Sentry SDK not available - continuing without error monitoring")
 
 # Debug logging para variables de entorno críticas
 print("\n" + "="*60, file=sys.stderr)
