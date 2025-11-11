@@ -62,7 +62,11 @@ const InformesInteligentes = () => {
   const loadNiveles = async () => {
     try {
       const response = await api.get('/grupos/');
-      const uniqueNiveles = [...new Set(response.data.map(g => g.course))];
+      // Filtrar cursos que no estén vacíos ni sean "Sin especificar"
+      const uniqueNiveles = [...new Set(response.data
+        .map(g => g.course)
+        .filter(course => course && course !== 'Sin especificar')
+      )];
       setNiveles(uniqueNiveles.map(nivel => ({ id: nivel, nombre: nivel })));
     } catch (error) {
       console.error('Error loading niveles:', error);
