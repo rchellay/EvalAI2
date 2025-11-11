@@ -30,7 +30,8 @@ from .serializers import (
     EvaluationSerializer, StudentDetailSerializer, GroupDetailSerializer, SubjectDetailSerializer,
     ObjectiveSerializer, EvidenceSerializer, SelfEvaluationSerializer, AttendanceSerializer, NotificationSerializer,
     CorrectionEvidenceSerializer, CorrectionEvidenceCreateSerializer, CorrectionEvidenceUpdateSerializer,
-    UserSettingsSerializer, CustomEventSerializer, CustomEvaluationSerializer, EvaluationResponseSerializer
+    UserSettingsSerializer, CustomEventSerializer, CustomEvaluationSerializer, EvaluationResponseSerializer,
+    UserSerializer
 )
 from .services.google_vision_ocr_service import google_vision_ocr_client, GoogleVisionOCRError
 from .services.whisper_loader import get_whisper_service
@@ -1029,27 +1030,9 @@ def get_current_user(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
     
-    user = request.user
-    
-    # Obtener o crear perfil
-    from .models import UserProfile
-    profile, created = UserProfile.objects.get_or_create(user=user)
-    
-    return Response({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'is_staff': user.is_staff,
-        'is_superuser': user.is_superuser,
-        'profile': {
-            'gender': profile.gender,
-            'phone': profile.phone,
-            'bio': profile.bio,
-            'welcome_message': profile.welcome_message,
-        }
-    })
+    # Usar UserSerializer que ya incluye avatar_url, display_name, gender y welcome_message
+    serializer = UserSerializer(request.user, context={'request': request})
+    return Response(serializer.data)
 
 
 # ===================== DASHBOARD ENDPOINTS =====================

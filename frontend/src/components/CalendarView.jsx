@@ -216,6 +216,25 @@ export default function CalendarView() {
     },
   });
 
+  // Función para dar estilo a los días (marcar días no lectivos en rojo)
+  const dayPropGetter = (date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD");
+    const hasNoLectivoEvent = customEvents.some(
+      evento => evento.fecha === dateStr && evento.tipo === 'no_lectivo'
+    );
+    
+    if (hasNoLectivoEvent) {
+      return {
+        className: 'dia-no-lectivo',
+        style: {
+          backgroundColor: '#fee2e2', // red-100
+          border: '2px solid #dc2626', // red-600
+        }
+      };
+    }
+    return {};
+  };
+
   const messages = {
     allDay: "Todo el día", previous: "Anterior", next: "Siguiente", today: "Hoy",
     month: "Mes", week: "Semana", day: "Día", agenda: "Agenda", date: "Fecha",
@@ -311,6 +330,7 @@ export default function CalendarView() {
             onNavigate={handleNavigate}
             selectable
             eventPropGetter={eventStyleGetter}
+            dayPropGetter={dayPropGetter}
             messages={messages}
             views={["month"]}
             defaultView="month"

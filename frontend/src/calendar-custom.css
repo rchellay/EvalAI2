@@ -71,6 +71,21 @@
   background-color: #F9FAFB !important;
 }
 
+/* DÍAS NO LECTIVOS - MARCADO EN ROJO */
+.rbc-day-bg.dia-no-lectivo {
+  background-color: #fee2e2 !important; /* red-100 */
+  border: 2px solid #dc2626 !important; /* red-600 */
+  position: relative;
+}
+
+.rbc-day-bg.dia-no-lectivo::after {
+  content: '🔴';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+}
+
 /* EVENTOS - COMPACTOS Y LEGIBLES */
 .rbc-event {
   padding: 4px 8px !important;

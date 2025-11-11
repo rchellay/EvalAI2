@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Calendar, Clock, AlertCircle, Save } from 'lucide-react';
 import api from '../lib/axios';
 import { toast } from 'react-hot-toast';
+import Switch from './Switch';
 
 const CreateEventModal = ({ isOpen, onClose, onEventCreated, initialDate = null }) => {
   const [formData, setFormData] = useState({
@@ -129,15 +130,11 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated, initialDate = null 
 
           {/* Todo el día */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.todo_el_dia}
-                onChange={(e) => handleChange('todo_el_dia', e.target.checked)}
-                className="mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Todo el día</span>
-            </label>
+            <span className="text-sm font-medium text-gray-700">Todo el día</span>
+            <Switch
+              checked={formData.todo_el_dia}
+              onChange={(checked) => handleChange('todo_el_dia', checked)}
+            />
           </div>
 
           {/* Horario (solo si no es todo el día) */}
@@ -189,10 +186,10 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated, initialDate = null 
             </label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { value: 'normal', label: 'Normal', color: 'blue', emoji: '📌' },
-                { value: 'no_lectivo', label: 'Día no lectivo', color: 'red', emoji: '🔴' },
-                { value: 'reminder', label: 'Recordatorio', color: 'yellow', emoji: '⏰' },
-                { value: 'meeting', label: 'Reunión', color: 'purple', emoji: '👥' },
+                { value: 'normal', label: 'Normal', color: 'blue', emoji: '📌', borderSelected: 'border-blue-600', bgSelected: 'bg-blue-50', textColor: 'text-blue-900' },
+                { value: 'no_lectivo', label: 'Día no lectivo', color: 'red', emoji: '🔴', borderSelected: 'border-red-600', bgSelected: 'bg-red-50', textColor: 'text-red-900' },
+                { value: 'reminder', label: 'Recordatorio', color: 'yellow', emoji: '⏰', borderSelected: 'border-yellow-600', bgSelected: 'bg-yellow-50', textColor: 'text-yellow-900' },
+                { value: 'meeting', label: 'Reunión', color: 'purple', emoji: '👥', borderSelected: 'border-purple-600', bgSelected: 'bg-purple-50', textColor: 'text-purple-900' },
               ].map(tipo => (
                 <button
                   key={tipo.value}
@@ -200,11 +197,13 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated, initialDate = null 
                   onClick={() => handleChange('tipo', tipo.value)}
                   className={`p-3 rounded-lg border-2 transition text-left ${
                     formData.tipo === tipo.value
-                      ? `border-${tipo.color}-600 bg-${tipo.color}-50`
+                      ? `${tipo.borderSelected} ${tipo.bgSelected}`
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="font-medium text-sm">{tipo.emoji} {tipo.label}</div>
+                  <div className={`font-medium text-sm ${formData.tipo === tipo.value ? tipo.textColor : 'text-gray-700'}`}>
+                    {tipo.emoji} {tipo.label}
+                  </div>
                 </button>
               ))}
             </div>
