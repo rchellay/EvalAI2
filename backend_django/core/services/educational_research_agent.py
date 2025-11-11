@@ -89,6 +89,34 @@ class EducationalResearchAgent:
                     },
                     "required": ["subject_name"]
                 }
+            },
+            {
+                "name": "create_rubric",
+                "description": "Crea una rúbrica de evaluación. Usa esta función cuando el usuario pida crear una rúbrica, matriz de evaluación o criterios de evaluación.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "rubric_name": {
+                            "type": "string",
+                            "description": "Nombre de la rúbrica (ej: 'Trabajo de investigación', 'Presentación oral')"
+                        },
+                        "subject_name": {
+                            "type": "string",
+                            "description": "Nombre de la asignatura relacionada (opcional)"
+                        },
+                        "criteria": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Lista de criterios de evaluación (ej: ['Comprensión del contenido', 'Presentación', 'Argumentación'])"
+                        },
+                        "performance_levels": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Niveles de desempeño (por defecto: ['Excelente', 'Notable', 'Aprobado', 'Insuficiente'])"
+                        }
+                    },
+                    "required": ["rubric_name", "criteria"]
+                }
             }
         ]
         
@@ -104,13 +132,15 @@ Tienes acceso a estas funciones para modificar la aplicación:
 ✅ create_student(name, group_id) - Crear un alumno
 ✅ create_group(group_name, student_names[]) - Crear grupo con alumnos
 ✅ create_subject(subject_name, days[], start_time, end_time, color) - Crear asignatura
+✅ create_rubric(rubric_name, subject_name, criteria[], performance_levels[]) - Crear rúbrica
 
 🚨 CUÁNDO USAR FUNCIONES:
 
 Detecta estas palabras clave del usuario:
-• "crear", "crea", "añadir", "añade", "registrar", "registra"
-• "nuevo alumno", "nueva asignatura", "nuevo grupo"
+• "crear", "crea", "añadir", "añade", "registrar", "registra", "genera", "haz"
+• "nuevo alumno", "nueva asignatura", "nuevo grupo", "nueva rúbrica"
 • "¿puedes crear...?"
+• "matriz de evaluación", "criterios de evaluación"
 
 Ejemplos donde DEBES usar funciones:
 - "Crea un alumno llamado Pedro" → create_student
@@ -118,6 +148,8 @@ Ejemplos donde DEBES usar funciones:
 - "Registra la asignatura Matemáticas" → create_subject
 - "Puedes crear alumnos?" → Responde "Sí" y espera instrucciones
 - "Crea un grupo con estos alumnos: ..." → create_group
+- "Crea una rúbrica para evaluar trabajos" → create_rubric
+- "Genera criterios de evaluación para presentaciones" → create_rubric
 
 🚨 SI FALTA INFORMACIÓN:
 Pregunta DIRECTAMENTE lo que necesitas, SIN teoría pedagógica:

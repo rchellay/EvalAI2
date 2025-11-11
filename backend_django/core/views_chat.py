@@ -322,6 +322,66 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                     'subject_id': subject.id
                 }
             
+            elif function_name == 'create_rubric':
+                from .models import Rubric, RubricCriterion, RubricLevel
+                
+                rubric_name = function_args.get('rubric_name')
+                subject_name = function_args.get('subject_name', None)
+                criteria = function_args.get('criteria', [])
+                performance_levels = function_args.get('performance_levels', ['Excelente', 'Notable', 'Aprobado', 'Insuficiente'])
+                
+                if not rubric_name:
+                    return {
+                        'success': False,
+                        'message': 'Falta el nombre de la rúbrica.'
+                    }
+                
+                if not criteria:
+                    return {
+                        'success': False,
+                        'message': 'La rúbrica necesita al menos un criterio. Por ejemplo: "Comprensión del contenido", "Presentación", etc.'
+                    }
+                
+                # Buscar la asignatura si se proporciona
+                subject = None
+                if subject_name:
+                    subject = Subject.objects.filter(name__icontains=subject_name, teacher=user).first()
+                
+                # Crear la rúbrica
+                rubric = Rubric.objects.create(
+                    name=rubric_name,
+                    teacher=user,
+                    subject=subject
+                )
+                
+                # Crear niveles de desempeño
+                levels_created = []
+                for idx, level_name in enumerate(performance_levels):
+                    level = RubricLevel.objects.create(
+                        rubric=rubric,
+                        name=level_name,
+                        score=len(performance_levels) - idx  # 4, 3, 2, 1
+                    )
+                    levels_created.append(level)
+                
+                # Crear criterios
+                criteria_created = []
+                for criterion_text in criteria:
+                    criterion = RubricCriterion.objects.create(
+                        rubric=rubric,
+                        description=criterion_text,
+                        weight=1.0
+                    )
+                    criteria_created.append(criterion.description)
+                
+                return {
+                    'success': True,
+                    'message': f'✅ Rúbrica "{rubric_name}" creada con {len(criteria_created)} criterios: {", ".join(criteria_created)}',
+                    'rubric_id': rubric.id,
+                    'levels': [l.name for l in levels_created],
+                    'criteria': criteria_created
+                }
+            
             else:
                 return {
                     'success': False,
