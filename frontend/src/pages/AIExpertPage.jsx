@@ -76,8 +76,14 @@ export default function AIExpertPage() {
       console.log('🔍 Loading chat sessions...');
       const response = await api.get('/ai/chat/');
       console.log('✅ Chat sessions loaded:', response.data);
-      console.log('📊 Number of sessions:', response.data?.length || 0);
-      setChatSessions(response.data);
+      
+      // Manejar tanto array directo como objeto paginado de DRF
+      const sessions = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.results || []);
+      
+      console.log('📊 Number of sessions:', sessions.length);
+      setChatSessions(sessions);
     } catch (error) {
       console.error('❌ Error loading chat sessions:', error);
       console.error('Error details:', error.response?.data);

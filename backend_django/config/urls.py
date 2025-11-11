@@ -22,9 +22,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import home, health_check
 from core.google_oauth_callback import google_callback_view
 
+def trigger_error(request):
+    """Endpoint de prueba para Sentry"""
+    division_by_zero = 1 / 0
+
 urlpatterns = [
     path('', home, name='home'),  # Página de inicio
     path('health/', health_check, name='health'),  # Health check para Render
+    path('sentry-debug/', trigger_error),  # Test Sentry
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),
     

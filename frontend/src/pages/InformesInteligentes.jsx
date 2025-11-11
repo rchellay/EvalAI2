@@ -62,8 +62,14 @@ const InformesInteligentes = () => {
   const loadNiveles = async () => {
     try {
       const response = await api.get('/grupos/');
+      
+      // Manejar tanto array directo como objeto paginado de DRF
+      const grupos = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.results || []);
+      
       // Filtrar cursos que no estén vacíos ni sean "Sin especificar"
-      const uniqueNiveles = [...new Set(response.data
+      const uniqueNiveles = [...new Set(grupos
         .map(g => g.course)
         .filter(course => course && course !== 'Sin especificar')
       )];
@@ -76,7 +82,13 @@ const InformesInteligentes = () => {
   const loadGrupos = async (nivel) => {
     try {
       const response = await api.get('/grupos/');
-      const filtered = response.data.filter(g => g.course === nivel);
+      
+      // Manejar tanto array directo como objeto paginado de DRF
+      const grupos = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.results || []);
+      
+      const filtered = grupos.filter(g => g.course === nivel);
       setGrupos(filtered.map(g => ({ id: g.id, nombre: g.name, course: g.course })));
     } catch (error) {
       console.error('Error loading grupos:', error);
