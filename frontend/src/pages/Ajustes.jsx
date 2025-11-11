@@ -5,6 +5,7 @@ import {
   Download, Trash2, Shield, Database, Users, BookOpen,
   Calendar, Settings, ChevronRight, Save, Check
 } from 'lucide-react';
+import SentryTestButton from '../components/SentryTestButton';
 
 const Ajustes = () => {
   const [activeSection, setActiveSection] = useState('perfil');
@@ -135,6 +136,18 @@ const Ajustes = () => {
               <div>
                 <h2 className="text-xl font-bold text-gray-800 mb-1">Perfil y Cuenta</h2>
                 <p className="text-sm text-gray-600">Información personal y configuración de sesión</p>
+              </div>
+
+              {/* Sentry Test Button - Para verificar integración */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <h3 className="text-sm font-semibold text-yellow-800 mb-2">🧪 Test de Monitoreo de Errores</h3>
+                  <p className="text-xs text-yellow-700 mb-3">
+                    Este botón lanza un error de prueba para verificar que Sentry está capturando errores correctamente.
+                    Revisa el dashboard de Sentry después de hacer clic.
+                  </p>
+                  <SentryTestButton />
+                </div>
               </div>
 
               <div className="space-y-4">
