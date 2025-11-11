@@ -99,13 +99,46 @@ export default function Login() {
   }, [handleGoogleCredential]);
 
   return (
-    <div className="center-page">
-      <div className="glass-card">
-        <div style={{display:'flex', gap:'1rem', marginBottom:'1rem'}}>
-          <button type="button" className={`btn-primary ${mode==='login'?'':'opacity-60'}`} style={{flex:1}} onClick={()=>setMode('login')} disabled={loading}>Login</button>
-          <button type="button" className={`btn-primary ${mode==='register'?'':'opacity-60'}`} style={{flex:1}} onClick={()=>setMode('register')} disabled={loading}>Registro</button>
-        </div>
-        <h1>{mode==='login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</h1>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Video de fondo */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src="/login-background.mp4" type="video/mp4" />
+        <source src="/login-background.webm" type="video/webm" />
+      </video>
+
+      {/* Overlay con gradiente */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/90 backdrop-blur-sm" />
+
+      {/* Logo flotante superior */}
+      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
+        <img
+          src="/evalai-logo.png"
+          alt="EvalAI"
+          className="h-16 w-auto object-contain drop-shadow-lg"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            const textFallback = document.createElement('h1');
+            textFallback.textContent = 'EvalAI';
+            textFallback.className = 'text-3xl font-bold text-white drop-shadow-lg';
+            e.target.parentElement.appendChild(textFallback);
+          }}
+        />
+      </div>
+
+      {/* Card de login con glassmorphism mejorado */}
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 p-8">
+          <div style={{display:'flex', gap:'1rem', marginBottom:'1rem'}}>
+            <button type="button" className={`btn-primary ${mode==='login'?'':'opacity-60'}`} style={{flex:1}} onClick={()=>setMode('login')} disabled={loading}>Login</button>
+            <button type="button" className={`btn-primary ${mode==='register'?'':'opacity-60'}`} style={{flex:1}} onClick={()=>setMode('register')} disabled={loading}>Registro</button>
+          </div>
+          <h1 className="text-white">{mode==='login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</h1>
         <form className="auth-form" onSubmit={mode==='login'?handleLogin:handleRegister}>
           <div className="input-group">
             <label>Usuario</label>
@@ -165,8 +198,12 @@ export default function Login() {
           
           <div id="googleBtn" style={{display:'none'}} />
         </form>
-        <p className="subtle" style={{marginTop:'1.4rem'}}>Demo: registra un usuario vía script backend y pruébalo aquí.</p>
+        <p className="subtle text-slate-400" style={{marginTop:'1.4rem'}}>Demo: registra un usuario vía script backend y pruébalo aquí.</p>
+        </div>
       </div>
+
+      {/* Partículas o elementos decorativos opcionales */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
     </div>
   );
 }

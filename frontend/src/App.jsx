@@ -26,6 +26,7 @@ import PublicAutoeval from './pages/PublicAutoeval';
 import AIExpertPage from './pages/AIExpertPage';
 import ToasterProvider from './ui/ToasterProvider';
 import Sidebar from './components/Sidebar';
+import SplashScreen from './components/SplashScreen';
 import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import api from './lib/axios';
@@ -91,6 +92,13 @@ function TopBar() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Mostrar splash solo si está habilitado
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
     <BrowserRouter
       future={{
