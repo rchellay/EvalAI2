@@ -109,7 +109,6 @@ export default function Login() {
         className="absolute inset-0 w-full h-full object-cover"
       >
         <source src="/login-background.mp4" type="video/mp4" />
-        <source src="/login-background.webm" type="video/webm" />
       </video>
 
       {/* Overlay con gradiente */}

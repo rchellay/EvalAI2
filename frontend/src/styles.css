@@ -262,3 +262,27 @@ input:focus { border-color: var(--primary); box-shadow:0 0 0 3px rgba(99,102,241
   background-color: #1f2937;
   border-color: #374151;
 }
+
+/* ===== ANIMACIONES PARA LOGIN BACKGROUND ===== */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-10px);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+}
+
+.animate-float {
+  animation: float linear infinite;
+}
