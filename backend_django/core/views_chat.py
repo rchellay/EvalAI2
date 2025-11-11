@@ -8,12 +8,56 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 import logging
+import re
 
 from .models import ChatSession, ChatMessage
 from .serializers_chat import ChatSessionSerializer, ChatSessionListSerializer, ChatMessageSerializer
 from .services.educational_research_agent import educational_research_agent
 
 logger = logging.getLogger(__name__)
+
+
+def generate_smart_title(message_text):
+    """
+    Genera un título inteligente basado en el contenido del mensaje,
+    omitiendo saludos genéricos y extrayendo la intención real.
+    """
+    # Limpiar el mensaje
+    text = message_text.strip().lower()
+    
+    # Saludos comunes a ignorar
+    greetings = [
+        'hola', 'buenos días', 'buenas tardes', 'buenas noches', 
+        'hey', 'hi', 'hello', 'saludos', 'qué tal', 'cómo estás',
+        'buen día'
+    ]
+    
+    # Dividir en oraciones
+    sentences = re.split(r'[.!?;]\s+|\n+', text)
+    
+    # Buscar la primera oración que NO sea solo un saludo
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        # Verificar si es solo un saludo
+        words = sentence.split()
+        is_greeting = all(word in greetings for word in words if word)
+        
+        if not is_greeting and len(sentence) > 5:
+            # Capitalizar primera letra
+            title = sentence[0].upper() + sentence[1:]
+            # Limitar longitud
+            if len(title) > 50:
+                title = title[:50] + '...'
+            return title
+    
+    # Si todo era saludos, usar el mensaje completo pero con prefijo
+    original = message_text.strip()
+    if len(original) > 50:
+        return original[:50] + '...'
+    return original if original else 'Nueva conversación'
 
 
 class ChatSessionViewSet(viewsets.ModelViewSet):
@@ -104,10 +148,11 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
             
             # Actualizar título del chat si es el primer mensaje
             if chat.message_count == 2:  # Usuario + Asistente
-                # Tomar las primeras palabras del primer mensaje como título
-                title = message_text[:50] + ('...' if len(message_text) > 50 else '')
+                # Generar título inteligente basado en contenido
+                title = generate_smart_title(message_text)
                 chat.title = title
                 chat.save()
+                logger.info(f"📝 Updated chat title to: {title}")
             
             # Serializar respuesta
             response_data = {
@@ -143,7 +188,7 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
                 )
             
             # Crear nueva sesión
-            title = message_text[:50] + ('...' if len(message_text) > 50 else '')
+            title = generate_smart_title(message_text)
             chat = ChatSession.objects.create(
                 user=request.user,
                 title=title
