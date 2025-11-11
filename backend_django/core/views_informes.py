@@ -14,8 +14,8 @@ from decimal import Decimal
 import json
 
 from core.models import (
-    Grupo, Student, Asignatura, Evaluacion, 
-    Attendance, Autoevaluacion, CorrectionEvidence
+    Group, Student, Subject, Evaluation, 
+    Attendance, SelfEvaluation, CorrectionEvidence
 )
 from core.services.ai_comment_generator import ai_comment_service
 from core.services.export_informes_service import pdf_export_service, excel_export_service
@@ -44,10 +44,10 @@ def informe_grupo(request):
         )
     
     try:
-        grupo = Grupo.objects.get(id=grupo_id, teacher=request.user)
+        grupo = Group.objects.get(id=grupo_id, teacher=request.user)
         fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
         fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
-    except Grupo.DoesNotExist:
+    except Group.DoesNotExist:
         return Response({'error': 'Grupo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     except ValueError:
         return Response({'error': 'Formato de fecha inválido'}, status=status.HTTP_400_BAD_REQUEST)
@@ -57,15 +57,15 @@ def informe_grupo(request):
     total_estudiantes = estudiantes.count()
     
     # Evaluaciones del trimestre
-    evaluaciones = Evaluacion.objects.filter(
-        estudiante__grupo_principal=grupo,
-        fecha__gte=fecha_inicio_dt,
-        fecha__lte=fecha_fin_dt,
-        nota__isnull=False
+    evaluaciones = Evaluation.objects.filter(
+        student__grupo_principal=grupo,
+        date__gte=fecha_inicio_dt,
+        date__lte=fecha_fin_dt,
+        score__isnull=False
     )
     
     # Media global del grupo
-    media_global = evaluaciones.aggregate(Avg('nota'))['nota__avg'] or 0
+    media_global = evaluaciones.aggregate(Avg('score'))['score__avg'] or 0
     
     # Calcular tendencia (comparar con trimestre anterior)
     # Para simplificar, asumimos 3 meses antes
@@ -73,14 +73,14 @@ def informe_grupo(request):
     fecha_inicio_anterior = fecha_inicio_dt - relativedelta(months=3)
     fecha_fin_anterior = fecha_fin_dt - relativedelta(months=3)
     
-    evaluaciones_anteriores = Evaluacion.objects.filter(
-        estudiante__grupo_principal=grupo,
-        fecha__gte=fecha_inicio_anterior,
-        fecha__lte=fecha_fin_anterior,
-        nota__isnull=False
+    evaluaciones_anteriores = Evaluation.objects.filter(
+        student__grupo_principal=grupo,
+        date__gte=fecha_inicio_anterior,
+        date__lte=fecha_fin_anterior,
+        score__isnull=False
     )
     
-    media_anterior = evaluaciones_anteriores.aggregate(Avg('nota'))['nota__avg'] or 0
+    media_anterior = evaluaciones_anteriores.aggregate(Avg('score'))['score__avg'] or 0
     tendencia_global = float(media_global - media_anterior) if media_global and media_anterior else 0
     
     # Distribución de notas
@@ -97,9 +97,9 @@ def informe_grupo(request):
     distribucion = {'Excelente': 0, 'Notable': 0, 'Aprobado': 0, 'Insuficiente': 0}
     
     for estudiante in estudiantes:
-        evaluaciones_estudiante = evaluaciones.filter(estudiante=estudiante)
+        evaluaciones_estudiante = evaluaciones.filter(student=estudiante)
         if evaluaciones_estudiante.exists():
-            media_estudiante = evaluaciones_estudiante.aggregate(Avg('nota'))['nota__avg']
+            media_estudiante = evaluaciones_estudiante.aggregate(Avg('score'))['score__avg']
             if media_estudiante:
                 categoria = categorizar_nota(media_estudiante)
                 distribucion[categoria] += 1
@@ -122,28 +122,28 @@ def informe_grupo(request):
     tasa_aprobados = (total_aprobados / total_estudiantes * 100) if total_estudiantes > 0 else 0
     
     # Medias por asignatura
-    asignaturas = Asignatura.objects.filter(teacher=request.user)
+    asignaturas = Subject.objects.filter(teacher=request.user)
     medias_por_asignatura = []
     
     for asignatura in asignaturas:
-        evaluaciones_asignatura = evaluaciones.filter(asignatura=asignatura)
+        evaluaciones_asignatura = evaluaciones.filter(subject=asignatura)
         if evaluaciones_asignatura.exists():
-            media_asignatura = evaluaciones_asignatura.aggregate(Avg('nota'))['nota__avg']
+            media_asignatura = evaluaciones_asignatura.aggregate(Avg('score'))['score__avg']
             
             # Tendencia de la asignatura
-            evaluaciones_asignatura_anterior = evaluaciones_anteriores.filter(asignatura=asignatura)
-            media_asignatura_anterior = evaluaciones_asignatura_anterior.aggregate(Avg('nota'))['nota__avg'] or 0
+            evaluaciones_asignatura_anterior = evaluaciones_anteriores.filter(subject=asignatura)
+            media_asignatura_anterior = evaluaciones_asignatura_anterior.aggregate(Avg('score'))['score__avg'] or 0
             tendencia = float(media_asignatura - media_asignatura_anterior) if media_asignatura and media_asignatura_anterior else 0
             
-            medias_por_asignatura.append({
-                'id': asignatura.id,
-                'nombre': asignatura.name,
+            medias_por_Subject.append({
+                'id': Subject.id,
+                'nombre': Subject.name,
                 'media': float(media_asignatura),
                 'tendencia': tendencia
             })
     
     # Ordenar por media
-    medias_por_asignatura.sort(key=lambda x: x['media'], reverse=True)
+    medias_por_Subject.sort(key=lambda x: x['media'], reverse=True)
     
     # Áreas destacadas y de mejora
     areas_destacadas = []
@@ -203,10 +203,10 @@ def informe_grupo(request):
     ranking_absentismo.sort(key=lambda x: x['horas_falta'], reverse=True)
     
     # Autoevaluación del grupo (promedio)
-    autoevaluaciones = Autoevaluacion.objects.filter(
-        estudiante__grupo_principal=grupo,
-        fecha__gte=fecha_inicio_dt,
-        fecha__lte=fecha_fin_dt
+    autoevaluaciones = AutoEvaluation.objects.filter(
+        student__grupo_principal=grupo,
+        date__gte=fecha_inicio_dt,
+        date__lte=fecha_fin_dt
     )
     
     autoevaluacion_grupo = None
@@ -218,8 +218,8 @@ def informe_grupo(request):
         
         percepciones_list = []
         for auto in autoevaluaciones[:10]:  # Máximo 10 para el análisis
-            if auto.reflexion_personal:
-                percepciones_list.append(auto.reflexion_personal)
+            if auto.comment:
+                percepciones_list.append(auto.comment)
         
         percepciones = "El grupo muestra interés en el aprendizaje cooperativo y valora la importancia del esfuerzo personal." if percepciones_list else ""
         
@@ -285,11 +285,11 @@ def informe_estudiante(request):
         return Response({'error': 'Formato de fecha inválido'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Evaluaciones del estudiante en el trimestre
-    evaluaciones = Evaluacion.objects.filter(
-        estudiante=estudiante,
-        fecha__gte=fecha_inicio_dt,
-        fecha__lte=fecha_fin_dt,
-        nota__isnull=False
+    evaluaciones = Evaluation.objects.filter(
+        student=estudiante,
+        date__gte=fecha_inicio_dt,
+        date__lte=fecha_fin_dt,
+        score__isnull=False
     )
     
     # Tendencia (comparar con trimestre anterior)
@@ -297,32 +297,32 @@ def informe_estudiante(request):
     fecha_inicio_anterior = fecha_inicio_dt - relativedelta(months=3)
     fecha_fin_anterior = fecha_fin_dt - relativedelta(months=3)
     
-    evaluaciones_anteriores = Evaluacion.objects.filter(
-        estudiante=estudiante,
-        fecha__gte=fecha_inicio_anterior,
-        fecha__lte=fecha_fin_anterior,
-        nota__isnull=False
+    evaluaciones_anteriores = Evaluation.objects.filter(
+        student=estudiante,
+        date__gte=fecha_inicio_anterior,
+        date__lte=fecha_fin_anterior,
+        score__isnull=False
     )
     
     # Agrupar por asignatura
-    asignaturas = Asignatura.objects.filter(
+    asignaturas = Subject.objects.filter(
         teacher=estudiante.grupo_principal.teacher if estudiante.grupo_principal else request.user
     )
     
     evaluaciones_por_asignatura = []
     for asignatura in asignaturas:
-        evaluaciones_asignatura = evaluaciones.filter(asignatura=asignatura)
+        evaluaciones_asignatura = evaluaciones.filter(subject=asignatura)
         if evaluaciones_asignatura.exists():
-            nota_trimestral = evaluaciones_asignatura.aggregate(Avg('nota'))['nota__avg']
+            nota_trimestral = evaluaciones_asignatura.aggregate(Avg('score'))['score__avg']
             
             # Tendencia
-            evaluaciones_asignatura_anterior = evaluaciones_anteriores.filter(asignatura=asignatura)
-            nota_anterior = evaluaciones_asignatura_anterior.aggregate(Avg('nota'))['nota__avg'] or 0
+            evaluaciones_asignatura_anterior = evaluaciones_anteriores.filter(subject=asignatura)
+            nota_anterior = evaluaciones_asignatura_anterior.aggregate(Avg('score'))['score__avg'] or 0
             tendencia = float(nota_trimestral - nota_anterior) if nota_trimestral and nota_anterior else 0
             
-            evaluaciones_por_asignatura.append({
-                'id': asignatura.id,
-                'nombre': asignatura.name,
+            evaluaciones_por_Subject.append({
+                'id': Subject.id,
+                'nombre': Subject.name,
                 'nota_trimestral': float(nota_trimestral),
                 'tendencia': tendencia
             })
@@ -339,16 +339,16 @@ def informe_estudiante(request):
     ])
     
     # Autoevaluación más reciente del trimestre
-    autoevaluacion = Autoevaluacion.objects.filter(
-        estudiante=estudiante,
-        fecha__gte=fecha_inicio_dt,
-        fecha__lte=fecha_fin_dt
-    ).order_by('-fecha').first()
+    autoevaluacion = AutoEvaluation.objects.filter(
+        student=estudiante,
+        date__gte=fecha_inicio_dt,
+        date__lte=fecha_fin_dt
+    ).order_by('-created_at').first()
     
     autoevaluacion_data = None
     if autoevaluacion:
         autoevaluacion_data = {
-            'texto': autoevaluacion.reflexion_personal or "Sin reflexión personal registrada",
+            'texto': autoEvaluation.reflexion_personal or "Sin reflexión personal registrada",
             'competencias': []
             # Aquí se pueden agregar las competencias específicas si están en el modelo
         }
@@ -362,8 +362,8 @@ def informe_estudiante(request):
     )[:5]
     
     for evidencia in evidencias:
-        if evidencia.comments:
-            registros_aula.append(evidencia.comments)
+        if evidencia.teacher_feedback:
+            registros_aula.append(evidencia.teacher_feedback)
     
     # Verificar si hay comentarios guardados
     comentarios_guardados = None
@@ -372,7 +372,7 @@ def informe_estudiante(request):
     
     data = {
         'nombre': estudiante.name,
-        'grupo': estudiante.grupo_principal.nombre if estudiante.grupo_principal else 'Sin grupo',
+        'grupo': estudiante.grupo_principal.name if estudiante.grupo_principal else 'Sin grupo',
         'evaluaciones_por_asignatura': evaluaciones_por_asignatura,
         'total_horas_ausencia': float(total_horas_ausencia),
         'autoevaluacion': autoevaluacion_data,
@@ -420,7 +420,7 @@ def generar_comentarios_ia(request):
             # usando la misma lógica que en informe_estudiante
             datos_estudiante = {
                 'nombre': estudiante.name,
-                'grupo': estudiante.grupo_principal.nombre if estudiante.grupo_principal else 'Sin grupo',
+                'grupo': estudiante.grupo_principal.name if estudiante.grupo_principal else 'Sin grupo',
                 # ... resto de datos
             }
         except Exception as e:
@@ -489,7 +489,7 @@ def guardar_borrador_informe(request):
 @permission_classes([IsAuthenticated])
 def exportar_pdf_grupo(request):
     """
-    Genera y descarga un PDF del informe de grupo.
+    Genera y descarga un PDF del informe de Group.
     """
     
     grupo_id = request.GET.get('grupo_id')
@@ -503,7 +503,7 @@ def exportar_pdf_grupo(request):
         )
     
     try:
-        grupo = Grupo.objects.get(id=grupo_id, teacher=request.user)
+        grupo = Group.objects.get(id=grupo_id, teacher=request.user)
         
         # Obtener los datos del informe usando la función existente
         # Reutilizar la lógica de informe_grupo
@@ -523,15 +523,15 @@ def exportar_pdf_grupo(request):
         pdf_buffer = pdf_export_service.generar_pdf_grupo(
             response_data,
             trimestre,
-            grupo.nombre
+            Group.nombre
         )
         
         # Retornar como descarga
         response = HttpResponse(pdf_buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="informe_grupo_{grupo.nombre}_{trimestre}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="informe_grupo_{Group.nombre}_{trimestre}.pdf"'
         return response
     
-    except Grupo.DoesNotExist:
+    except Group.DoesNotExist:
         return Response({'error': 'Grupo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
@@ -544,7 +544,7 @@ def exportar_pdf_grupo(request):
 @permission_classes([IsAuthenticated])
 def exportar_excel_grupo(request):
     """
-    Genera y descarga un Excel con los datos del grupo.
+    Genera y descarga un Excel con los datos del Group.
     """
     
     grupo_id = request.GET.get('grupo_id')
@@ -558,7 +558,7 @@ def exportar_excel_grupo(request):
         )
     
     try:
-        grupo = Grupo.objects.get(id=grupo_id, teacher=request.user)
+        grupo = Group.objects.get(id=grupo_id, teacher=request.user)
         
         # Obtener los datos del informe
         from django.test import RequestFactory
@@ -577,7 +577,7 @@ def exportar_excel_grupo(request):
         excel_buffer = excel_export_service.generar_excel_grupo(
             response_data,
             trimestre,
-            grupo.nombre
+            Group.nombre
         )
         
         # Retornar como descarga
@@ -585,10 +585,10 @@ def exportar_excel_grupo(request):
             excel_buffer,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = f'attachment; filename="datos_grupo_{grupo.nombre}_{trimestre}.xlsx"'
+        response['Content-Disposition'] = f'attachment; filename="datos_grupo_{Group.nombre}_{trimestre}.xlsx"'
         return response
     
-    except Grupo.DoesNotExist:
+    except Group.DoesNotExist:
         return Response({'error': 'Grupo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
@@ -641,7 +641,7 @@ def exportar_pdf_individual(request):
             comentarios,
             trimestre,
             estudiante.name,
-            estudiante.grupo_principal.nombre if estudiante.grupo_principal else 'Sin grupo'
+            estudiante.grupo_principal.name if estudiante.grupo_principal else 'Sin grupo'
         )
         
         # Retornar como descarga
@@ -717,3 +717,8 @@ def exportar_excel_individual(request):
             {'error': f'Error al generar Excel: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+
+
+
