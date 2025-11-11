@@ -21,11 +21,6 @@ const Ajustes = () => {
     nivelEducativo: 'Primaria',
     asignaturas: [],
     
-    // Interfaz y Personalización
-    tema: 'claro',
-    fontSize: 'medio',
-    modoCompacto: false,
-    
     // Notificaciones
     notifInApp: {
       evaluaciones: true,
@@ -45,9 +40,9 @@ const Ajustes = () => {
     const loadSettings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8000/api/user/settings/', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/user/settings/`, {
           headers: {
-            'Authorization': `Token ${token}`
+            'Authorization': `Bearer ${token}`
           }
         });
         if (response.ok) {
@@ -64,10 +59,10 @@ const Ajustes = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/user/settings/', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/settings/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(settings)
@@ -88,7 +83,6 @@ const Ajustes = () => {
   const sections = [
     { id: 'perfil', label: 'Perfil y Cuenta', icon: User },
     { id: 'centro', label: 'Centro y Año Académico', icon: Building2 },
-    { id: 'interfaz', label: 'Interfaz y Personalización', icon: Settings },
     { id: 'notificaciones', label: 'Notificaciones', icon: Bell },
     { id: 'datos', label: 'Datos y Privacidad', icon: Shield },
     ...(settings.isAdmin ? [{ id: 'admin', label: 'Control Administrativo', icon: Database }] : [])
@@ -286,98 +280,6 @@ const Ajustes = () => {
                       + Añadir
                     </button>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Interfaz y Personalización */}
-          {activeSection === 'interfaz' && (
-            <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-1">Interfaz y Personalización</h2>
-                <p className="text-sm text-gray-600">Adapta la apariencia a tus preferencias</p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                    <Sun className="w-4 h-4" />
-                    Tema visual
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { value: 'claro', label: 'Claro', icon: Sun },
-                      { value: 'oscuro', label: 'Oscuro', icon: Moon },
-                      { value: 'auto', label: 'Automático', icon: Laptop }
-                    ].map(tema => {
-                      const Icon = tema.icon;
-                      return (
-                        <button
-                          key={tema.value}
-                          onClick={() => setSettings({...settings, tema: tema.value})}
-                          className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg transition-all ${
-                            settings.tema === tema.value
-                              ? 'border-indigo-500 bg-indigo-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-6 h-6" />
-                          <span className="text-sm font-medium">{tema.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                    <Type className="w-4 h-4" />
-                    Tamaño de fuente (accesibilidad)
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { value: 'pequeño', label: 'Pequeño' },
-                      { value: 'medio', label: 'Medio' },
-                      { value: 'grande', label: 'Grande' }
-                    ].map(size => (
-                      <button
-                        key={size.value}
-                        onClick={() => setSettings({...settings, fontSize: size.value})}
-                        className={`p-3 border-2 rounded-lg transition-all ${
-                          settings.fontSize === size.value
-                            ? 'border-indigo-500 bg-indigo-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <span className={`font-medium ${
-                          size.value === 'pequeño' ? 'text-sm' : 
-                          size.value === 'medio' ? 'text-base' : 'text-lg'
-                        }`}>
-                          {size.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <p className="font-medium text-gray-800">Modo compacto</p>
-                      <p className="text-sm text-gray-600">Ideal para tablets y portátiles</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.modoCompacto}
-                      onChange={(e) => setSettings({...settings, modoCompacto: e.target.checked})}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                  </label>
                 </div>
               </div>
             </div>

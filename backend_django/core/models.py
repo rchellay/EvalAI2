@@ -1010,10 +1010,12 @@ class UserProfile(models.Model):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', help_text="Usuario asociado")
+    display_name = models.CharField(max_length=100, blank=True, default='', help_text="Nombre a mostrar en la UI")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, help_text="Género del usuario")
     phone = models.CharField(max_length=20, blank=True, default='', help_text="Teléfono de contacto")
     bio = models.TextField(blank=True, default='', help_text="Biografía o descripción")
     avatar = models.FileField(upload_to="avatars/", null=True, blank=True, help_text="Foto de perfil")
+    settings = models.TextField(blank=True, default='{}', help_text="JSON con configuraciones del usuario")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

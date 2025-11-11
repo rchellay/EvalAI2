@@ -51,17 +51,18 @@ export default function Sidebar() {
       {/* Logo Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
         {!collapsed ? (
-          <div className="flex items-center gap-3">
-            <img
-              src="/evalai-logo.png"
-              alt="EvalAI Logo"
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-            <h1 className="text-xl font-bold">EvalAI</h1>
-          </div>
+          <img
+            src="/evalai-logo.png"
+            alt="EvalAI"
+            className="h-10 w-auto object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              const textFallback = document.createElement('h1');
+              textFallback.textContent = 'EvalAI';
+              textFallback.className = 'text-xl font-bold';
+              e.target.parentElement.appendChild(textFallback);
+            }}
+          />
         ) : (
           <img
             src="/evalai-logo.png"

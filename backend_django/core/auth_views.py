@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
+import json
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -106,3 +107,78 @@ def google_login_view(request):
 def ping_view(request):
     """Health check"""
     return Response({'message': 'pong', 'status': 'ok'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def me_view(request):
+    """Get current user info"""
+    user = request.user
+    profile = user.profile if hasattr(user, 'profile') else None
+    
+    return Response({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'display_name': profile.display_name if profile else user.username,
+        'avatar_url': profile.avatar.url if profile and profile.avatar else None,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+    })
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def user_settings_view(request):
+    """Get or update user settings"""
+    user = request.user
+    
+    if request.method == 'GET':
+        profile = user.profile if hasattr(user, 'profile') else None
+        settings_data = json.loads(profile.settings) if profile and profile.settings else {}
+        
+        return Response({
+            'displayName': profile.display_name if profile else user.username,
+            'email': user.email,
+            'centro': settings_data.get('centro', ''),
+            'autoLogout': settings_data.get('autoLogout', '30'),
+            'añoAcademico': settings_data.get('añoAcademico', '2024-2025'),
+            'nivelEducativo': settings_data.get('nivelEducativo', 'Primaria'),
+            'notifInApp': settings_data.get('notifInApp', {
+                'evaluaciones': True,
+                'informes': True,
+                'asistencia': True,
+                'grupos': True
+            }),
+            'notifEmail': settings_data.get('notifEmail', True),
+            'recordatorios': settings_data.get('recordatorios', '15'),
+            'isAdmin': user.is_staff,
+        })
+    
+    elif request.method == 'POST':
+        profile = user.profile if hasattr(user, 'profile') else None
+        if not profile:
+            from .models import UserProfile
+            profile = UserProfile.objects.create(user=user)
+        
+        # Actualizar campos del perfil
+        if 'displayName' in request.data:
+            profile.display_name = request.data['displayName']
+        
+        if 'email' in request.data:
+            user.email = request.data['email']
+            user.save()
+        
+        # Guardar settings como JSON
+        settings_data = {
+            'centro': request.data.get('centro', ''),
+            'autoLogout': request.data.get('autoLogout', '30'),
+            'añoAcademico': request.data.get('añoAcademico', '2024-2025'),
+            'nivelEducativo': request.data.get('nivelEducativo', 'Primaria'),
+            'notifInApp': request.data.get('notifInApp', {}),
+            'notifEmail': request.data.get('notifEmail', True),
+            'recordatorios': request.data.get('recordatorios', '15'),
+        }
+        
+        profile.settings = json.dumps(settings_data)
+        profile.save()
+        
+        return Response({'message': 'Settings updated successfully'})

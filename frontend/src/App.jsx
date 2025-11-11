@@ -68,11 +68,19 @@ function TopBar() {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 focus:outline-none"
           >
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-              {user?.username?.[0]?.toUpperCase() || 'U'}
-            </div>
+            {user?.avatar_url ? (
+              <img 
+                src={user.avatar_url} 
+                alt={user.username}
+                className="w-8 h-8 rounded-full object-cover border-2 border-blue-500"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                {user?.username?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {user?.username || 'Usuario'}
+              {user?.display_name || user?.username || 'Usuario'}
             </span>
           </button>
           {dropdownOpen && (

@@ -39,7 +39,7 @@ from .views_contextual import SubjectNestedViewSet, StudentContextualViewSet
 from .views_attendance import AttendanceViewSet
 from .views_hierarchy import GroupHierarchyViewSet, StudentHierarchyViewSet
 from .views_chat import ChatSessionViewSet, test_research_search
-from .auth_views import login_view, register_view, google_login_view, ping_view
+from .auth_views import login_view, register_view, google_login_view, ping_view, me_view, user_settings_view
 from .admin_views import cleanup_duplicates_view
 from .migration_views import run_migrations_view, check_migrations_view
 from .views_informes import (
@@ -169,6 +169,8 @@ urlpatterns = [
     path('auth/login/', login_view, name='login'),
     path('auth/register/', register_view, name='register'),
     path('auth/google/', google_login_view, name='google-login'),
+    path('auth/me/', me_view, name='me'),
+    path('user/settings/', user_settings_view, name='user-settings'),
     path('ping/', ping_view, name='ping'),
     
     # Dashboard endpoints
