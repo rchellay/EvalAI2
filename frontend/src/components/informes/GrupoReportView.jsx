@@ -28,9 +28,10 @@ const GrupoReportView = ({ grupo, trimestre, dateRange, onBack }) => {
   const loadGroupReport = async () => {
     setLoading(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/grupo/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/grupo/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -44,12 +45,13 @@ const GrupoReportView = ({ grupo, trimestre, dateRange, onBack }) => {
     }
   };
 
-  const exportPDF = async () => {
+  const exportToPDF = async () => {
     setExporting(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/grupo/pdf/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/grupo/pdf/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -67,12 +69,13 @@ const GrupoReportView = ({ grupo, trimestre, dateRange, onBack }) => {
     }
   };
 
-  const exportExcel = async () => {
+  const exportToExcel = async () => {
     setExporting(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/grupo/excel/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/grupo/excel/?grupo_id=${grupo.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -136,7 +139,7 @@ const GrupoReportView = ({ grupo, trimestre, dateRange, onBack }) => {
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Volver</span>

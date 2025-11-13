@@ -3020,7 +3020,19 @@ def procesar_imagen_ocr(request):
     """
     Procesa una imagen para extraer texto manuscrito usando Google Cloud Vision OCR
     """
-    return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    try:
+        if 'image' not in request.FILES:
+            return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image_file = request.FILES['image']
+        idioma = request.data.get('idioma', 'es')
+        
+        resultado = google_vision_ocr_client.procesar_imagen(image_file.read(), idioma)
+        return Response(resultado)
+    except GoogleVisionOCRError as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({'error': f'Error procesando imagen: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -3029,7 +3041,32 @@ def procesar_y_corregir_imagen(request):
     """
     Procesa una imagen para extraer texto manuscrito y lo corrige automáticamente
     """
-    return Response({'error': 'OCR temporalmente deshabilitado'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    try:
+        if 'image' not in request.FILES:
+            return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image_file = request.FILES['image']
+        idioma = request.data.get('idioma', 'es')
+        
+        # OCR
+        resultado_ocr = google_vision_ocr_client.procesar_imagen(image_file.read(), idioma)
+        texto_extraido = resultado_ocr.get('texto', '')
+        
+        if not texto_extraido:
+            return Response({'error': 'No se pudo extraer texto de la imagen'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Corrección
+        texto_corregido = languagetool_service.corregir_texto(texto_extraido, idioma)
+        
+        return Response({
+            'texto_original': texto_extraido,
+            'texto_corregido': texto_corregido,
+            'confianza': resultado_ocr.get('confianza', 0)
+        })
+    except GoogleVisionOCRError as e:
+        return Response({'error': f'Error OCR: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

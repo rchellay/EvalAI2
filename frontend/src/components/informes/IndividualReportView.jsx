@@ -48,9 +48,10 @@ const IndividualReportView = ({
   const loadStudentReport = async () => {
     setLoading(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/estudiante/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/estudiante/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -73,9 +74,10 @@ const IndividualReportView = ({
   const generateAIComments = async () => {
     setGeneratingAI(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        'http://localhost:8000/api/informes/generar-comentarios-ia/',
+        `${API_URL}/api/informes/generar-comentarios-ia/`,
         {
           method: 'POST',
           headers: {
@@ -104,9 +106,10 @@ const IndividualReportView = ({
   const saveDraft = async () => {
     setSavingDraft(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       await fetch(
-        'http://localhost:8000/api/informes/guardar-borrador/',
+        `${API_URL}/api/informes/guardar-borrador/`,
         {
           method: 'POST',
           headers: {
@@ -129,11 +132,12 @@ const IndividualReportView = ({
     }
   };
 
-  const exportPDF = async () => {
+  const exportToPDF = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/estudiante/pdf/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/estudiante/pdf/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           method: 'POST',
           headers: {
@@ -154,11 +158,12 @@ const IndividualReportView = ({
     }
   };
 
-  const exportExcel = async () => {
+  const exportToExcel = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://evalai2.onrender.com';
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/informes/estudiante/excel/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
+        `${API_URL}/api/informes/estudiante/excel/?estudiante_id=${selectedStudent.id}&fecha_inicio=${dateRange.start}&fecha_fin=${dateRange.end}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -202,7 +207,7 @@ const IndividualReportView = ({
         <div className="flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Volver</span>
