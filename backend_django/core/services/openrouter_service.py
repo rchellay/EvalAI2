@@ -26,11 +26,19 @@ class OpenRouterClient:
         self.timeout = getattr(settings, 'OPENROUTER_TIMEOUT', 60)
         self.cache_ttl = getattr(settings, 'OPENROUTER_CACHE_TTL', 86400)  # 24 horas
         
-        # Modelos disponibles (actualizados noviembre 2025 - todos gratuitos)
+        # Modelos disponibles (orden de fallback personalizado)
+        self.rubric_model_candidates = [
+            'meta-llama/llama-3.3-8b-instruct:free',
+            'openai/gpt-oss-20b:free',
+            'nvidia/nemotron-nano-9b-v2:free',
+            'meta-llama/llama-4-maverick:free',
+            'google/gemma-3n-e4b-it:free',
+            'google/gemma-3-27b-it:free',
+        ]
         self.models = {
-            'qwen_rubrics': 'minimax/minimax-m2:free',  # 230B params - Principal para rúbricas y análisis
-            'deepseek_analysis': 'minimax/minimax-m2:free',  # Mismo modelo - excelente en razonamiento
-            'glm_quick': 'minimax/minimax-m2:free'  # Mismo modelo - consistente y rápido
+            'qwen_rubrics': self.rubric_model_candidates[0],  # Usar el primero por defecto
+            'deepseek_analysis': self.rubric_model_candidates[0],
+            'glm_quick': self.rubric_model_candidates[0],
         }
         
         if not self.api_key:
@@ -144,40 +152,34 @@ class OpenRouterClient:
             logger.warning("No hay API key configurada, usando fallback")
             return self._get_fallback_rubric(prompt, num_criteria, num_levels, max_score)
         
-        # Generar con Qwen3-235B
-        logger.info(f"Generando rúbrica con Qwen3-235B para: {prompt[:50]}...")
-        
-        # Construir el prompt estructurado
+        # Intentar con cada modelo en orden hasta éxito
         structured_prompt = self._build_rubric_prompt(prompt, language, num_criteria, num_levels, max_score)
-        
-        # Intentar generar con reintentos
         max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                result_text = self._call_openrouter_api(structured_prompt, self.models['qwen_rubrics'], 4096)
-                result = self._parse_rubric_response(result_text)
-                
-                # Validar estructura
-                if self._validate_rubric_schema(result):
-                    # Guardar en caché
-                    cache.set(cache_key, result, self.cache_ttl)
-                    result['_from_cache'] = False
-                    result['_model_used'] = 'qwen3-235b-a22b'
-                    logger.info(f"Rúbrica generada exitosamente con Qwen3-235B y guardada en caché")
-                    return result
-                else:
-                    logger.warning(f"Esquema inválido en intento {attempt + 1}")
-                    
-            except Exception as e:
-                logger.error(f"Error en intento {attempt + 1}: {str(e)}")
-                if attempt < max_retries - 1:
-                    time.sleep(2 ** attempt)  # Backoff exponencial
-        
-        # Si todos los intentos fallan, usar fallback mejorado
-        logger.warning("Todos los intentos fallaron con Qwen3-235B, usando fallback mejorado")
+        for model_name in self.rubric_model_candidates:
+            logger.info(f"Intentando generar rúbrica con modelo: {model_name} para: {prompt[:50]}...")
+            for attempt in range(max_retries):
+                try:
+                    result_text = self._call_openrouter_api(structured_prompt, model_name, 4096)
+                    result = self._parse_rubric_response(result_text)
+                    # Validar estructura
+                    if self._validate_rubric_schema(result):
+                        cache.set(cache_key, result, self.cache_ttl)
+                        result['_from_cache'] = False
+                        result['_model_used'] = model_name
+                        logger.info(f"Rúbrica generada exitosamente con {model_name} y guardada en caché")
+                        return result
+                    else:
+                        logger.warning(f"Esquema inválido en intento {attempt + 1} con {model_name}")
+                except Exception as e:
+                    logger.error(f"Error en intento {attempt + 1} con {model_name}: {str(e)}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2 ** attempt)
+            logger.warning(f"Modelo {model_name} falló, probando siguiente en la lista...")
+        # Si todos los modelos fallan, usar fallback mejorado
+        logger.warning("Todos los modelos fallaron, usando fallback mejorado")
         fallback_result = self._get_fallback_rubric(prompt, num_criteria, num_levels, max_score)
         fallback_result['_is_fallback'] = True
-        fallback_result['_fallback_reason'] = "API de Qwen3-235B no disponible"
+        fallback_result['_fallback_reason'] = "Ningún modelo IA disponible"
         return fallback_result
     
     def generate_analysis(
