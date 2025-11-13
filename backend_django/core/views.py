@@ -3028,10 +3028,15 @@ def procesar_imagen_ocr(request):
                 'help': 'Para habilitar OCR, configura GOOGLE_APPLICATION_CREDENTIALS en Render.'
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
-        if 'image' not in request.FILES:
-            return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        image_file = request.FILES['image']
+        # Aceptar tanto 'imagen' como 'image' para compatibilidad frontend-backend
+        image_field = None
+        if 'imagen' in request.FILES:
+            image_field = 'imagen'
+        elif 'image' in request.FILES:
+            image_field = 'image'
+        if not image_field:
+            return Response({'error': 'No se proporcionó imagen (usa campo "imagen" o "image")'}, status=status.HTTP_400_BAD_REQUEST)
+        image_file = request.FILES[image_field]
         idioma = request.data.get('idioma', 'es')
         
         resultado = google_vision_ocr_client.procesar_imagen(image_file.read(), idioma)
@@ -3056,10 +3061,15 @@ def procesar_y_corregir_imagen(request):
                 'help': 'Para habilitar OCR, configura GOOGLE_APPLICATION_CREDENTIALS en Render.'
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
-        if 'image' not in request.FILES:
-            return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        image_file = request.FILES['image']
+        # Aceptar tanto 'imagen' como 'image' para compatibilidad frontend-backend
+        image_field = None
+        if 'imagen' in request.FILES:
+            image_field = 'imagen'
+        elif 'image' in request.FILES:
+            image_field = 'image'
+        if not image_field:
+            return Response({'error': 'No se proporcionó imagen (usa campo "imagen" o "image")'}, status=status.HTTP_400_BAD_REQUEST)
+        image_file = request.FILES[image_field]
         idioma = request.data.get('idioma', 'es')
         
         # OCR
