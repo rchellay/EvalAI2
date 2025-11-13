@@ -624,11 +624,36 @@ class RubricLevelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        queryset = RubricLevel.objects.all()
+        
+        # Filtrar por criterio si se proporciona
+        criterion_id = self.request.query_params.get('criterion', None)
+        if criterion_id:
+            queryset = queryset.filter(criterion_id=criterion_id)
+        
         # Superusers ven todo
         if self.request.user.is_superuser:
-            return RubricLevel.objects.all()
+            return queryset
+        
         # Usuarios normales solo ven niveles de sus rúbricas
-        return RubricLevel.objects.filter(rubric__teacher=self.request.user)
+        return queryset.filter(criterion__rubric__teacher=self.request.user)
+    
+    def perform_create(self, serializer):
+        # Verificar que el criterio pertenece al usuario
+        criterion = serializer.validated_data.get('criterion')
+        if not self.request.user.is_superuser:
+            if criterion.rubric.teacher != self.request.user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("No tienes permiso para crear niveles en este criterio")
+        serializer.save()
+    
+    def perform_update(self, serializer):
+        # Verificar que el nivel pertenece al usuario
+        if not self.request.user.is_superuser:
+            if serializer.instance.criterion.rubric.teacher != self.request.user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("No tienes permiso para actualizar este nivel")
+        serializer.save()
 
 
 class RubricScoreViewSet(viewsets.ModelViewSet):
