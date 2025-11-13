@@ -3021,6 +3021,13 @@ def procesar_imagen_ocr(request):
     Procesa una imagen para extraer texto manuscrito usando Google Cloud Vision OCR
     """
     try:
+        # Verificar si Google Vision está disponible
+        if not google_vision_ocr_client.client:
+            return Response({
+                'error': 'OCR no disponible. Las credenciales de Google Cloud Vision no están configuradas.',
+                'help': 'Para habilitar OCR, configura GOOGLE_APPLICATION_CREDENTIALS en Render.'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
         if 'image' not in request.FILES:
             return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -3042,6 +3049,13 @@ def procesar_y_corregir_imagen(request):
     Procesa una imagen para extraer texto manuscrito y lo corrige automáticamente
     """
     try:
+        # Verificar si Google Vision está disponible
+        if not google_vision_ocr_client.client:
+            return Response({
+                'error': 'OCR no disponible. Las credenciales de Google Cloud Vision no están configuradas.',
+                'help': 'Para habilitar OCR, configura GOOGLE_APPLICATION_CREDENTIALS en Render.'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
         if 'image' not in request.FILES:
             return Response({'error': 'No se proporcionó imagen'}, status=status.HTTP_400_BAD_REQUEST)
         

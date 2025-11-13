@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import sys
+import os
 
 # Configurar Sentry para monitoreo de errores (opcional)
 try:
@@ -314,7 +315,29 @@ AI_TEMPERATURE = config('AI_TEMPERATURE', default=0.3, cast=float)  # Más deter
 
 # Google Cloud Vision OCR Configuration
 GOOGLE_CLOUD_PROJECT_ID = config('GOOGLE_CLOUD_PROJECT_ID', default='evalai-education')
-GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
+
+# Decodificar credenciales Base64 para Render
+GOOGLE_CLOUD_CREDENTIALS_BASE64 = config('GOOGLE_CLOUD_CREDENTIALS_BASE64', default=None)
+if GOOGLE_CLOUD_CREDENTIALS_BASE64:
+    import base64
+    import json
+    import tempfile
+    
+    try:
+        credentials_json = base64.b64decode(GOOGLE_CLOUD_CREDENTIALS_BASE64).decode('utf-8')
+        
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(credentials_json)
+            GOOGLE_CLOUD_CREDENTIALS_PATH = f.name
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+            print(f"✅ Google Cloud credentials decodificadas y configuradas")
+    except Exception as e:
+        print(f"⚠️ Error decodificando credenciales Base64: {e}")
+        GOOGLE_CLOUD_CREDENTIALS_PATH = None
+else:
+    GOOGLE_CLOUD_CREDENTIALS_PATH = config('GOOGLE_CLOUD_CREDENTIALS_PATH', default=None)
+
 GOOGLE_VISION_MAX_FILE_SIZE = config('GOOGLE_VISION_MAX_FILE_SIZE', default=20 * 1024 * 1024, cast=int)  # 20MB
 
 # OpenAI Whisper Configuration (Cloud Audio Transcription)
