@@ -304,7 +304,7 @@ OPENROUTER_TIMEOUT = config('OPENROUTER_TIMEOUT', default=60, cast=int)
 OPENROUTER_CACHE_TTL = config('OPENROUTER_CACHE_TTL', default=86400, cast=int)
 
 # Modelos específicos para diferentes tareas
-QWEN_MODEL = config('QWEN_MODEL', default='qwen/qwen3-235b-a22b:free')  # Principal para rúbricas
+QWEN_MODEL = config('QWEN_MODEL', default='qwen/qwen3-embedding-0.6b')  # Principal para rúbricas
 DEEPSEEK_MODEL = config('DEEPSEEK_MODEL', default='google/gemini-flash-1.5')  # Análisis y feedback (soporta imágenes)
 GLM_MODEL = config('GLM_MODEL', default='z-ai/glm-4-air:free')  # Tareas rápidas
 

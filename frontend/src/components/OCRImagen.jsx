@@ -314,7 +314,7 @@ const OCRImagen = () => {
       }
 
       if (imagen) {
-        formData.append('original_image', imagen);
+        formData.append('imagen', imagen); // Usar siempre 'imagen' para consistencia con backend
       }
 
       const response = await api.post('/correccion/guardar-evidencia/', formData, {
