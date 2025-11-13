@@ -13,33 +13,33 @@ El OCR devuelve **503 Service Unavailable** porque las credenciales de Google Cl
 
 ### 1️⃣ Obtener Credenciales de Google Cloud
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com)
-2. Selecciona el proyecto **evalai-education** (o crea uno nuevo)
-3. Ve a **APIs & Services** → **Credentials**
-4. Clic en **Create Credentials** → **Service Account**
-5. Completa el formulario:
-   - **Nombre**: `evalai-ocr-service`
-   - **Rol**: `Cloud Vision API User`
-6. Clic en **Done**
-7. Encuentra la cuenta creada y clic en **Keys** → **Add Key** → **JSON**
-8. Descarga el archivo JSON (ejemplo: `evalai-credentials.json`)
 
-### 2️⃣ Habilitar Cloud Vision API
+5️⃣ Actualizar settings.py para Decodificar Base64
 
-1. En Google Cloud Console, ve a **APIs & Services** → **Library**
-2. Busca **Cloud Vision API**
-3. Clic en **Enable**
+El archivo `backend_django/config/settings.py` ya está configurado para decodificar automáticamente:
 
-### 3️⃣ Convertir JSON a Base64
+```python
+# Google Cloud Vision (OCR)
+GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'evalai-education')
 
-**En PowerShell** (Windows):
-```powershell
-$bytes = [System.IO.File]::ReadAllBytes("C:\path\to\evalai-credentials.json")
-$base64 = [System.Convert]::ToBase64String($bytes)
-$base64 | Set-Clipboard
-Write-Host "Base64 copiado al portapapeles!"
+# Decodificar credenciales Base64 en Render
+if os.environ.get('GOOGLE_CLOUD_CREDENTIALS_BASE64'):
+      import base64
+      import json
+      import tempfile
+    
+      credentials_base64 = os.environ.get('GOOGLE_CLOUD_CREDENTIALS_BASE64')
+      credentials_json = base64.b64decode(credentials_base64).decode('utf-8')
+    
+      # Crear archivo temporal
+      with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(credentials_json)
+            GOOGLE_CLOUD_CREDENTIALS_PATH = f.name
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+else:
+      GOOGLE_CLOUD_CREDENTIALS_PATH = os.environ.get('GOOGLE_CLOUD_CREDENTIALS_PATH')
 ```
-
+```
 **En Terminal** (Mac/Linux):
 ```bash
 base64 -i evalai-credentials.json | pbcopy
@@ -70,52 +70,31 @@ GOOGLE_CLOUD_PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'evalai-educ
 if os.environ.get('GOOGLE_CLOUD_CREDENTIALS_BASE64'):
     import base64
     import json
-    import tempfile
     
     credentials_base64 = os.environ.get('GOOGLE_CLOUD_CREDENTIALS_BASE64')
     credentials_json = base64.b64decode(credentials_base64).decode('utf-8')
     
-    # Crear archivo temporal
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        f.write(credentials_json)
         GOOGLE_CLOUD_CREDENTIALS_PATH = f.name
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
 else:
     GOOGLE_CLOUD_CREDENTIALS_PATH = os.environ.get('GOOGLE_CLOUD_CREDENTIALS_PATH')
 ```
 
----
 
 ## 🧪 Verificación
 
 ### Verificar en Local (Opcional)
-
-Si quieres probar en local:
-
 ```powershell
 # Windows PowerShell
-$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\evalai-credentials.json"
-cd backend_django
 python manage.py runserver
 ```
 
-### Verificar en Render
-
 1. Después de agregar la variable, Render hará **deploy automático**
-2. Espera 2-3 minutos
-3. Verifica en los logs:
-   ```
    Cliente Google Cloud Vision configurado correctamente
-   ```
 4. Prueba el endpoint:
    ```bash
    curl -X POST https://evalai2.onrender.com/api/ocr/procesar/ \
      -H "Authorization: Bearer YOUR_TOKEN" \
-     -F "image=@test.jpg" \
-     -F "idioma=es"
-   ```
-
----
 
 ## 📊 Costos de Google Cloud Vision
 
@@ -127,31 +106,17 @@ python manage.py runserver
 ### Monitoreo de Uso
 1. Ve a [Google Cloud Console](https://console.cloud.google.com)
 2. **Billing** → **Reports**
-3. Filtra por **Cloud Vision API**
 
 ---
 
-## ⚠️ Troubleshooting
-
-### Error: "Invalid credentials"
-- ✅ Verifica que el archivo JSON sea válido
-- ✅ Asegúrate de que el Base64 esté completo (sin saltos de línea)
 - ✅ Regenera la clave si es necesario
-
 ### Error: "API not enabled"
 - ✅ Ve a **APIs & Services** → **Library**
 - ✅ Busca **Cloud Vision API** y haz clic en **Enable**
 
-### Error: "Quota exceeded"
-- ✅ Verifica uso en **Billing** → **Reports**
-- ✅ Si necesitas más, aumenta la cuota en **IAM & Admin** → **Quotas**
 
 ### En Render: "Credentials not found"
-- ✅ Verifica que `GOOGLE_CLOUD_CREDENTIALS_BASE64` esté en Environment
-- ✅ Verifica que no haya espacios extra en el valor
-- ✅ Haz redeploy manual: **Manual Deploy** → **Deploy latest commit**
 
----
 
 ## 🔐 Seguridad
 
@@ -163,18 +128,12 @@ python manage.py runserver
 - ✅ Rota credenciales cada 90 días
 
 ### ✅ Archivo .gitignore
-```gitignore
 # Google Cloud Credentials
 *.json
 !package.json
 !tsconfig.json
 evalai-credentials.json
-google-credentials*.json
-```
 
----
-
-## 📚 Recursos
 
 - [Google Cloud Vision Docs](https://cloud.google.com/vision/docs)
 - [Quickstart Guide](https://cloud.google.com/vision/docs/setup)
