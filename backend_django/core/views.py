@@ -2750,29 +2750,41 @@ def insights_ia(request):
             user = request.user
             thirty_days_ago = timezone.now().date() - timedelta(days=30)
             
+            logger.info(f"[INSIGHTS] Generando insights para usuario: {user.username}")
+            
             # Obtener datos del aula (del profesor)
             total_students = Student.objects.filter(grupo_principal__teacher=user).distinct().count()
+            logger.info(f"[INSIGHTS] Total estudiantes: {total_students}")
+            
             total_evaluations = Evaluation.objects.filter(
                 evaluator=user,
                 created_at__gte=thirty_days_ago
             ).count()
+            logger.info(f"[INSIGHTS] Total evaluaciones: {total_evaluations}")
+            
             avg_score = Evaluation.objects.filter(
                 evaluator=user,
                 created_at__gte=thirty_days_ago,
                 score__isnull=False
             ).aggregate(avg=Avg('score'))['avg'] or 0
+            logger.info(f"[INSIGHTS] Promedio calificaciones: {avg_score}")
             
             student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
+            logger.info(f"[INSIGHTS] IDs estudiantes: {list(student_ids)}")
+            
             total_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
                 date__gte=thirty_days_ago
             ).count()
+            
             present_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
                 date__gte=thirty_days_ago,
                 status='presente'
             ).count()
+            
             attendance_rate = (present_attendance / max(total_attendance, 1)) * 100
+            logger.info(f"[INSIGHTS] Tasa asistencia: {attendance_rate}%")
             
             # Generar insights estáticos basados en los datos
             insights = []
@@ -2802,6 +2814,8 @@ def insights_ia(request):
             if not insights:
                 insights.append("📚 Comienza a registrar evaluaciones y asistencias para obtener insights personalizados")
             
+            logger.info(f"[INSIGHTS] Insights generados: {insights}")
+            
             return Response({
                 'insights': insights,
                 'data': {
@@ -2813,7 +2827,9 @@ def insights_ia(request):
             })
             
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"[INSIGHTS] Error generando insights: {str(e)}")
+        logger.error(f"[INSIGHTS] Traceback: {traceback.format_exc()}")
+        return Response({'error': f'Error generando insights: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -2893,6 +2909,8 @@ def noticias_educacion(request):
         from datetime import timedelta
         import hashlib
         
+        logger.info("[NOTICIAS] Solicitando noticias educativas")
+        
         # Cache de 2 días (48 horas)
         cache_key = 'noticias_educacion_cache'
         cache_timeout = 60 * 60 * 48  # 48 horas en segundos
@@ -2900,7 +2918,10 @@ def noticias_educacion(request):
         # Intentar obtener del cache
         cached_data = cache.get(cache_key)
         if cached_data:
+            logger.info("[NOTICIAS] Devolviendo datos del cache")
             return Response(cached_data)
+        
+        logger.info("[NOTICIAS] Generando noticias nuevas")
         
         # Generar noticias actualizadas (aquí se conectaría a un RSS/API real)
         # Por ahora usamos datos simulados con fecha dinámica
@@ -2956,13 +2977,17 @@ def noticias_educacion(request):
             'next_update': (today + timedelta(days=2)).isoformat()
         }
         
+        logger.info(f"[NOTICIAS] Generadas {len(noticias_data)} noticias")
+        
         # Guardar en cache por 2 días
         cache.set(cache_key, response_data, cache_timeout)
         
         return Response(response_data)
         
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"[NOTICIAS] Error generando noticias: {str(e)}")
+        logger.error(f"[NOTICIAS] Traceback: {traceback.format_exc()}")
+        return Response({'error': f'Error obteniendo noticias: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ===================== LANGUAGE TOOL ENDPOINTS =====================
