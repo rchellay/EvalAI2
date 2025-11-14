@@ -404,6 +404,13 @@ IMPORTANTE:
                 for criterion in result.get('criteria', []):
                     criterion['weight'] = round((criterion.get('weight', 0) / total_weight) * 100, 1)
             
+            # Asegurar que todos los niveles tengan nombre
+            level_names = ["Insuficiente", "En desarrollo", "Satisfactorio", "Excelente", "Sobresaliente"]
+            for criterion in result.get('criteria', []):
+                for i, level in enumerate(criterion.get('levels', [])):
+                    if not level.get('name'):
+                        level['name'] = level_names[i] if i < len(level_names) else f"Nivel {i + 1}"
+            
             return result
             
         except json.JSONDecodeError as e:
