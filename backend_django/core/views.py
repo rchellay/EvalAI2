@@ -2750,7 +2750,7 @@ def insights_ia(request):
         if request.method == 'GET':
             # Obtener insights existentes o generar nuevos
             user = request.user
-            thirty_days_ago = timezone.now().date() - timedelta(days=30)
+            thirty_days_ago = timezone.now() - timedelta(days=30)
             
             logger.info(f"[INSIGHTS] Generando insights para usuario: {user.username}")
             
@@ -2776,12 +2776,12 @@ def insights_ia(request):
             
             total_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
-                date__gte=thirty_days_ago
+                date__gte=thirty_days_ago.date()
             ).count()
             
             present_attendance = Attendance.objects.filter(
                 student_id__in=student_ids,
-                date__gte=thirty_days_ago,
+                date__gte=thirty_days_ago.date(),
                 status='presente'
             ).count()
             
