@@ -16,6 +16,7 @@ const OCRImagen = () => {
   const [tipoTexto, setTipoTexto] = useState('manuscrito');
   const [mostrarSugerencias, setMostrarSugerencias] = useState({});
   const [idiomasDisponibles, setIdiomasDisponibles] = useState({});
+  const [validacionImagen, setValidacionImagen] = useState(null);
   const [ocrResult, setOcrResult] = useState(null);
   
   // Estados para vincular con alumno
