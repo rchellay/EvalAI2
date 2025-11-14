@@ -151,10 +151,8 @@ const OCRImagen = () => {
         },
       });
 
-      console.log('Respuesta OCR:', response.data);
       setTextoExtraido(response.data.text);
       setOcrResult(response.data);
-      console.log('Texto extraído establecido:', response.data.text);
       toast.success('Texto extraído exitosamente');
     } catch (err) {
       console.error('Error procesando imagen:', err);
@@ -186,12 +184,9 @@ const OCRImagen = () => {
         },
       });
 
-      console.log('Respuesta OCR con corrección:', response.data);
       setTextoExtraido(response.data.texto_original);
       setCorreccion(response.data.texto_corregido);
       setOcrResult(response.data);
-      console.log('Texto original:', response.data.texto_original);
-      console.log('Texto corregido:', response.data.texto_corregido);
       setEstadisticas(response.data.estadisticas);
       toast.success('Imagen procesada y texto corregido exitosamente');
     } catch (err) {
