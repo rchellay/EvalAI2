@@ -284,6 +284,24 @@ class RubricLevelSerializer(serializers.ModelSerializer):
         model = RubricLevel
         fields = ['id', 'criterion', 'name', 'description', 'score', 'order', 'color', 'created_at']
         read_only_fields = ['id', 'created_at']
+    
+    def validate_criterion(self, value):
+        """Validar que el criterio existe"""
+        if not value:
+            raise serializers.ValidationError("El criterio es obligatorio")
+        return value
+    
+    def validate_score(self, value):
+        """Validar que el score sea un número válido mayor o igual a 0"""
+        if value is None:
+            raise serializers.ValidationError("El score es obligatorio")
+        try:
+            score = float(value)
+            if score < 0:
+                raise serializers.ValidationError("El score debe ser mayor o igual a 0")
+            return score
+        except (ValueError, TypeError):
+            raise serializers.ValidationError("El score debe ser un número válido")
 
 
 class RubricCriterionSerializer(serializers.ModelSerializer):
