@@ -14,6 +14,8 @@ import json
 import sys
 import traceback
 import logging
+import tempfile
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -3032,6 +3034,7 @@ def procesar_imagen_ocr(request):
     """
     Procesa una imagen para extraer texto manuscrito usando Google Cloud Vision OCR
     """
+    temp_file_path = None
     try:
         # Verificar si Google Vision está disponible
         if not google_vision_ocr_client.client:
@@ -3051,12 +3054,26 @@ def procesar_imagen_ocr(request):
         image_file = request.FILES[image_field]
         idioma = request.data.get('idioma', 'es')
         
-        resultado = google_vision_ocr_client.procesar_imagen(image_file.read(), idioma)
+        # Guardar archivo temporalmente
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            for chunk in image_file.chunks():
+                temp_file.write(chunk)
+            temp_file_path = temp_file.name
+        
+        # Procesar imagen
+        resultado = google_vision_ocr_client.detect_handwritten_text(temp_file_path, idioma)
         return Response(resultado)
     except GoogleVisionOCRError as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': f'Error procesando imagen: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    finally:
+        # Limpiar archivo temporal
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except Exception as e:
+                logger.warning(f"Error eliminando archivo temporal: {str(e)}")
 
 
 @api_view(['POST'])
@@ -3065,6 +3082,7 @@ def procesar_y_corregir_imagen(request):
     """
     Procesa una imagen para extraer texto manuscrito y lo corrige automáticamente
     """
+    temp_file_path = None
     try:
         # Verificar si Google Vision está disponible
         if not google_vision_ocr_client.client:
@@ -3084,9 +3102,15 @@ def procesar_y_corregir_imagen(request):
         image_file = request.FILES[image_field]
         idioma = request.data.get('idioma', 'es')
         
+        # Guardar archivo temporalmente
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            for chunk in image_file.chunks():
+                temp_file.write(chunk)
+            temp_file_path = temp_file.name
+        
         # OCR
-        resultado_ocr = google_vision_ocr_client.procesar_imagen(image_file.read(), idioma)
-        texto_extraido = resultado_ocr.get('texto', '')
+        resultado_ocr = google_vision_ocr_client.detect_handwritten_text(temp_file_path, idioma)
+        texto_extraido = resultado_ocr.get('text', '')
         
         if not texto_extraido:
             return Response({'error': 'No se pudo extraer texto de la imagen'}, status=status.HTTP_400_BAD_REQUEST)
@@ -3097,12 +3121,19 @@ def procesar_y_corregir_imagen(request):
         return Response({
             'texto_original': texto_extraido,
             'texto_corregido': texto_corregido,
-            'confianza': resultado_ocr.get('confianza', 0)
+            'confianza': resultado_ocr.get('confidence', 0)
         })
     except GoogleVisionOCRError as e:
         return Response({'error': f'Error OCR: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
-        return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': f'Error procesando imagen: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    finally:
+        # Limpiar archivo temporal
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except Exception as e:
+                logger.warning(f"Error eliminando archivo temporal: {str(e)}")
 
 
 @api_view(['GET'])
