@@ -291,17 +291,11 @@ class RubricLevelSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("El criterio es obligatorio")
         return value
     
-    def validate_score(self, value):
-        """Validar que el score sea un número válido mayor o igual a 0"""
-        if value is None:
-            raise serializers.ValidationError("El score es obligatorio")
-        try:
-            score = float(value)
-            if score < 0:
-                raise serializers.ValidationError("El score debe ser mayor o igual a 0")
-            return score
-        except (ValueError, TypeError):
-            raise serializers.ValidationError("El score debe ser un número válido")
+    def validate_name(self, value):
+        """Validar que el nombre no esté vacío"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("El nombre es obligatorio")
+        return value.strip()
 
 
 class RubricCriterionSerializer(serializers.ModelSerializer):
