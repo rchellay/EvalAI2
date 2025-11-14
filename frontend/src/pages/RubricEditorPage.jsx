@@ -189,7 +189,7 @@ const RubricEditorPage = () => {
       weight: criterion.weight.toFixed(1), // El peso ya viene como porcentaje
       levels: criterion.levels?.map((level, levelIdx) => ({
         id: `temp-ai-level-${Date.now()}-${idx}-${levelIdx}`,
-        name: level.level_name,
+        name: level.name || `Nivel ${levelIdx + 1}`,
         description: level.description || '',
         score: level.score,
         order: levelIdx,
