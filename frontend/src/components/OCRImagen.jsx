@@ -16,7 +16,7 @@ const OCRImagen = () => {
   const [tipoTexto, setTipoTexto] = useState('manuscrito');
   const [mostrarSugerencias, setMostrarSugerencias] = useState({});
   const [idiomasDisponibles, setIdiomasDisponibles] = useState({});
-  const [validacionImagen, setValidacionImagen] = useState(null);
+  const [ocrResult, setOcrResult] = useState(null);
   
   // Estados para vincular con alumno
   const [estudiantes, setEstudiantes] = useState([]);
@@ -104,6 +104,7 @@ const OCRImagen = () => {
       setTextoExtraido('');
       setCorreccion(null);
       setEstadisticas(null);
+      setOcrResult(null);
       setError(null);
     }
   };
@@ -152,6 +153,7 @@ const OCRImagen = () => {
 
       console.log('Respuesta OCR:', response.data);
       setTextoExtraido(response.data.text);
+      setOcrResult(response.data);
       console.log('Texto extraído establecido:', response.data.text);
       toast.success('Texto extraído exitosamente');
     } catch (err) {
@@ -187,6 +189,7 @@ const OCRImagen = () => {
       console.log('Respuesta OCR con corrección:', response.data);
       setTextoExtraido(response.data.texto_original);
       setCorreccion(response.data.texto_corregido);
+      setOcrResult(response.data);
       console.log('Texto original:', response.data.texto_original);
       console.log('Texto corregido:', response.data.texto_corregido);
       setEstadisticas(response.data.estadisticas);
@@ -350,6 +353,7 @@ const OCRImagen = () => {
     setTextoExtraido('');
     setCorreccion(null);
     setEstadisticas(null);
+    setOcrResult(null);
     setError(null);
     setValidacionImagen(null);
     setMostrarSugerencias({});
@@ -604,21 +608,34 @@ const OCRImagen = () => {
       )}
 
       {/* Texto extraído */}
-      {textoExtraido && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3 flex items-center">
-            <FileImage className="mr-2 text-blue-600" /> Texto Extraído
-          </h3>
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3 flex items-center">
+          <FileImage className="mr-2 text-blue-600" /> Texto Extraído
+        </h3>
+        {textoExtraido ? (
           <div className="text-slate-700 dark:text-slate-300 text-base leading-relaxed">
             {correccion ? renderizarTextoConErrores() : textoExtraido}
           </div>
-          {correccion && (
-            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-              💡 Haz clic en las palabras marcadas para ver sugerencias de corrección
+        ) : (
+          <div className="text-slate-500 dark:text-slate-400 italic">
+            {imagen ? 'Haz clic en "Procesar OCR" para extraer el texto de la imagen.' : 'Sube una imagen y procesa el OCR para ver el texto extraído aquí.'}
+          </div>
+        )}
+        {correccion && textoExtraido && (
+          <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+            💡 Haz clic en las palabras marcadas para ver sugerencias de corrección
+          </div>
+        )}
+        {ocrResult && (
+          <div className="mt-3 p-2 bg-slate-100 dark:bg-slate-700 rounded text-xs text-slate-600 dark:text-slate-300">
+            <div className="flex justify-between">
+              <span>Confianza: {Math.round((ocrResult.confidence || 0) * 100)}%</span>
+              <span>Palabras: {ocrResult.word_count || 0}</span>
+              <span>Idioma: {ocrResult.language_hint || idioma}</span>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Estadísticas */}
       {estadisticas && (
