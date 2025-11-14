@@ -2771,6 +2771,13 @@ def insights_ia(request):
             ).aggregate(avg=Avg('score'))['avg'] or 0
             logger.info(f"[INSIGHTS] Promedio calificaciones: {avg_score}")
             
+            # Convertir avg_score a float de forma segura
+            try:
+                avg_score_float = float(avg_score) if avg_score is not None else 0.0
+            except (TypeError, ValueError):
+                avg_score_float = 0.0
+                logger.warning(f"[INSIGHTS] Error convirtiendo avg_score {avg_score} a float")
+            
             student_ids = Student.objects.filter(grupo_principal__teacher=user).values_list('id', flat=True)
             logger.info(f"[INSIGHTS] IDs estudiantes: {list(student_ids)}")
             
@@ -2797,10 +2804,10 @@ def insights_ia(request):
             if total_evaluations > 0:
                 insights.append(f"📝 Se han registrado {total_evaluations} evaluaciones en los últimos 30 días")
             
-            if avg_score > 0:
-                if avg_score >= 7:
+            if avg_score_float > 0:
+                if avg_score_float >= 7:
                     insights.append("🎉 ¡Excelente! El promedio de calificaciones es muy bueno")
-                elif avg_score >= 5:
+                elif avg_score_float >= 5:
                     insights.append("📈 El rendimiento académico está en un nivel aceptable")
                 else:
                     insights.append("⚠️ Considera reforzar el apoyo académico")
@@ -2823,7 +2830,7 @@ def insights_ia(request):
                 'data': {
                     'total_students': total_students,
                     'total_evaluations': total_evaluations,
-                    'avg_score': round(float(avg_score), 1),
+                    'avg_score': round(avg_score_float, 1),
                     'attendance_rate': round(attendance_rate, 1)
                 }
             })
