@@ -638,6 +638,18 @@ class RubricLevelViewSet(viewsets.ModelViewSet):
         # Usuarios normales solo ven niveles de sus rúbricas
         return queryset.filter(criterion__rubric__teacher=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        """Create with detailed logging for debugging"""
+        logger.info(f"[RUBRIC_LEVEL_CREATE] Starting create with data: {request.data}")
+        try:
+            response = super().create(request, *args, **kwargs)
+            logger.info(f"[RUBRIC_LEVEL_CREATE] Success: {response.data}")
+            return response
+        except Exception as e:
+            logger.error(f"[RUBRIC_LEVEL_CREATE] Error: {str(e)}")
+            logger.error(f"[RUBRIC_LEVEL_CREATE] Request data: {request.data}")
+            raise
+    
     def perform_create(self, serializer):
         # Verificar que el criterio pertenece al usuario
         criterion = serializer.validated_data.get('criterion')
