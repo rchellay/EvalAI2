@@ -281,7 +281,12 @@ const RubricEditorPage = () => {
       navigate('/rubricas');
     } catch (error) {
       console.error('Error saving rubric:', error);
-      toast.error('Error al guardar rúbrica');
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Error desconocido al guardar rúbrica';
+      toast.error(`Error al guardar rúbrica: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
